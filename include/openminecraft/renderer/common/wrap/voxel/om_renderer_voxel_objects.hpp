@@ -1,0 +1,406 @@
+#ifndef OM_RENDERER_VOXEL_OBJECTS_HPP
+#define OM_RENDERER_VOXEL_OBJECTS_HPP
+
+#include "glm/ext/vector_float3.hpp"
+#include "glm/fwd.hpp"
+#include "openminecraft/world/om_world_chunk.hpp"
+#include <atomic>
+#include <cstdint>
+#include <initializer_list>
+#include <vector>
+
+namespace openminecraft::renderer::common::wrap::voxel
+{
+struct OMVoxelAABB
+{
+    glm::vec3 offset;
+    glm::vec3 size;
+
+    [[nodiscard]] inline auto applyOffset(glm::vec3 v) const -> OMVoxelAABB
+    {
+        return {offset + v, size};
+    }
+
+    [[nodiscard]] inline auto intersect(const OMVoxelAABB &other) const -> bool
+    {
+        glm::vec3 currMin = offset;
+        glm::vec3 currMax = currMin + size;
+        glm::vec3 tgtMin = other.offset;
+        glm::vec3 tgtMax = tgtMin + other.size;
+        return currMin.x <= tgtMax.x && currMax.x >= tgtMin.x && currMin.y <= tgtMax.y && currMax.y >= tgtMin.y &&
+               currMin.z <= tgtMax.z && currMax.z >= tgtMin.z;
+    }
+
+    [[nodiscard]] inline auto contains(const glm::vec3 p) const -> bool
+    {
+        glm::vec3 currMin = offset;
+        glm::vec3 currMax = currMin + size;
+        return currMin.x <= p.x && currMax.x >= p.x && currMin.y <= p.y && currMax.y >= p.y && currMin.z <= p.z &&
+               currMax.z >= p.z;
+    }
+};
+struct OMVoxelShape
+{
+    std::vector<OMVoxelAABB> aabbs = {};
+
+  public:
+    OMVoxelShape() = default;
+    OMVoxelShape(const OMVoxelAABB &a)
+    {
+        aabbs.emplace_back(a);
+    }
+    OMVoxelShape(const std::initializer_list<OMVoxelAABB> l) : aabbs(l)
+    {
+    }
+    OMVoxelShape(const std::vector<OMVoxelAABB> l) : aabbs(l)
+    {
+    }
+
+    [[nodiscard]] inline auto contains(const glm::vec3 p) const -> bool
+    {
+        for (auto const &a : aabbs)
+        {
+            if (a.contains(p))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    [[nodiscard]] inline auto intersect(const OMVoxelAABB &other) const -> bool
+    {
+        for (auto const &a : aabbs)
+        {
+            if (other.intersect(a))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    [[nodiscard]] inline auto intersect(const OMVoxelShape &other) const -> bool
+    {
+        for (auto const &a : aabbs)
+        {
+            if (other.intersect(a))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+};
+struct OMVoxel
+{
+    int32_t voxelBasic;
+    int32_t voxelMeta;
+    int32_t voxelExtra;
+    int32_t voxelExtra2;
+    int32_t voxelExtra3;
+    int32_t voxelType;
+};
+struct OMVoxelFluid
+{
+    int32_t voxelBasic;
+    int32_t voxelMeta;
+    int32_t voxelExtra;
+    int32_t voxelExtra2;
+    int32_t voxelType;
+};
+struct OMVoxelComplex
+{
+    int32_t voxelBasic;
+    int32_t voxelMeta;
+    int32_t voxelExtra;
+    glm::vec3 voxelOffset;
+    glm::vec2 voxelUV0, voxelUV1;
+    float voxelRotationAngle;
+    glm::vec3 voxelRotationCenter, voxelSize;
+    float voxelRotationAngleExt1, voxelRotationAngleExt2;
+    int32_t voxelType;
+};
+enum OMVoxelFacing : uint8_t
+{
+    NegX = 0b000,
+    PosX = 0b100,
+    NegZ = 0b001,
+    PosZ = 0b101,
+    NegY = 0b010,
+    PosY = 0b110,
+    None = 0b111,
+};
+// INFO: note for the ambient occulusion
+// Type -> (AO1, AO2, AO3, AO4)
+// NegX => ((0, 1, 0), (0, 0, 0), (0, 1, 1), (0, 0, 1))
+// PosX => ((1, 1, 1), (1, 0, 1), (1, 1, 0), (1, 0, 0))
+// NegZ => ((1, 1, 0), (1, 0, 0), (0, 1, 0), (0, 0, 0))
+// PosZ => ((0, 1, 1), (0, 0, 1), (1, 1, 1), (1, 0, 1))
+// NegY => ((0, 0, 0), (0, 0, 1), (1, 0, 0), (1, 0, 1))
+// PosY => ((0, 1, 0), (0, 1, 1), (1, 1, 0), (1, 1, 1))
+
+class OMVoxelHandler
+{
+  public:
+    virtual ~OMVoxelHandler()
+    {
+    }
+    virtual auto querySkipsRendering(int bsid, int tgbsid, OMVoxelFacing) -> bool = 0;
+    virtual auto queryNumParts(int bsid) -> int = 0;
+    virtual auto queryPartFaceEnabled(int bsid, int pid, OMVoxelFacing) -> bool = 0;
+    virtual auto queryPartFaceTex(int bsid, int pid, OMVoxelFacing) -> int = 0;
+    virtual auto queryPartFaceCull(int bsid, int pid, OMVoxelFacing) -> OMVoxelFacing = 0;
+    virtual auto queryPartAABB(int bsid, int pid) -> OMVoxelAABB = 0;
+    virtual auto queryPartFaceUV(int bsid, int pid, OMVoxelFacing) -> glm::vec4 = 0;
+    virtual auto queryPartFaceRotation(int bsid, int pid, OMVoxelFacing) -> int = 0;
+    virtual auto queryPartFaceTint(int bsid, int pid, OMVoxelFacing) -> int = 0;
+    virtual auto queryPartRotationAxis(int bsid, int pid) -> int = 0;
+    virtual auto queryPartRotationCenter(int bsid, int pid) -> glm::vec3 = 0;
+    virtual auto queryPartRotationAngle(int bsid, int pid) -> int = 0;
+    virtual auto queryPartRotationAngleExt(int bsid, int pid) -> glm::vec3 = 0;
+    virtual auto querySoild(int bsid) -> bool = 0;
+    virtual auto queryOcclusionShape(int bsid) -> OMVoxelShape = 0;
+    virtual auto queryPartAmbientOcclusion(int bsid, int pid) -> bool = 0;
+    virtual auto queryPartShade(int bsid, int pid) -> bool = 0;
+    virtual auto queryPartComplex(int bsid, int pid) -> bool = 0;
+    virtual auto queryPartFaceSecondaryTexture(int bsid, int pid, OMVoxelFacing) -> bool = 0;
+    virtual auto queryPartRotationAngleF(int bsid, int pid) -> float = 0;
+    virtual auto queryTranslucent(int bsid) -> bool = 0;
+    virtual auto queryFluid(int bsid) -> bool = 0;
+    virtual auto queryFluidFalling(int bsid) -> bool = 0;
+    virtual auto queryFluidLevel(int bsid) -> uint8_t = 0;
+    virtual auto queryFluidTex(int bsid) -> int = 0;
+    virtual auto queryWaterlogged(int bsid) -> bool = 0;
+    virtual auto queryFluidSame(int bsid1, int bsid2) -> bool = 0;
+    virtual auto queryFluidTexSec(int bsid) -> int = 0;
+};
+
+class OMVoxelHandlerDummy : public OMVoxelHandler
+{
+  public:
+    OMVoxelHandlerDummy() = default;
+    ~OMVoxelHandlerDummy() = default;
+    auto queryNumParts(int b) -> int override
+    {
+        return b == 0 ? 0 : 1;
+    }
+    auto queryPartFaceEnabled(int b, int, OMVoxelFacing) -> bool override
+    {
+        return b != 0;
+    }
+    auto queryPartFaceTex(int b, int, OMVoxelFacing) -> int override
+    {
+        return b;
+    }
+    auto queryPartFaceCull(int, int, OMVoxelFacing v) -> OMVoxelFacing override
+    {
+        return v;
+    }
+    auto queryPartAABB(int bsid, int pid) -> OMVoxelAABB override
+    {
+        return {{0, 0, 0}, {16, 16, 16}};
+    }
+    auto queryPartFaceUV(int bsid, int pid, OMVoxelFacing) -> glm::vec4 override
+    {
+        return {0, 0, 16, 16};
+    }
+    auto queryPartFaceRotation(int bsid, int pid, OMVoxelFacing) -> int override
+    {
+        return 0;
+    }
+    auto queryPartFaceTint(int bsid, int pid, OMVoxelFacing) -> int override
+    {
+        return -1;
+    }
+    auto queryPartRotationAxis(int bsid, int pid) -> int override
+    {
+        return 0;
+    }
+    auto queryPartRotationCenter(int bsid, int pid) -> glm::vec3 override
+    {
+        return {0, 0, 0};
+    }
+    auto queryPartRotationAngle(int bsid, int pid) -> int override
+    {
+        return 2;
+    }
+    auto querySoild(int bsid) -> bool override
+    {
+        return true;
+    }
+    auto queryOcclusionShape(int bsid) -> OMVoxelShape override
+    {
+        return {{{0, 0, 0}, {16, 16, 16}}};
+    }
+    auto queryPartAmbientOcclusion(int bsid, int pid) -> bool override
+    {
+        return true;
+    }
+    auto queryPartShade(int bsid, int pid) -> bool override
+    {
+        return true;
+    }
+    auto queryPartComplex(int bsid, int pid) -> bool override
+    {
+        return false;
+    }
+    auto queryPartFaceSecondaryTexture(int bsid, int pid, OMVoxelFacing) -> bool override
+    {
+        return false;
+    }
+    auto queryPartRotationAngleF(int bsid, int pid) -> float override
+    {
+        return 0.0f;
+    }
+    auto queryPartRotationAngleExt(int bsid, int pid) -> glm::vec3 override
+    {
+        return {};
+    }
+    auto queryTranslucent(int bsid) -> bool override
+    {
+        return false;
+    }
+    auto querySkipsRendering(int bsid, int tgbsid, OMVoxelFacing) -> bool override
+    {
+        return false;
+    }
+    auto queryFluid(int bsid) -> bool override
+    {
+        return false;
+    }
+    auto queryFluidFalling(int bsid) -> bool override
+    {
+        return false;
+    }
+    auto queryFluidLevel(int bsid) -> uint8_t override
+    {
+        return 0;
+    }
+    auto queryFluidTex(int bsid) -> int override
+    {
+        return 0;
+    }
+    auto queryWaterlogged(int bsid) -> bool override
+    {
+        return false;
+    }
+    auto queryFluidSame(int bsid1, int bsid2) -> bool override
+    {
+        return true;
+    }
+    auto queryFluidTexSec(int bsid) -> int override
+    {
+        return 0;
+    }
+};
+
+class OMChunkPaletteProvider
+{
+  public:
+    virtual ~OMChunkPaletteProvider() = default;
+
+    virtual auto color(const world::OMChunk<16> &chunk, int x, int y, int z, uint32_t blockState, int tintIndex)
+        -> glm::u8vec3 = 0;
+
+    // Fluid tinting: water inside waterlogged blocks should use the water color,
+    // not the block's own colorSource (usually None -> white)
+    virtual auto fluidColor(const world::OMChunk<16> &chunk, int x, int y, int z, uint32_t blockState) -> glm::u8vec3
+    {
+        return color(chunk, x, y, z, blockState, 0);
+    }
+};
+
+struct OMVoxelSkyDisc
+{
+    glm::vec3 diskCenterColor;
+    float discRange;
+    glm::vec3 diskSideColor;
+    float discHeight;
+};
+
+struct OMVoxelSunrise
+{
+    glm::vec4 sunColor;
+    float sunAngle;
+};
+
+struct OMVoxelMoon
+{
+    float moonAngle;
+    int moonPhase;
+};
+
+struct OMVoxelCloud
+{
+    glm::vec3 camera;
+    float opacity;
+    glm::vec3 color;
+};
+
+struct OMVoxelLightMap
+{
+    float skyFactor;
+    float blockFactor;
+    float nightVisionFactor;
+    float darknessScale;
+    float bossOverlayWorldDarkeningFactor;
+    float brightnessFactor;
+    float pad01, pad02;
+    glm::vec3 blockLightTint;
+    float pad1 = 0;
+    glm::vec3 skyLightColor;
+    float pad2 = 0;
+    glm::vec3 ambientColor;
+    float pad3 = 0;
+    glm::vec3 nightVisionColor;
+    float pad4 = 0;
+};
+
+class OMVoxelColorManager
+{
+  public:
+    virtual ~OMVoxelColorManager()
+    {
+    }
+
+    virtual auto getSkyDiscColor() -> glm::vec3 = 0;
+    virtual auto getSkyDiskRange() -> float = 0;
+    virtual auto getSkyDiskHeight() -> float = 0;
+    virtual auto getFogRange() -> glm::vec2 = 0;
+    virtual auto getBlockTint() -> glm::vec3 = 0;
+    virtual auto getSkyLightColor() -> glm::vec3 = 0;
+    virtual auto getAmbientColor() -> glm::vec3 = 0;
+    virtual auto getNightVisionColor() -> glm::vec3 = 0;
+    virtual auto getBlockFactor() -> float = 0;
+    virtual auto getSkyFactor() -> float = 0;
+    virtual auto getNightVisionFactor() -> float = 0;
+    virtual auto getDarknessScale() -> float = 0;
+    virtual auto getBossOverlayWorldDarkeningFactor() -> float = 0;
+    virtual auto getBrightnessFactor() -> float = 0;
+    virtual auto getFogColor() -> glm::vec3 = 0;
+    virtual auto getSunriseColor() -> glm::vec4 = 0;
+    virtual auto getSunAngle() -> float = 0;
+    virtual auto getMoonAngle() -> float = 0;
+    virtual auto getMoonPhase() -> int = 0;
+    virtual auto getStarOpacity() -> float = 0;
+    virtual auto getStarRotation() -> float = 0;
+    virtual auto getCloudColor() -> glm::vec4 = 0;
+
+    inline auto isDirty() -> bool
+    {
+        return dirty;
+    }
+    inline void solveDirty()
+    {
+        dirty = false;
+    }
+
+  protected:
+    std::atomic_bool dirty = true;
+};
+
+} // namespace openminecraft::renderer::common::wrap::voxel
+
+#endif

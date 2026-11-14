@@ -6,7 +6,7 @@
 #include "openminecraft/renderer/common/wrap/om_renderer_segbuf.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_segbuf.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_temptarget.hpp"
-#include "openminecraft/renderer/common/wrap/om_renderer_voxel.hpp"
+#include "openminecraft/renderer/common/wrap/voxel/om_renderer_voxel_manager.hpp"
 #include <algorithm>
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
@@ -26,7 +26,7 @@
 #include <random>
 #include <vector>
 
-namespace openminecraft::renderer::common::wrap
+namespace openminecraft::renderer::common::wrap::voxel
 {
 struct Frustum
 {
@@ -1690,4 +1690,4 @@ void OMVoxelManager::bindCameraBuffer(OMRendererBuffer *cameraBuffer)
     starPipeline->bindInput(0, cameraBuffer);
     cloudPipeline->bindInput(0, cameraBuffer);
 }
-} // namespace openminecraft::renderer::common::wrap
+} // namespace openminecraft::renderer::common::wrap::voxel

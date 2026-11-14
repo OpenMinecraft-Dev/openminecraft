@@ -12,12 +12,12 @@
 #include "openminecraft-shell/data/om_identifier.hpp"
 #include "openminecraft/io/json/om_io_ast_builder_json.hpp"
 #include "openminecraft/io/json/om_io_ast_json.hpp"
-#include "openminecraft/renderer/common/wrap/om_renderer_voxel.hpp"
+#include "openminecraft/renderer/common/wrap/voxel/om_renderer_voxel_objects.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 
 using namespace openminecraft;
 using namespace openminecraft::io;
-using namespace openminecraft::renderer::common::wrap;
+using namespace openminecraft::renderer::common::wrap::voxel;
 
 namespace openminecraft::shell::data
 {
@@ -68,7 +68,7 @@ static auto fromAxis(std::string s) -> OMModelAxis
     }
 }
 auto OMModelPrecompiler::querySkipsRendering(int modelId, int tgmodelId,
-                                             openminecraft::renderer::common::wrap::OMVoxelFacing d) -> bool
+                                             openminecraft::renderer::common::wrap::voxel::OMVoxelFacing d) -> bool
 {
     const auto &b = block::blockStateRegistry.idToRegistry[modelId];
     const auto &tb = block::blockStateRegistry.idToRegistry[tgmodelId];
@@ -80,7 +80,7 @@ auto OMModelPrecompiler::queryTranslucent(int modelId) -> bool
 }
 
 auto OMModelPrecompiler::queryPartFaceSecondaryTexture(int modelId, int pid,
-                                                       openminecraft::renderer::common::wrap::OMVoxelFacing f) -> bool
+                                                       openminecraft::renderer::common::wrap::voxel::OMVoxelFacing f) -> bool
 {
     switch (f)
     {
@@ -195,7 +195,7 @@ auto cullFaceTo(OMModelCullSide s) -> ::OMVoxelFacing
         return PosX;
     default:
     case None:
-        return openminecraft::renderer::common::wrap::None;
+        return openminecraft::renderer::common::wrap::voxel::None;
     }
 }
 auto OMModelPrecompiler::queryPartFaceCull(int modelId, int pid, ::OMVoxelFacing f) -> ::OMVoxelFacing
@@ -218,7 +218,7 @@ auto OMModelPrecompiler::queryPartFaceCull(int modelId, int pid, ::OMVoxelFacing
     }
 }
 
-auto OMModelPrecompiler::queryPartFaceUV(int modelId, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing f)
+auto OMModelPrecompiler::queryPartFaceUV(int modelId, int pid, openminecraft::renderer::common::wrap::voxel::OMVoxelFacing f)
     -> glm::vec4
 {
     glm::vec2 uv0, uv1;
@@ -254,7 +254,7 @@ auto OMModelPrecompiler::queryPartFaceUV(int modelId, int pid, openminecraft::re
 }
 
 auto OMModelPrecompiler::queryPartFaceRotation(int modelId, int pid,
-                                               openminecraft::renderer::common::wrap::OMVoxelFacing f) -> int
+                                               openminecraft::renderer::common::wrap::voxel::OMVoxelFacing f) -> int
 {
     switch (f)
     {

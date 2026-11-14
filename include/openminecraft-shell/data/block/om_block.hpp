@@ -4,7 +4,7 @@
 #include "openminecraft-shell/data/block/om_blockstate.hpp"
 #include "openminecraft-shell/data/block/om_blockstate_registry.hpp"
 #include "openminecraft-shell/data/om_identifier.hpp"
-#include "openminecraft/renderer/common/wrap/om_renderer_voxel.hpp"
+#include "openminecraft/renderer/common/wrap/voxel/om_renderer_voxel_objects.hpp"
 #include <initializer_list>
 #include <memory>
 #include <unordered_map>
@@ -44,7 +44,7 @@ template <> struct hash<openminecraft::shell::data::block::OMBlockModelIdentifie
     }
 };
 } // namespace std
-using openminecraft::renderer::common::wrap::OMVoxelFacing;
+using openminecraft::renderer::common::wrap::voxel::OMVoxelFacing;
 namespace openminecraft::shell::data::block
 {
 // Fluid type: determines the texture used and the "same fluid" grouping

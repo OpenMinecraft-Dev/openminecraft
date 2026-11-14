@@ -1,4 +1,6 @@
-#include "openminecraft/renderer/common/wrap/om_renderer_voxel.hpp"
+#include "openminecraft/renderer/common/wrap/voxel/om_renderer_voxel_compiler_pool.hpp"
+#include "openminecraft/renderer/common/wrap/voxel/om_renderer_voxel_compiler.hpp"
+#include "openminecraft/renderer/common/wrap/voxel/om_renderer_voxel_layer.hpp"
 #include <array>
 #include <chrono>
 #include <mutex>
@@ -6,7 +8,7 @@
 #include <thread>
 #include <vector>
 
-namespace openminecraft::renderer::common::wrap
+namespace openminecraft::renderer::common::wrap::voxel
 {
 auto computeSectionVisibility(const std::array<uint8_t, 4096> &blocking) -> uint64_t
 {
@@ -397,4 +399,4 @@ void OMVoxelCompilerPool::compile(int i, bool useCache, float distanceSq)
 
     queuedChunks.push(OMCompileRequest{distanceSq, i, useCache});
 }
-} // namespace openminecraft::renderer::common::wrap
+} // namespace openminecraft::renderer::common::wrap::voxel

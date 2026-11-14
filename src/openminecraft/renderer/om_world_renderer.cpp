@@ -28,7 +28,7 @@
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_temptarget.hpp"
-#include "openminecraft/renderer/common/wrap/om_renderer_voxel.hpp"
+#include "openminecraft/renderer/common/wrap/voxel/om_renderer_voxel_manager.hpp"
 #include "openminecraft/specs/png/om_png.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include "openminecraft/world/om_world_chunkmanager.hpp"
@@ -44,7 +44,7 @@ using namespace openminecraft::renderer::common;
 
 namespace openminecraft::shell::renderer
 {
-class OMWorldColorManager : public wrap::OMVoxelColorManager
+class OMWorldColorManager : public wrap::voxel::OMVoxelColorManager
 {
   private:
     animation::OMAnimationMultiTimeline<24000, glm::vec3> fogColorTimeline =
@@ -248,7 +248,7 @@ static auto convert(uint32_t rgb) -> glm::u8vec3
 {
     return {rgb >> 16, rgb >> 8, rgb};
 }
-class OMWorldPaletteProvider : public wrap::OMChunkPaletteProvider
+class OMWorldPaletteProvider : public wrap::voxel::OMChunkPaletteProvider
 {
   public:
     OMWorldPaletteProvider(const std::array<glm::u8vec3, 256 * 256> &grass,
@@ -440,7 +440,7 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
     textureAtlas->build();
 
     colorManager->updateGameTime(12000);
-    voxelManager = new wrap::OMVoxelManager(
+    voxelManager = new wrap::voxel::OMVoxelManager(
         renderer, tempTarget->target(), textureAtlas->texture.getTag(), textureAtlas->textureSecondary.getTag(),
         chunkManager,
         [&](bool r) -> void { record(r); }, this->voxelHandler,

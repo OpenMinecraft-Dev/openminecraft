@@ -7,7 +7,7 @@
 #include "openminecraft/binary/om_bin_hash.hpp"
 #include "openminecraft/io/json/om_io_ast_json.hpp"
 #include "openminecraft/log/om_log_common.hpp"
-#include "openminecraft/renderer/common/wrap/om_renderer_voxel.hpp"
+#include "openminecraft/renderer/common/wrap/voxel/om_renderer_voxel_objects.hpp"
 #include "openminecraft-shell/data/block/om_block.hpp"
 #include <cstdint>
 #include <initializer_list>
@@ -87,7 +87,7 @@ struct OMModel
     uint32_t fluidTexFlow;
     bool waterlogged;
 };
-class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxelHandler
+class OMModelPrecompiler : public openminecraft::renderer::common::wrap::voxel::OMVoxelHandler
 {
   public:
     OMModelPrecompiler(std::string root, OMTextureAtlas *);
@@ -105,30 +105,30 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::OMVoxel
     auto loadModelPart(OMIdentifier) -> int;
     auto loadModelPartWithArgs(OMIdentifier, int, int, int, bool) -> int;
 
-    auto querySkipsRendering(int modelId, int targetModelId, openminecraft::renderer::common::wrap::OMVoxelFacing)
+    auto querySkipsRendering(int modelId, int targetModelId, openminecraft::renderer::common::wrap::voxel::OMVoxelFacing)
         -> bool override;
     auto queryNumParts(int modelId) -> int override;
-    auto queryPartFaceEnabled(int modelId, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing)
+    auto queryPartFaceEnabled(int modelId, int pid, openminecraft::renderer::common::wrap::voxel::OMVoxelFacing)
         -> bool override;
-    auto queryPartFaceTex(int modelId, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing) -> int override;
-    auto queryPartFaceCull(int modelId, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing)
-        -> openminecraft::renderer::common::wrap::OMVoxelFacing override;
-    auto queryPartAABB(int modelId, int pid) -> openminecraft::renderer::common::wrap::OMVoxelAABB override;
-    auto queryPartFaceUV(int modelId, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing)
+    auto queryPartFaceTex(int modelId, int pid, openminecraft::renderer::common::wrap::voxel::OMVoxelFacing) -> int override;
+    auto queryPartFaceCull(int modelId, int pid, openminecraft::renderer::common::wrap::voxel::OMVoxelFacing)
+        -> openminecraft::renderer::common::wrap::voxel::OMVoxelFacing override;
+    auto queryPartAABB(int modelId, int pid) -> openminecraft::renderer::common::wrap::voxel::OMVoxelAABB override;
+    auto queryPartFaceUV(int modelId, int pid, openminecraft::renderer::common::wrap::voxel::OMVoxelFacing)
         -> glm::vec4 override;
-    auto queryPartFaceRotation(int modelId, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing)
+    auto queryPartFaceRotation(int modelId, int pid, openminecraft::renderer::common::wrap::voxel::OMVoxelFacing)
         -> int override;
-    auto queryPartFaceTint(int modelId, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing)
+    auto queryPartFaceTint(int modelId, int pid, openminecraft::renderer::common::wrap::voxel::OMVoxelFacing)
         -> int override;
     auto queryPartRotationAxis(int modelId, int pid) -> int override;
     auto queryPartRotationCenter(int modelId, int pid) -> glm::vec3 override;
     auto queryPartRotationAngle(int modelId, int pid) -> int override;
     auto querySoild(int modelId) -> bool override;
-    auto queryOcclusionShape(int modelId) -> openminecraft::renderer::common::wrap::OMVoxelShape override;
+    auto queryOcclusionShape(int modelId) -> openminecraft::renderer::common::wrap::voxel::OMVoxelShape override;
     auto queryPartAmbientOcclusion(int modelId, int pid) -> bool override;
     auto queryPartShade(int modelId, int pid) -> bool override;
     auto queryPartComplex(int modelId, int pid) -> bool override;
-    auto queryPartFaceSecondaryTexture(int modelId, int pid, openminecraft::renderer::common::wrap::OMVoxelFacing)
+    auto queryPartFaceSecondaryTexture(int modelId, int pid, openminecraft::renderer::common::wrap::voxel::OMVoxelFacing)
         -> bool override;
     auto queryPartRotationAngleF(int modelId, int pid) -> float override;
     auto queryPartRotationAngleExt(int modelId, int pid) -> glm::vec3 override;

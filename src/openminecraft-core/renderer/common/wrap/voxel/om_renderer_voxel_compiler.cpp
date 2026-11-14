@@ -1,12 +1,12 @@
 #include "glm/fwd.hpp"
-#include "openminecraft/renderer/common/wrap/om_renderer_voxel.hpp"
+#include "openminecraft/renderer/common/wrap/voxel/om_renderer_voxel_compiler.hpp"
 #include <array>
 #include <cstdint>
 #include <functional>
 #include <tuple>
 #include <unordered_map>
 
-namespace openminecraft::renderer::common::wrap
+namespace openminecraft::renderer::common::wrap::voxel
 {
 OMVoxelCompiler::OMVoxelCompiler() : logger("OMVoxelCompiler", this)
 {
@@ -706,4 +706,4 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
         }
     }
 }
-} // namespace openminecraft::renderer::common::wrap
+} // namespace openminecraft::renderer::common::wrap::voxel

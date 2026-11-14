@@ -17,7 +17,7 @@
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_blur.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_temptarget.hpp"
-#include "openminecraft/renderer/common/wrap/om_renderer_voxel.hpp"
+#include "openminecraft/renderer/common/wrap/voxel/om_renderer_voxel_manager.hpp"
 #include <array>
 #include <chrono>
 #include <string>
@@ -57,7 +57,7 @@ class OMWorldRenderer : public OMRendererHandler
     // INFO: these are the resource handles used for rendering
     wrap::OMBufferRef uniformBuffer, voxelModelBuffer, cameraBuffer;
     wrap::OMRendererTempTarget *tempTarget;
-    wrap::OMVoxelManager *voxelManager;
+    wrap::voxel::OMVoxelManager *voxelManager;
     data::OMTextureAtlas *textureAtlas;
     wrap::OMTextureRef sunTex;
     wrap::OMTextureRef moonTex;
