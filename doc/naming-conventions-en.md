@@ -230,7 +230,7 @@ These are **external contracts** and are not rewritten according to C++ identifi
 
 - Resource identifiers keep the Minecraft format:
   `minecraft:grass_block[snowy=false]`, `minecraft:water[falling=true,level=8]`.
-- JSON / style-sheet keys use snake_case: `animationSpeed`, `opacityHovered`
+- JSON / style-sheet keys use camelCase: `animationSpeed`, `opacityHovered`
   (see `doc/demiurge/control.md`).
 - Protocol fields keep the Minecraft protocol names; do not localize them.
 - Log messages are short English sentences, starting lowercase, naming the module after its type:
