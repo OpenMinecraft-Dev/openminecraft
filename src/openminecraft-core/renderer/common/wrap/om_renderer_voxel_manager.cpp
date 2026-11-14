@@ -357,8 +357,8 @@ OMVoxelManager::OMVoxelManager(
                         ->format(voxelDebug)
                         ->blendFunc({SrcAlpha, OneMinusSrcAlpha, SrcAlpha, OneMinusSrcAlpha})
                         ->blend(true)
-                        ->depth(true, true)
-                        ->depthOp(Less)
+                        ->depth(true, false)
+                        ->depthOp(Always)
                         ->buildN();
 
     skyDiscPipeline = renderer->createPipeline()
@@ -1608,9 +1608,6 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
                    ->vertexBuffer({voxelFluidLayer->buf()->buffer()})
                    ->indexBuffer(voxelIndexBuffer)
                    ->drawIndexedInstanceN(6, voxelFluidLayer->buf()->usedSize() / sizeof(OMVoxelFluid))
-                   ->pipeline(debugPipeline)
-                   ->vertexBuffer({debugOffsetBuffer})
-                   ->drawN(2 * 12)
                    ->endDebugTag();
 
     if (samples != 1)
@@ -1668,7 +1665,13 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
     {
         tsk->resolve(translucentTarget->target());
     }
-    return tsk->removeClearColor(1)->target(resolveTarget->target())->pipeline(composePipeline)->drawN(6);
+    return tsk->removeClearColor(1)
+        ->target(resolveTarget->target())
+        ->pipeline(composePipeline)
+        ->drawN(6)
+        ->pipeline(debugPipeline)
+        ->vertexBuffer({debugOffsetBuffer})
+        ->drawN(2 * 12);
 }
 
 void OMVoxelManager::bindCameraBuffer(OMRendererBuffer *cameraBuffer)
