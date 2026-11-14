@@ -235,7 +235,7 @@ jobs:
           tar -xJf llvm-toolchain-openbsd-${{ matrix.arch }}.tar.xz -C ./toolchain/
           rm llvm-toolchain-openbsd-${{ matrix.arch }}.tar.xz
 
-          xmake f --toolchain=llvm --sdk=${{ github.workspace }}/toolchain -a ${{ matrix.arch }} -m ${{ env.MODE }} -p bsd --target_os=OpenBSD -yc ${{ env.XMAKE_ARGS }}
+          xmake f --toolchain=llvm --sdk=${{ github.workspace }}/toolchain -a ${{ matrix.arch }} -m ${{ env.MODE }} --cxflags="-fPIC" --cflags="-fPIC" -p bsd --target_os=OpenBSD -yc ${{ env.XMAKE_ARGS }}
 
       - name: Configure Windows
         if: matrix.plat == 'windows'
