@@ -246,7 +246,7 @@ OMVoxelManager::OMVoxelManager(
                         ->inputName("inLightmap")
                         ->output(cutoutTargetMS->target())
                         ->samples(samples)
-                        ->setCullMode(renderer::common::Back)
+                        ->setCullMode(renderer::common::None)
                         ->setFrontClockwise(true)
                         ->shader(renderer->shaderManager.preprocess("core/voxel/voxelfluid.frag.glsl", Fragment,
                                                                     GLSLSource, voxelFluidFormat))
@@ -788,6 +788,71 @@ auto OMVoxelManager::calcActualFogColor() -> glm::vec3
     return glm::mix(fogColor, skyColor, skyColorMix);
 }
 
+auto OMVoxelManager::updateFluidFog(basics::OMCamera &camera) -> void
+{
+    fluidFogActive = false;
+    fluidFogLava = false;
+
+    const auto camPos = camera.getPosRaw();
+    const int64_t cx = camPos.getChunkX();
+    const int64_t cy = camPos.getChunkY();
+    const int64_t cz = camPos.getChunkZ();
+    const int lx = static_cast<int>(std::floor(camPos.getModX(16)));
+    const int ly = static_cast<int>(std::floor(camPos.getY() - static_cast<float>(cy * 16)));
+    const int lz = static_cast<int>(std::floor(camPos.getModZ(16)));
+
+    if (lx < 0 || lx > 15 || ly < 0 || ly > 15 || lz < 0 || lz > 15)
+    {
+        return;
+    }
+
+    auto chunk = chunkManager->tryGetChunk(world::OMChunkIndex{cx, cy, cz});
+
+    if (!chunk)
+    {
+        return;
+    }
+
+    const uint32_t state = chunk->fetch(lx, ly, lz);
+    const int model = modelFetcher(state, cx, cy, cz, lx, ly, lz);
+
+    if (!voxelHandler->queryFluid(model))
+    {
+        return;
+    }
+
+    fluidFogActive = true;
+    fluidFogLava = voxelHandler->queryFluidLava(model);
+
+    if (fluidFogLava)
+    {
+        fluidFogColor = glm::vec3(0.72f, 0.13f, 0.02f);
+        // FogData.x is the fully fogged distance, .y is where fog starts.
+        fluidFogRange = glm::vec2(2.2f, 0.05f);
+    }
+    else
+    {
+        // Darker and slightly closer water fog: the old color lifted the
+        // near-field water too much after sRGB -> linear conversion.
+        fluidFogColor = glm::vec3(0.025f, 0.11f, 0.22f);
+        fluidFogRange = glm::vec2(12.0f, -1.35f);
+    }
+
+    actualFogColor = fluidFogColor;
+}
+
+auto OMVoxelManager::uploadFogData() -> void
+{
+    const glm::vec2 range = fluidFogActive ? fluidFogRange : colorManager->getFogRange();
+    const auto fg = srgbToLinear(actualFogColor);
+
+    std::array<float, 5> fogParams = {range.x, range.y, fg.r, fg.g, fg.b};
+    fogdata->updateData(fogParams.data());
+
+    std::array<float, 5> cloudFogParams = {range.x, range.y, fg.r, fg.g, fg.b};
+    cloudFogdata->updateData(cloudFogParams.data());
+}
+
 auto OMVoxelManager::updateColor() -> void
 {
     if (colorManager->isDirty())
@@ -973,6 +1038,8 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
     actualFogColor = calcActualFogColor();
 
     updateColor();
+    updateFluidFog(camera);
+    uploadFogData();
 
     if (chunkManager->numChunks())
     {

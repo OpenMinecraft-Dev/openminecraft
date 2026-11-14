@@ -337,6 +337,11 @@ auto OMModelPrecompiler::queryFluid(int modelId) -> bool
     return blockModels[modelId].fluid;
 }
 
+auto OMModelPrecompiler::queryFluidLava(int modelId) -> bool
+{
+    return blockModels[modelId].fluidLava;
+}
+
 auto OMModelPrecompiler::queryFluidFalling(int modelId) -> bool
 {
     return blockModels[modelId].fluidFalling;
@@ -841,6 +846,7 @@ auto OMModelPrecompiler::composeFluidModel(OMIdentifier ident, block::OMBlockFlu
     m.soild = false;
     m.translucent = translucent;
     m.fluid = true;
+    m.fluidLava = fluidType == block::OMBlockFluidType::FluidLava;
     m.fluidFalling = falling;
     m.fluidLevel = level;
     m.fluidTex = textureAtlas.addTexture(OMIdentifier("minecraft:block/" + fluidName + "_still"));

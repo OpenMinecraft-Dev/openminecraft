@@ -81,6 +81,7 @@ struct OMModel
     bool soild;
     bool translucent;
     bool fluid;
+    bool fluidLava = false;
     bool fluidFalling;
     uint8_t fluidLevel;
     uint32_t fluidTex;
@@ -135,6 +136,7 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::voxel::
     auto queryPartRotationAngleExt(int modelId, int pid) -> glm::vec3 override;
     auto queryTranslucent(int modelId) -> bool override;
     auto queryFluid(int modelId) -> bool override;
+    auto queryFluidLava(int modelId) -> bool override;
     auto queryFluidFalling(int modelId) -> bool override;
     auto queryFluidLevel(int modelId) -> uint8_t override;
     auto queryFluidTex(int modelId) -> int override;

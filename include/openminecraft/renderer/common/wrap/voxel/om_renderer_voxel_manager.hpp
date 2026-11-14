@@ -121,6 +121,13 @@ class OMVoxelManager
     glm::vec2 lastExtent = glm::vec2(0.0f);
 
     void unloadChunk(int i);
+    void updateFluidFog(basics::OMCamera &camera);
+    void uploadFogData();
+
+    bool fluidFogActive = false;
+    bool fluidFogLava = false;
+    glm::vec2 fluidFogRange = glm::vec2(0.0f);
+    glm::vec3 fluidFogColor = glm::vec3(0.0f);
 };
 
 } // namespace openminecraft::renderer::common::wrap::voxel

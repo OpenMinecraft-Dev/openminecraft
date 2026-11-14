@@ -175,6 +175,10 @@ class OMVoxelHandler
     virtual auto queryPartRotationAngleF(int bsid, int pid) -> float = 0;
     virtual auto queryTranslucent(int bsid) -> bool = 0;
     virtual auto queryFluid(int bsid) -> bool = 0;
+    virtual auto queryFluidLava(int bsid) -> bool
+    {
+        return false;
+    }
     virtual auto queryFluidFalling(int bsid) -> bool = 0;
     virtual auto queryFluidLevel(int bsid) -> uint8_t = 0;
     virtual auto queryFluidTex(int bsid) -> int = 0;

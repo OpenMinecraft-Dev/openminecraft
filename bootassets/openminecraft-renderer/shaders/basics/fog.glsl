@@ -9,7 +9,7 @@ vec4 fog_gen(vec4 original, float fogStart, float fogEnd, vec3 fogColor, float t
     d = (d - 0.5) * 2;
 #endif
 
-    const float near = 0.05;
+    const float near = 0.01;
     const float far = 1500;
     d = (near * far) / (far - d * (far - near));
 
