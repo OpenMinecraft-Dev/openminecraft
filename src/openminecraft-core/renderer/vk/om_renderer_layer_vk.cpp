@@ -846,7 +846,8 @@ auto OMRendererVk::deviceSelection(std::function<int(std::vector<std::string>)> 
 
         for (uint32_t i = 0; i < familyCount; ++i)
         {
-            if (!usable(i) || !hasFlag(i, QueueFlagBits::eTransfer) || !hasFlag(i, QueueFlagBits::eGraphics) || hasFlag(i, QueueFlagBits::eGraphics))
+            if (!usable(i) || !hasFlag(i, QueueFlagBits::eTransfer) || !hasFlag(i, QueueFlagBits::eGraphics) ||
+                hasFlag(i, QueueFlagBits::eGraphics))
             {
                 continue;
             }
@@ -860,8 +861,8 @@ auto OMRendererVk::deviceSelection(std::function<int(std::vector<std::string>)> 
         {
             for (uint32_t i = 0; i < familyCount; ++i)
             {
-                if (!usable(i) || !hasFlag(i, QueueFlagBits::eTransfer) || !hasFlag(i, QueueFlagBits::eGraphics) || static_cast<int32_t>(i) == graphics ||
-                    static_cast<int32_t>(i) == present)
+                if (!usable(i) || !hasFlag(i, QueueFlagBits::eTransfer) || !hasFlag(i, QueueFlagBits::eGraphics) ||
+                    static_cast<int32_t>(i) == graphics || static_cast<int32_t>(i) == present)
                 {
                     continue;
                 }
@@ -874,7 +875,8 @@ auto OMRendererVk::deviceSelection(std::function<int(std::vector<std::string>)> 
         {
             for (uint32_t i = 0; i < familyCount; ++i)
             {
-                if (!usable(i) || !hasFlag(i, QueueFlagBits::eTransfer) || !hasFlag(i, QueueFlagBits::eGraphics) || static_cast<int32_t>(i) == graphics)
+                if (!usable(i) || !hasFlag(i, QueueFlagBits::eTransfer) || !hasFlag(i, QueueFlagBits::eGraphics) ||
+                    static_cast<int32_t>(i) == graphics)
                 {
                     continue;
                 }
@@ -953,6 +955,72 @@ auto OMRendererVk::deviceSelection(std::function<int(std::vector<std::string>)> 
 
         logger->info("queue families: graphics={} (queue {}), present={} (queue {}), transfer={} (queue {})", gfam,
                      graphicsQueueIndex, pfam, presentQueueIndex, tfam, transferQueueIndex);
+
+        const auto props = devtarget.getProperties();
+        const auto limits = props.limits;
+        const auto features = devtarget.getFeatures();
+        const auto memory = devtarget.getMemoryProperties();
+
+        const auto decodeVersion = [](uint32_t version) {
+            return fmt::format("{}.{}.{}", (version >> 22) & 0x7f, (version >> 12) & 0x3ff, version & 0xfff);
+        };
+
+        logger->info("physical device: {} ({}) vendor=0x{:04x} device=0x{:04x}", props.deviceName.data(),
+                     ::vk::to_string(props.deviceType), props.vendorID, props.deviceID);
+        logger->info("api version={} driver version={} (0x{:08x})", decodeVersion(props.apiVersion),
+                     decodeVersion(props.driverVersion), props.driverVersion);
+        logger->info("device id: {:#x}", props.deviceID);
+        logger->info("limits: maxImage2D={}x{}, maxFramebuffer={}x{}, maxColorAttachments={}, "
+                     "maxVertexAttributes={}, maxPushConstants={}, maxStorageBufferRange={}, "
+                     "maxDescriptorSetSampledImages={}, maxComputeInvocations={}, maxSamplerAnisotropy={:.1f}",
+                     limits.maxImageDimension2D, limits.maxImageDimension2D, limits.maxFramebufferWidth,
+                     limits.maxFramebufferHeight, limits.maxColorAttachments, limits.maxVertexInputAttributes,
+                     limits.maxPushConstantsSize, limits.maxStorageBufferRange, limits.maxDescriptorSetSampledImages,
+                     limits.maxComputeWorkGroupInvocations, static_cast<double>(limits.maxSamplerAnisotropy));
+        logger->info("features: samplerAnisotropy={}, tessellation={}, geometry={}, multiDrawIndirect={}, "
+                     "drawIndirectFirstInstance={}, independentBlend={}, depthClamp={}, fillModeNonSolid={}, "
+                     "wideLines={}, largePoints={}, shaderStorageImageWriteWithoutFormat={}",
+                     static_cast<bool>(features.samplerAnisotropy), static_cast<bool>(features.tessellationShader),
+                     static_cast<bool>(features.geometryShader), static_cast<bool>(features.multiDrawIndirect),
+                     static_cast<bool>(features.drawIndirectFirstInstance), static_cast<bool>(features.independentBlend),
+                     static_cast<bool>(features.depthClamp), static_cast<bool>(features.fillModeNonSolid),
+                     static_cast<bool>(features.wideLines), static_cast<bool>(features.largePoints),
+                     static_cast<bool>(features.shaderStorageImageWriteWithoutFormat));
+
+        for (uint32_t i = 0; i < memory.memoryHeapCount; ++i)
+        {
+            const auto &heap = memory.memoryHeaps[i];
+            const bool local = (heap.flags & ::vk::MemoryHeapFlagBits::eDeviceLocal) ==
+                               ::vk::MemoryHeapFlagBits::eDeviceLocal;
+            logger->info("memory heap {}: {:.1f} MB{}", i, static_cast<double>(heap.size) / (1024.0 * 1024.0),
+                         local ? " (device local)" : "");
+        }
+
+        try
+        {
+            const auto extensions = devtarget.enumerateDeviceExtensionProperties();
+            logger->info("device extensions: {}", extensions.size());
+
+            static constexpr std::array<const char *, 8> interesting = {
+                "VK_KHR_swapchain", "VK_KHR_dynamic_rendering", "VK_KHR_synchronization2",
+                "VK_EXT_descriptor_indexing", "VK_EXT_extended_dynamic_state",
+                "VK_EXT_extended_dynamic_state2", "VK_EXT_extended_dynamic_state3", "VK_KHR_push_descriptor"};
+            for (const auto *wanted : interesting)
+            {
+                for (const auto &ext : extensions)
+                {
+                    if (std::string(ext.extensionName.data()) == wanted)
+                    {
+                        logger->info("  extension: {}", wanted);
+                        break;
+                    }
+                }
+            }
+        }
+        catch (SystemError &e)
+        {
+            logger->warn("unable to enumerate device extensions: {}", VkErrorTranslate(e, "openminecraft.renderer.vk.err.phydev"));
+        }
 
         return OMResult<PhysicalDevice, std::string>::ok(devtarget);
     }

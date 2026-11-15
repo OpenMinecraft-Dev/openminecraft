@@ -1,6 +1,7 @@
 #ifndef OM_RENDERER_LAYER_VK_SWAPCHAINMANAGER_HPP
 #define OM_RENDERER_LAYER_VK_SWAPCHAINMANAGER_HPP
 
+#include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/util/om_util_reinitable.hpp"
 #include <functional>
 #ifdef OM_VULKAN_DYNAMIC
@@ -39,6 +40,7 @@ class OMSwapchainManager : public util::OMReinitable
     ::vk::SwapchainKHR swapchain;
 
   private:
+    log::OMLogger logger;
     std::pair<uint32_t, uint32_t> families;
     std::function<OMSwapchainCap()> fetch;
     ::vk::Device device;

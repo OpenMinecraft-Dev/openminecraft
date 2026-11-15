@@ -48,6 +48,74 @@ OMRendererOpenGL::OMRendererOpenGL(AppInfo info, void *window, std::string shade
 
     this->initGlFuncs();
 
+    auto glString = [&](GLenum name) -> std::string {
+        const auto *value = gl.glGetString(name);
+        return value != nullptr ? std::string(reinterpret_cast<const char *>(value)) : std::string("<unknown>");
+    };
+
+    auto *sdlWindow = reinterpret_cast<SDL_Window *>(window);
+    const auto pixelFormat = SDL_GetWindowPixelFormat(sdlWindow);
+
+    int red = 0, green = 0, blue = 0, alpha = 0;
+    int depth = 0, stencil = 0, doubleBuffer = 0;
+    int multisampleBuffers = 0, multisampleSamples = 0;
+    int framebufferSrgb = 0;
+    SDL_GL_GetAttribute(SDL_GL_RED_SIZE, &red);
+    SDL_GL_GetAttribute(SDL_GL_GREEN_SIZE, &green);
+    SDL_GL_GetAttribute(SDL_GL_BLUE_SIZE, &blue);
+    SDL_GL_GetAttribute(SDL_GL_ALPHA_SIZE, &alpha);
+    SDL_GL_GetAttribute(SDL_GL_DEPTH_SIZE, &depth);
+    SDL_GL_GetAttribute(SDL_GL_STENCIL_SIZE, &stencil);
+    SDL_GL_GetAttribute(SDL_GL_DOUBLEBUFFER, &doubleBuffer);
+    SDL_GL_GetAttribute(SDL_GL_MULTISAMPLEBUFFERS, &multisampleBuffers);
+    SDL_GL_GetAttribute(SDL_GL_MULTISAMPLESAMPLES, &multisampleSamples);
+    SDL_GL_GetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, &framebufferSrgb);
+
+    GLint glSamples = 0;
+    GLint glSampleBuffers = 0;
+    gl.glGetIntegerv(GL_SAMPLES, &glSamples);
+    gl.glGetIntegerv(GL_SAMPLE_BUFFERS, &glSampleBuffers);
+
+    int swapInterval = 0;
+    SDL_GL_GetSwapInterval(&swapInterval);
+
+    logger.info("OpenGL vendor: {}", glString(GL_VENDOR));
+    logger.info("OpenGL renderer: {}", glString(GL_RENDERER));
+    logger.info("OpenGL version: {}", glString(GL_VERSION));
+    logger.info("OpenGL shading language: {}", glString(GL_SHADING_LANGUAGE_VERSION));
+    logger.info("Window pixel format: {} ({})", SDL_GetPixelFormatName(pixelFormat),
+                static_cast<int>(pixelFormat));
+    logger.info("Surface format: RGBA={}{}{}{}, depth={}, stencil={}", red, green, blue, alpha, depth, stencil);
+    logger.info("Present mode equivalents: doubleBuffer={}, swapInterval={}, MSAA buffers={} samples={} (GL={}/{}), sRGB={}",
+                doubleBuffer, swapInterval, multisampleBuffers, multisampleSamples, glSampleBuffers, glSamples,
+                framebufferSrgb);
+
+    GLint extensionCount = 0;
+    gl.glGetIntegerv(GL_NUM_EXTENSIONS, &extensionCount);
+    logger.info("OpenGL extensions: {}", extensionCount);
+
+    static constexpr std::array<const char *, 7> swapExtensions = {
+        "WGL_EXT_swap_control", "WGL_EXT_swap_control_tear", "GLX_EXT_swap_control",
+        "GLX_MESA_swap_control", "GLX_SGI_swap_control", "EGL_KHR_swap_buffers_with_damage",
+        "EGL_EXT_swap_buffers_with_damage"};
+    for (GLuint i = 0; i < static_cast<GLuint>(extensionCount); ++i)
+    {
+        const auto *ext = gl.glGetStringi(GL_EXTENSIONS, i);
+        if (ext == nullptr)
+        {
+            continue;
+        }
+
+        const std::string name(reinterpret_cast<const char *>(ext));
+        for (const auto *wanted : swapExtensions)
+        {
+            if (name == wanted)
+            {
+                logger.info("Swap control extension: {}", name);
+            }
+        }
+    }
+
     defaultTarget = createRenderTarget();
     defaultTarget->build();
 

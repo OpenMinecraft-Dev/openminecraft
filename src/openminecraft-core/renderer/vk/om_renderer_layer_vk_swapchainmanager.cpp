@@ -23,7 +23,7 @@ OMSwapchainManager::OMSwapchainManager(SurfaceKHR surface, std::function<OMSwapc
                                        std::pair<uint32_t, uint32_t> families, Device dev,
                                        AllocationCallbacks callbacks, void *window)
     : surface(surface), families(std::move(families)), fetch(std::move(fetch)), device(dev), callbacks(callbacks),
-      window(window)
+      window(window), logger("OMSwapchainManager", this)
 {
     OMSwapchainManager::reinit();
 }
@@ -74,6 +74,19 @@ auto OMSwapchainManager::choosePresentMode(const OMSwapchainCap &cap) -> Present
 void OMSwapchainManager::reinit()
 {
     auto supp = fetch();
+
+    logger.info("Surface formats ({}):", supp.formats.size());
+    for (const auto &sf : supp.formats)
+    {
+        logger.info("  format={} colorSpace={}", ::vk::to_string(sf.format), ::vk::to_string(sf.colorSpace));
+    }
+
+    logger.info("Present modes ({}):", supp.presentModes.size());
+    for (const auto &pm : supp.presentModes)
+    {
+        logger.info("  {}", ::vk::to_string(pm));
+    }
+
     auto imageCount = supp.capabilities.minImageCount + 1;
     if (supp.capabilities.maxImageCount > 0 && imageCount > supp.capabilities.maxImageCount)
     {
@@ -110,6 +123,10 @@ void OMSwapchainManager::reinit()
         createInfo.queueFamilyIndexCount = 1;
         createInfo.pQueueFamilyIndices = fams.data();
     }
+
+    logger.info("Chosen surface format={} colorSpace={}, present mode={}, extent={}x{}, images={}",
+                ::vk::to_string(form.format), ::vk::to_string(form.colorSpace), ::vk::to_string(createInfo.presentMode),
+                extent.width, extent.height, imageCount);
 
     swapchain = device.createSwapchainKHR(createInfo, callbacks);
 
