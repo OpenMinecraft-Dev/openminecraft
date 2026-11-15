@@ -175,6 +175,11 @@ void OMDemiurgeRendererHandler::recordTask(bool resize)
 
 void OMDemiurgeRendererHandler::beforeFrame()
 {
+    if (stopTick)
+    {
+        return;
+    }
+
     auto ext = renderer->getLogicalExtent() / renderer->getUiScale();
 
     node->flushDeferredActions();
@@ -211,6 +216,11 @@ void OMDemiurgeRendererHandler::beforeFrame()
 
 void OMDemiurgeRendererHandler::afterFrame()
 {
+    if (stopTick)
+    {
+        return;
+    }
+
     // Scissor commands are baked into the recorded task; re-record when a clip
     // rectangle changed (layout moved) so the clip follows the node.
     if (clipDirty)

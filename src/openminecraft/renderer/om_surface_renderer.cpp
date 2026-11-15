@@ -66,6 +66,11 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
             this->renderer->fetchTask("demiurgeui_compose_surface")->setDisabled(false);
             this->renderer->fetchTask("demiurgeui_bgblur")->setDisabled(false);
 
+            if (internal)
+            {
+                internal->stopTick = false;
+            }
+
             openScreen();
         }
 
@@ -73,6 +78,11 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
         {
             this->renderer->fetchTask("demiurgeui_compose_surface")->setDisabled(true);
             this->renderer->fetchTask("demiurgeui_bgblur")->setDisabled(true);
+
+            if (internal)
+            {
+                internal->stopTick = true;
+            }
         }
 
         if (e.custom.flag == EventChunkLoadStatus && chunkStatusBar)

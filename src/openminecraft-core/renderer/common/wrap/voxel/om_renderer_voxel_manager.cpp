@@ -890,7 +890,7 @@ auto OMVoxelManager::uploadFogData() -> void
     const auto fg = srgbToLinear(fluidFogActive ? fluidFogColor : skyFogColor);
 
     std::array<float, 5> fogParams = {range.x, range.y, fg.r, fg.g, fg.b};
-    // fogdata->synced = true;
+    fogdata->synced = true;
     fogdata->updateData(fogParams.data());
 
     std::array<float, 5> cloudFogParams = {range.x, range.y, fg.r, fg.g, fg.b};

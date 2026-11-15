@@ -96,6 +96,10 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
         }
     }
 
+    // When true, beforeFrame/afterFrame skip layout, node submission and
+    // channel uploads entirely. Rendering tasks may already be disabled; this
+    // also removes the CPU cost of ticking the UI tree.
+    bool stopTick = false;
     bool fit = false;
     bool clipDirty = false;
     LayerBounds recordedLayerBounds;
