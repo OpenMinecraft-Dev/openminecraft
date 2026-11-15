@@ -22,6 +22,11 @@ uniform sampler2D inLightmap;
 
 void main()
 {
+    if (!gl_FrontFacing && abs(voxNormal.y) < 0.5)
+    {
+        discard;
+    }
+
     mat4 unused = camera.viewProj;
     float unused2 = texelFetch(inChunkPos, 0).r;
 

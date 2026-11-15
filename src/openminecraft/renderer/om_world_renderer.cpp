@@ -343,7 +343,7 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
     auto model = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     uniformBuffer->updateData(&model);
     cameraBuffer = wrap::OMBufferRef(renderer, "world.camera");
-    renderer->registerBuffer(cameraBuffer.getTag(), Uniform, sizeof(glm::mat4));
+    renderer->registerBuffer(cameraBuffer.getTag(), Uniform, sizeof(glm::mat4) + sizeof(glm::vec4));
 
     outputFrg = renderer->shaderManager.preprocess("core/bilt.frag.glsl", Fragment, GLSLSource, format);
     outputVtx = renderer->shaderManager.preprocess("core/bilt.vert.glsl", Vertex, GLSLSource, format);
@@ -479,9 +479,14 @@ auto OMWorldRenderer::getTick() -> int
 void OMWorldRenderer::afterFrame()
 {
     voxelManager->update(*camera);
-    auto cam = camera->fetchProjMat() * camera->fetchViewMat();
+    struct CameraUniform
+    {
+        glm::mat4 viewProj;
+        glm::vec4 nearFar;
+    } cameraUniform = {camera->fetchProjMat() * camera->fetchViewMat(),
+                       glm::vec4(basics::OMCamera::nearPlane, basics::OMCamera::farPlane, 0.0f, 0.0f)};
     cameraBuffer->synced = true;
-    cameraBuffer->updateData(&cam);
+    cameraBuffer->updateData(&cameraUniform);
 
     if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - tickTp).count() > 50)
     {

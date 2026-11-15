@@ -54,8 +54,9 @@ auto OMDemiurgeTextSdfMultilineNode::syncLayout() -> void
         const float width = maxWidth * th;
         const float height = textUnitHeight * th + std::max<int>(0, static_cast<int>(lines.size()) - 1) * lineAdvance;
 
-        stylesStorage.put("minWidth", width);
-        stylesStorage.put("minHeight", height);
+        stylesStorage.putLayout("minWidth", width);
+        stylesStorage.putLayout("minHeight", height);
+
     }
 
     OMDemiurgeNode::syncLayout();

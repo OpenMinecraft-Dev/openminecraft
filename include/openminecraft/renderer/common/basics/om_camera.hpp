@@ -29,6 +29,9 @@ struct OMCameraPlane
 class OMCamera
 {
   public:
+    static constexpr float nearPlane = 0.1f;
+    static constexpr float farPlane = 1000.0f;
+
     OMCamera(OMRenderer *renderer, glm::vec3 location, float yaw, float pitch);
     // Construct from chunk coordinates + local offset, avoiding large world coordinates being squashed into float first
     OMCamera(OMRenderer *renderer, int64_t chunkX, int64_t chunkY, int64_t chunkZ, float localX, float localY,

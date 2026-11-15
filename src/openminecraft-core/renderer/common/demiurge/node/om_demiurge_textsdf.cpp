@@ -21,8 +21,8 @@ auto OMDemiurgeTextSdfNode::syncLayout() -> void
         auto b = set->bound(shapeResult);
         auto th = stylesStorage.get<int>("textHeight", 12);
 
-        stylesStorage.put("minWidth", b.x * th);
-        stylesStorage.put("minHeight", b.y * th);
+        stylesStorage.putLayout("minWidth", b.x * th);
+        stylesStorage.putLayout("minHeight", b.y * th);
     }
     OMDemiurgeNode::syncLayout();
 }

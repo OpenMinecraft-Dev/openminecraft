@@ -419,6 +419,21 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     });
     pageMisc->mountDirect(debugTreeButton);
 
+    auto deviceInfoLabel = std::make_shared<node::controls::OMDemiurgeMultilineLabel>(fontset.get());
+    deviceInfoLabel->setText(renderer->deviceInfos());
+    deviceInfoLabel->style("textHeight", 13);
+    deviceInfoLabel->style("color", (int)0xffffffff);
+    deviceInfoLabel->style("margin", std::array<OMDemiurgeSize, 4>{8_px, 8_px, 8_px, 8_px});
+
+    auto deviceInfoScroll = std::make_shared<node::container::OMDemiurgeScrollPane>();
+    deviceInfoScroll->style("width", OMDemiurgeSize::fill());
+    deviceInfoScroll->style("height", OMDemiurgeSize::fit());
+    deviceInfoScroll->style("flexGrow", 1.0f);
+    deviceInfoScroll->setOrientation(node::container::OMDemiurgeScrollPaneOrientation::Both);
+    deviceInfoScroll->setContentStretch(false);
+    deviceInfoScroll->setContentNode(deviceInfoLabel);
+    pageMisc->mountDirect(deviceInfoScroll);
+
     demoTabs = std::make_shared<node::container::OMDemiurgeTabPane>(fontset.get());
     demoTabs->style("width", OMDemiurgeSize::fill());
     demoTabs->style("height", OMDemiurgeSize::fill());

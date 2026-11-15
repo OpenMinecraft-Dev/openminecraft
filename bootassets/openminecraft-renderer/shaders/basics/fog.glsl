@@ -1,6 +1,8 @@
 #ifndef FOG_GLSL
 #define FOG_GLSL
 
+#include "basics/structs/camera.glsl"
+
 vec4 fog_gen(vec4 original, float fogStart, float fogEnd, vec3 fogColor, float targetOpacity)
 {
     float d = gl_FragCoord.z;
@@ -9,12 +11,17 @@ vec4 fog_gen(vec4 original, float fogStart, float fogEnd, vec3 fogColor, float t
     d = (d - 0.5) * 2;
 #endif
 
-    const float near = 0.01;
-    const float far = 1500;
+    float near = max(camera.nearFar.x, 0.0001);
+    float far = max(camera.nearFar.y, near + 0.0001);
     d = (near * far) / (far - d * (far - near));
 
-    return vec4(mix(original.rgb, fogColor, smoothstep(fogEnd, fogStart, d)),
-                mix(original.a, targetOpacity, smoothstep(fogEnd, fogStart, d)));
+    // FogData may be supplied as either (start, end) or (end, start); the
+    // smaller value is the real world-space start distance.
+    float start = min(fogStart, fogEnd);
+    float end = max(fogStart, fogEnd);
+    float t = end > start ? clamp((d - start) / (end - start), 0.0, 1.0) : step(end, d);
+
+    return vec4(mix(original.rgb, fogColor, t), mix(original.a, targetOpacity, t));
 }
 
 vec4 fog_gendefault(vec4 original, float targetOpacity)

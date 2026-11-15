@@ -192,6 +192,16 @@ template <typename T> class OMDemiurgeChannel : public OMDemiurgeAbstractChannel
         return overlay ? hasOverlayObjects : hasNormalObjects;
     }
 
+    // Pre-allocate instance capacity so the first frame that shows a text-heavy
+    // page does not reallocate the GPU buffer mid-frame.
+    inline auto reserve(size_t capacity) -> void
+    {
+        if (capacity > bufferCapacity)
+        {
+            bufferCapacity = capacity;
+        }
+    }
+
     inline auto bufferSize() -> int
     {
         // Grow the instance buffer by a larger factor than the object count so
@@ -209,6 +219,7 @@ template <typename T> class OMDemiurgeChannel : public OMDemiurgeAbstractChannel
             }
 
             bufferCapacity = next;
+
         }
 
         return sizeof(T) * bufferCapacity;

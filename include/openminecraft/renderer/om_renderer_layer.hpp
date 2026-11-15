@@ -204,6 +204,7 @@ class OMRenderer
     }
 
     virtual auto driver() -> std::string = 0;
+    virtual auto deviceInfos() -> std::string = 0;
     virtual auto allocateBuffer(common::OMBufferUsage usage, uint64_t length) -> common::OMRendererBuffer * = 0;
     inline auto allocateTexture(uint64_t width, uint64_t height, uint64_t mipmap, common::OMTextureType type,
                                 common::OMTextureArrangement arrangement) -> common::OMRendererTexture *

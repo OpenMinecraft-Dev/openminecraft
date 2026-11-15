@@ -14,8 +14,8 @@ OMCamera::OMCamera(OMRenderer *renderer, glm::vec3 location, float yaw, float pi
 
 OMCamera::OMCamera(OMRenderer *renderer, int64_t chunkX, int64_t chunkY, int64_t chunkZ, float localX, float localY,
                    float localZ, float yaw, float pitch)
-    : renderer(renderer), logger("OMCamera", this), position(chunkX, chunkY, chunkZ, localX, localY, localZ),
-      yaw(yaw), pitch(pitch)
+    : renderer(renderer), logger("OMCamera", this), position(chunkX, chunkY, chunkZ, localX, localY, localZ), yaw(yaw),
+      pitch(pitch)
 {
 }
 
@@ -33,8 +33,9 @@ auto OMCamera::fetchProjMat() -> glm::mat4
 {
     auto extent = renderer->getExtent();
     extent = glm::max(extent, glm::vec2(1.0f, 1.0f));
-    // near raised from 0.05 to 0.1: depth precision is inversely proportional to near, greatly reducing z-fighting on distant coplanar surfaces
-    return glm::perspectiveRH_ZO(glm::radians(fov), extent.x / extent.y, 0.1f, 1500.0f);
+    // near raised from 0.05 to 0.1: depth precision is inversely proportional to near, greatly reducing z-fighting on
+    // distant coplanar surfaces
+    return glm::perspectiveRH_ZO(glm::radians(fov), extent.x / extent.y, nearPlane, farPlane);
 }
 
 void OMCamera::modYaw(float d)

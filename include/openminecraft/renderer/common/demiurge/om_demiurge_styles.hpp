@@ -47,6 +47,14 @@ class OMDemiurgeStyles
         styles[s] = t;
         modified = true;
     }
+    // Internal layout metrics (minWidth/minHeight) must be stored without
+    // marking the node dirty. Otherwise syncLayout writes them every frame,
+    // which re-triggers text shaping indefinitely.
+    auto putLayout(std::string s, std::any t)
+    {
+        styles[s] = t;
+    }
+
     inline auto invalidate() -> void
     {
         modified = true;

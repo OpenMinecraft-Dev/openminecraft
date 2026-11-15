@@ -839,14 +839,15 @@ auto OMVoxelManager::updateFluidFog(basics::OMCamera &camera) -> void
     {
         fluidFogColor = glm::vec3(0.72f, 0.13f, 0.02f);
         // FogData.x is the fully fogged distance, .y is where fog starts.
-        fluidFogRange = glm::vec2(2.2f, 0.05f);
+        fluidFogRange = glm::vec2(1.0f, 0.25f);
     }
     else
     {
-        // Darker and slightly closer water fog: the old color lifted the
-        // near-field water too much after sRGB -> linear conversion.
+        // Restore the underwater fog: start just in front of the camera and
+        // become fully opaque at render distance instead of using a negative
+        // start distance (which made smoothstep undefined on some drivers).
         fluidFogColor = glm::vec3(0.025f, 0.11f, 0.22f);
-        fluidFogRange = glm::vec2(12.0f, -1.35f);
+        fluidFogRange = glm::vec2(18.0f, -8.0f);
     }
 
     actualFogColor = fluidFogColor;
@@ -855,6 +856,7 @@ auto OMVoxelManager::updateFluidFog(basics::OMCamera &camera) -> void
 auto OMVoxelManager::uploadFogData() -> void
 {
     const glm::vec2 range = fluidFogActive ? fluidFogRange : colorManager->getFogRange();
+
     const auto fg = srgbToLinear(actualFogColor);
 
     std::array<float, 5> fogParams = {range.x, range.y, fg.r, fg.g, fg.b};
@@ -1395,15 +1397,32 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                         visible = false;
                     }
 
-
                     if (!visible)
                     {
+                        // Keep recently visible chunks resident for a short grace period. Fast
+                        // camera rotations can move a chunk out of the frustum and back in
+                        // within a few frames; unloading immediately forces a full remesh and
+                        // leaves visible gaps (showing the underground) while it compiles.
+                        setOffset(i, glm::vec4{INFINITY});
+
                         if (chk.visible)
                         {
-                            unloadChunk(i);
-                            chk.visible = false;
+                            if (hideFrames[i] < OMVoxelManager::unloadDelay)
+                            {
+                                ++hideFrames[i];
+                            }
+                            else
+                            {
+                                unloadChunk(i);
+                                chk.visible = false;
+                                hideFrames[i] = 0;
+                            }
                         }
-                        hideFrames[i] = 0;
+                        else
+                        {
+                            hideFrames[i] = 0;
+                        }
+
                         continue;
                     }
 

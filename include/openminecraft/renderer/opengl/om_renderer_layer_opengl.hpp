@@ -22,6 +22,7 @@ class OMRendererOpenGL : public OMRenderer
     ~OMRendererOpenGL() override;
 
     auto driver() -> std::string override;
+    auto deviceInfos() -> std::string override;
     auto allocateBuffer(common::OMBufferUsage usage, uint64_t length) -> common::OMRendererBuffer * override;
     auto allocateTexture(uint64_t width, uint64_t height, uint64_t layers, uint64_t mipmap, common::OMTextureType type,
                          common::OMTextureArrangement arr) -> common::OMRendererTexture * override;

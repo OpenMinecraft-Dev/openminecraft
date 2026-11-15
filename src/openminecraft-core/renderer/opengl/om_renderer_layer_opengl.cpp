@@ -11,6 +11,10 @@
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_texture.hpp"
 #include "openminecraft/renderer/common/om_renderer_handler.hpp"
 #include "openminecraft/util/om_util_ticker.hpp"
+#include <array>
+#include <fstream>
+#include <cstdlib>
+#include <vector>
 
 namespace openminecraft::renderer::opengl
 {
@@ -48,6 +52,28 @@ OMRendererOpenGL::OMRendererOpenGL(AppInfo info, void *window, std::string shade
 
     this->initGlFuncs();
 
+    defaultTarget = createRenderTarget();
+    defaultTarget->build();
+
+    if (false)
+    {
+        gl.glEnable(GL_DEBUG_OUTPUT);
+        gl.glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+
+        gl.glDebugMessageCallback(debugCallback, nullptr);
+
+        gl.glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+    }
+}
+
+template <typename T> inline auto fetchGlFunc(const char *name) -> T
+{
+    return (T)(SDL_GL_GetProcAddress(name));
+}
+
+auto OMRendererOpenGL::deviceInfos() -> std::string
+{
+    std::string out;
     auto glString = [&](GLenum name) -> std::string {
         const auto *value = gl.glGetString(name);
         return value != nullptr ? std::string(reinterpret_cast<const char *>(value)) : std::string("<unknown>");
@@ -79,60 +105,92 @@ OMRendererOpenGL::OMRendererOpenGL(AppInfo info, void *window, std::string shade
     int swapInterval = 0;
     SDL_GL_GetSwapInterval(&swapInterval);
 
-    logger.info("OpenGL vendor: {}", glString(GL_VENDOR));
-    logger.info("OpenGL renderer: {}", glString(GL_RENDERER));
-    logger.info("OpenGL version: {}", glString(GL_VERSION));
-    logger.info("OpenGL shading language: {}", glString(GL_SHADING_LANGUAGE_VERSION));
-    logger.info("Window pixel format: {} ({})", SDL_GetPixelFormatName(pixelFormat),
-                static_cast<int>(pixelFormat));
-    logger.info("Surface format: RGBA={}{}{}{}, depth={}, stencil={}", red, green, blue, alpha, depth, stencil);
-    logger.info("Present mode equivalents: doubleBuffer={}, swapInterval={}, MSAA buffers={} samples={} (GL={}/{}), sRGB={}",
-                doubleBuffer, swapInterval, multisampleBuffers, multisampleSamples, glSampleBuffers, glSamples,
-                framebufferSrgb);
+    out += fmt::format("OpenGL vendor: {}\n", glString(GL_VENDOR));
+    out += fmt::format("OpenGL renderer: {}\n", glString(GL_RENDERER));
+    out += fmt::format("OpenGL version: {}\n", glString(GL_VERSION));
+    out += fmt::format("OpenGL shading language: {}\n", glString(GL_SHADING_LANGUAGE_VERSION));
+    out += fmt::format("Window pixel format: {} ({})\n", SDL_GetPixelFormatName(pixelFormat),
+                       static_cast<int>(pixelFormat));
+    out += fmt::format("Surface format: RGBA={}{}{}{}, depth={}, stencil={}\n", red, green, blue, alpha, depth,
+                       stencil);
+    out += fmt::format("Present mode equivalents: doubleBuffer={}, swapInterval={}, MSAA buffers={} samples={} "
+                       "(GL={}/{}), sRGB={}\n",
+                       doubleBuffer, swapInterval, multisampleBuffers, multisampleSamples, glSampleBuffers, glSamples,
+                       framebufferSrgb);
+
+    int contextMajor = 0, contextMinor = 0, contextFlags = 0, contextProfile = 0;
+    SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &contextMajor);
+    SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &contextMinor);
+    SDL_GL_GetAttribute(SDL_GL_CONTEXT_FLAGS, &contextFlags);
+    SDL_GL_GetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, &contextProfile);
+    out += fmt::format("Context: requested={}.{}, flags=0x{:x}, profile=0x{:x}\n", contextMajor, contextMinor,
+                       contextFlags, contextProfile);
+
+    if (const auto *details = SDL_GetPixelFormatDetails(pixelFormat); details != nullptr)
+    {
+        out += fmt::format("Pixel format details: bpp={}, bytes={}, R={}bits/{}shift/0x{:x}, "
+                           "G={}bits/{}shift/0x{:x}, B={}bits/{}shift/0x{:x}, A={}bits/{}shift/0x{:x}\n",
+                           details->bits_per_pixel, details->bytes_per_pixel, details->Rbits, details->Rshift,
+                           details->Rmask, details->Gbits, details->Gshift, details->Gmask, details->Bbits,
+                           details->Bshift, details->Bmask, details->Abits, details->Ashift, details->Amask);
+    }
+
+    GLint maxTextureSize = 0, maxCubeSize = 0, max3DSize = 0, maxArrayLayers = 0;
+    GLint maxTextureUnits = 0, maxCombinedUnits = 0, maxVertexAttribs = 0;
+    GLint maxVertexUniforms = 0, maxFragmentUniforms = 0;
+    GLint maxUniformBufferBindings = 0, maxUniformBlockSize = 0;
+    GLint maxShaderStorageBindings = 0, maxShaderStorageBlockSize = 0;
+    GLint maxDrawBuffers = 0, maxColorAttachments = 0, maxSamples = 0;
+    GLint maxViewport[2] = {0, 0};
+    GLfloat lineWidth[2] = {0.0f, 0.0f};
+    GLfloat pointSize[2] = {0.0f, 0.0f};
+    gl.glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTextureSize);
+    gl.glGetIntegerv(GL_MAX_CUBE_MAP_TEXTURE_SIZE, &maxCubeSize);
+    gl.glGetIntegerv(GL_MAX_3D_TEXTURE_SIZE, &max3DSize);
+    gl.glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, &maxArrayLayers);
+    gl.glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxTextureUnits);
+    gl.glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &maxCombinedUnits);
+    gl.glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxVertexAttribs);
+    gl.glGetIntegerv(GL_MAX_VERTEX_UNIFORM_COMPONENTS, &maxVertexUniforms);
+    gl.glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_COMPONENTS, &maxFragmentUniforms);
+    gl.glGetIntegerv(GL_MAX_UNIFORM_BUFFER_BINDINGS, &maxUniformBufferBindings);
+    gl.glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &maxUniformBlockSize);
+    gl.glGetIntegerv(GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS, &maxShaderStorageBindings);
+    gl.glGetIntegerv(GL_MAX_SHADER_STORAGE_BLOCK_SIZE, &maxShaderStorageBlockSize);
+    gl.glGetIntegerv(GL_MAX_DRAW_BUFFERS, &maxDrawBuffers);
+    gl.glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
+    gl.glGetIntegerv(GL_MAX_SAMPLES, &maxSamples);
+    gl.glGetIntegerv(GL_MAX_VIEWPORT_DIMS, maxViewport);
+    gl.glGetFloatv(GL_ALIASED_LINE_WIDTH_RANGE, lineWidth);
+    gl.glGetFloatv(GL_POINT_SIZE_RANGE, pointSize);
+
+    out += fmt::format("Limits: texture2D={}, cube={}, texture3D={}, arrayLayers={}, "
+                       "textureUnits={}, combinedUnits={}, vertexAttribs={}, vertexUniforms={}, "
+                       "fragmentUniforms={}, uniformBindings={}, uniformBlockSize={}, "
+                       "shaderStorageBindings={}, shaderStorageBlockSize={}, drawBuffers={}, "
+                       "colorAttachments={}, maxSamples={}, maxViewport={}x{}\n",
+                       maxTextureSize, maxCubeSize, max3DSize, maxArrayLayers, maxTextureUnits, maxCombinedUnits,
+                       maxVertexAttribs, maxVertexUniforms, maxFragmentUniforms, maxUniformBufferBindings,
+                       maxUniformBlockSize, maxShaderStorageBindings, maxShaderStorageBlockSize, maxDrawBuffers,
+                       maxColorAttachments, maxSamples, maxViewport[0], maxViewport[1]);
+    out += fmt::format("Ranges: lineWidth={:.2f}..{:.2f}, pointSize={:.2f}..{:.2f}\n",
+                       static_cast<double>(lineWidth[0]), static_cast<double>(lineWidth[1]),
+                       static_cast<double>(pointSize[0]), static_cast<double>(pointSize[1]));
 
     GLint extensionCount = 0;
     gl.glGetIntegerv(GL_NUM_EXTENSIONS, &extensionCount);
-    logger.info("OpenGL extensions: {}", extensionCount);
+    out += fmt::format("OpenGL extensions ({}):\n", extensionCount);
 
-    static constexpr std::array<const char *, 7> swapExtensions = {
-        "WGL_EXT_swap_control", "WGL_EXT_swap_control_tear", "GLX_EXT_swap_control",
-        "GLX_MESA_swap_control", "GLX_SGI_swap_control", "EGL_KHR_swap_buffers_with_damage",
-        "EGL_EXT_swap_buffers_with_damage"};
     for (GLuint i = 0; i < static_cast<GLuint>(extensionCount); ++i)
     {
         const auto *ext = gl.glGetStringi(GL_EXTENSIONS, i);
-        if (ext == nullptr)
+        if (ext != nullptr)
         {
-            continue;
-        }
-
-        const std::string name(reinterpret_cast<const char *>(ext));
-        for (const auto *wanted : swapExtensions)
-        {
-            if (name == wanted)
-            {
-                logger.info("Swap control extension: {}", name);
-            }
+            out += fmt::format("  {}\n", reinterpret_cast<const char *>(ext));
         }
     }
 
-    defaultTarget = createRenderTarget();
-    defaultTarget->build();
-
-    if (false)
-    {
-        gl.glEnable(GL_DEBUG_OUTPUT);
-        gl.glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-
-        gl.glDebugMessageCallback(debugCallback, nullptr);
-
-        gl.glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
-    }
-}
-
-template <typename T> inline auto fetchGlFunc(const char *name) -> T
-{
-    return (T)(SDL_GL_GetProcAddress(name));
+    return out;
 }
 
 void OMRendererOpenGL::initGlFuncs()
@@ -234,6 +292,12 @@ void OMRendererOpenGL::render(util::OMTicker &t)
         t.push("gl_resize");
         auto siz = getExtent();
         gl.glViewport(0, 0, siz.x, siz.y);
+        gl.glDisable(GL_BLEND);
+        gl.glDisable(GL_CULL_FACE);
+        gl.glDisable(GL_SCISSOR_TEST);
+        gl.glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        gl.glDepthMask(GL_TRUE);
+        gl.glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         for (auto tsk : tasks)
         {

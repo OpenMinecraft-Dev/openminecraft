@@ -75,6 +75,7 @@ auto OMDemiurgeRendererHandler::fetchFontChannel(geom::OMFontSet *s)
     }
 
     auto c = std::make_shared<element::OMDemiurgeTextSdfChannel>(this->renderer, [&]() -> void { recordTask(); }, s);
+    c->reserve(2048);
     c->init(uniformBuffer.getTag(), middleTarget->targetTagName());
     fonts[s] = c;
     return c;

@@ -103,7 +103,7 @@ class OMVoxelManager
     size_t lastOffsetCount = 0;
     bool offsetUploadedOnce = false;
     std::vector<uint16_t> hideFrames;
-    static constexpr uint16_t unloadDelay = 30;
+    static constexpr uint16_t unloadDelay = 90;
 
     float lastCameraYaw = INFINITY;
     float lastCameraPitch = INFINITY;
