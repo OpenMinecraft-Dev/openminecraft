@@ -18,26 +18,36 @@ auto OMDemiurgeTextSdfMultilineNode::syncLayout() -> void
     if (stylesStorage.isModified())
     {
         const auto text = stylesStorage.get<std::string>("text", "");
+        const auto th = stylesStorage.get<int>("textHeight", 12);
 
-        lines.clear();
-
-        size_t start = 0;
-
-        while (true)
+        // Layout styles (color, opacity, bounds, ...) can change every frame.
+        // Only re-run HarfBuzz shaping when the actual text or text height
+        // changes; the shaped glyphs are still valid otherwise.
+        if (!hasShapedText || text != lastShapedText || th != lastShapedTextHeight)
         {
-            const size_t pos = text.find('\n', start);
-            lines.push_back(set->shape(text.substr(start, pos == std::string::npos ? std::string::npos : pos - start)));
+            lines.clear();
 
-            if (pos == std::string::npos)
+            size_t start = 0;
+
+            while (true)
             {
-                break;
+                const size_t pos = text.find('\n', start);
+                lines.push_back(set->shape(text.substr(start, pos == std::string::npos ? std::string::npos : pos - start)));
+
+                if (pos == std::string::npos)
+                {
+                    break;
+                }
+
+                start = pos + 1;
             }
 
-            start = pos + 1;
+            lastShapedText = text;
+            lastShapedTextHeight = th;
+            hasShapedText = true;
         }
 
-        const auto th = static_cast<float>(stylesStorage.get<int>("textHeight", 12));
-
+        const float textHeight = static_cast<float>(th);
         float maxWidth = 0.0f;
         float maxUnitHeight = 0.0f;
 
@@ -49,10 +59,10 @@ auto OMDemiurgeTextSdfMultilineNode::syncLayout() -> void
         }
 
         textUnitHeight = maxUnitHeight;
-        lineAdvance = stylesStorage.get<float>("textLineHeight", maxUnitHeight * th * 1.25f);
+        lineAdvance = stylesStorage.get<float>("textLineHeight", maxUnitHeight * textHeight * 1.25f);
 
-        const float width = maxWidth * th;
-        const float height = textUnitHeight * th + std::max<int>(0, static_cast<int>(lines.size()) - 1) * lineAdvance;
+        const float width = maxWidth * textHeight;
+        const float height = textUnitHeight * textHeight + std::max<int>(0, static_cast<int>(lines.size()) - 1) * lineAdvance;
 
         stylesStorage.putLayout("minWidth", width);
         stylesStorage.putLayout("minHeight", height);

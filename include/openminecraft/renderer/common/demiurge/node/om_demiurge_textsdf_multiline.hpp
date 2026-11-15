@@ -4,6 +4,7 @@
 #include "openminecraft/geom/om_fontset.hpp"
 #include "openminecraft/renderer/common/demiurge/om_demiurge_node.hpp"
 #include <vector>
+#include <string>
 
 namespace openminecraft::renderer::common::demiurge::node
 {
@@ -27,6 +28,9 @@ class OMDemiurgeTextSdfMultilineNode : public OMDemiurgeNode
 
     float textUnitHeight = 0.0f;
     float lineAdvance = 0.0f;
+    std::string lastShapedText;
+    int lastShapedTextHeight = -1;
+    bool hasShapedText = false;
 };
 } // namespace openminecraft::renderer::common::demiurge::node
 
