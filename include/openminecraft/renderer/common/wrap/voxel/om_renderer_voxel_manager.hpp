@@ -86,7 +86,8 @@ class OMVoxelManager
 
     OMVoxelCompilerPool *compilerPool;
 
-    glm::vec3 actualFogColor = glm::vec3(1.0f);
+    glm::vec3 skyFogColor = glm::vec3(1.0f);
+    glm::vec3 fluidFogColor = glm::vec3(1.0f);
     glm::vec3 cameraForward = glm::vec3(0.0f, 0.0f, 1.0f);
     int renderDistance = 8;
     // Chunk culling / rendering distance in 16-block chunks, configured by the application layer.
@@ -127,12 +128,12 @@ class OMVoxelManager
 
     void unloadChunk(int i);
     void updateFluidFog(basics::OMCamera &camera);
+    auto queryBlockState(int64_t chunkX, int64_t chunkY, int64_t chunkZ, int x, int y, int z) -> uint32_t;
     void uploadFogData();
 
+    uint32_t airBlockState = 0;
     bool fluidFogActive = false;
-    bool fluidFogLava = false;
     glm::vec2 fluidFogRange = glm::vec2(0.0f);
-    glm::vec3 fluidFogColor = glm::vec3(0.0f);
 };
 
 } // namespace openminecraft::renderer::common::wrap::voxel

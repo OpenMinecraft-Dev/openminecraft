@@ -89,6 +89,7 @@ OMVoxelManager::OMVoxelManager(
     this->recordTask = recordTask;
     this->renderer = renderer;
     this->chunkManager = man;
+    this->airBlockState = airId;
     this->voxelHandler = handler;
     this->paletteProvider = paletteProvider;
     this->compiler.paletteProvider = this->paletteProvider;
@@ -799,10 +800,54 @@ auto OMVoxelManager::calcActualFogColor() -> glm::vec3
     return glm::mix(fogColor, skyColor, skyColorMix);
 }
 
+auto OMVoxelManager::queryBlockState(int64_t chunkX, int64_t chunkY, int64_t chunkZ, int x, int y, int z) -> uint32_t
+{
+    // Standard accessor normalization, matching OMVoxelCompilerPool's externalAccessor:
+    // step into the neighbouring chunk instead of relying on the camera chunk's fetch().
+    while (x < 0)
+    {
+        x += 16;
+        --chunkX;
+    }
+    while (x >= 16)
+    {
+        x -= 16;
+        ++chunkX;
+    }
+    while (y < 0)
+    {
+        y += 16;
+        --chunkY;
+    }
+    while (y >= 16)
+    {
+        y -= 16;
+        ++chunkY;
+    }
+    while (z < 0)
+    {
+        z += 16;
+        --chunkZ;
+    }
+    while (z >= 16)
+    {
+        z -= 16;
+        ++chunkZ;
+    }
+
+    auto chunk = chunkManager->tryGetChunk(world::OMChunkIndex{chunkX, chunkY, chunkZ});
+
+    if (!chunk)
+    {
+        return airBlockState;
+    }
+
+    return chunk->fetch(x, y, z);
+}
+
 auto OMVoxelManager::updateFluidFog(basics::OMCamera &camera) -> void
 {
     fluidFogActive = false;
-    fluidFogLava = false;
 
     const auto camPos = camera.getPosRaw();
     const int64_t cx = camPos.getChunkX();
@@ -812,19 +857,7 @@ auto OMVoxelManager::updateFluidFog(basics::OMCamera &camera) -> void
     const int ly = static_cast<int>(std::floor(camPos.getY() - static_cast<float>(cy * 16)));
     const int lz = static_cast<int>(std::floor(camPos.getModZ(16)));
 
-    if (lx < 0 || lx > 15 || ly < 0 || ly > 15 || lz < 0 || lz > 15)
-    {
-        return;
-    }
-
-    auto chunk = chunkManager->tryGetChunk(world::OMChunkIndex{cx, cy, cz});
-
-    if (!chunk)
-    {
-        return;
-    }
-
-    const uint32_t state = chunk->fetch(lx, ly, lz);
+    const uint32_t state = queryBlockState(cx, cy, cz, lx, ly, lz);
     const int model = modelFetcher(state, cx, cy, cz, lx, ly, lz);
 
     if (!voxelHandler->queryFluid(model))
@@ -833,9 +866,8 @@ auto OMVoxelManager::updateFluidFog(basics::OMCamera &camera) -> void
     }
 
     fluidFogActive = true;
-    fluidFogLava = voxelHandler->queryFluidLava(model);
 
-    if (fluidFogLava)
+    if (voxelHandler->queryFluidLava(model))
     {
         fluidFogColor = glm::vec3(0.72f, 0.13f, 0.02f);
         // FogData.x is the fully fogged distance, .y is where fog starts.
@@ -849,15 +881,13 @@ auto OMVoxelManager::updateFluidFog(basics::OMCamera &camera) -> void
         fluidFogColor = glm::vec3(0.025f, 0.11f, 0.22f);
         fluidFogRange = glm::vec2(18.0f, -8.0f);
     }
-
-    actualFogColor = fluidFogColor;
 }
 
 auto OMVoxelManager::uploadFogData() -> void
 {
     const glm::vec2 range = fluidFogActive ? fluidFogRange : colorManager->getFogRange();
 
-    const auto fg = srgbToLinear(actualFogColor);
+    const auto fg = srgbToLinear(fluidFogActive ? fluidFogColor : skyFogColor);
 
     std::array<float, 5> fogParams = {range.x, range.y, fg.r, fg.g, fg.b};
     fogdata->updateData(fogParams.data());
@@ -875,7 +905,7 @@ auto OMVoxelManager::updateColor() -> void
         skydisc->updateData(&disc);
         OMVoxelSunrise ris = {srgbToLinear(colorManager->getSunriseColor()), colorManager->getSunAngle()};
         sunrise->updateData(&ris);
-        auto fg = srgbToLinear(actualFogColor);
+        auto fg = srgbToLinear(fluidFogActive ? fluidFogColor : skyFogColor);
         const auto fogRange = effectiveFogRange();
         std::array<float, 5> fogParams = {fogRange.x, fogRange.y, fg.r, fg.g, fg.b};
         fogdata->updateData(fogParams.data());
@@ -1047,7 +1077,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
         }}.data());
 
     cameraForward = camera.getForward();
-    actualFogColor = calcActualFogColor();
+    skyFogColor = calcActualFogColor();
 
     updateColor();
     updateFluidFog(camera);
