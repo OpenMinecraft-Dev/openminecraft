@@ -15,31 +15,175 @@ OMDemiurgeTextSdfMultilineNode::~OMDemiurgeTextSdfMultilineNode() = default;
 
 auto OMDemiurgeTextSdfMultilineNode::syncLayout() -> void
 {
-    if (stylesStorage.isModified())
+    const bool wrap = stylesStorage.get<bool>("wrap", false);
+
+    float boundWidth = 0.0f;
+    try
+    {
+        boundWidth = stylesStorage.get<OMDemiurgeRect>("layoutBound").width;
+    }
+    catch (const std::bad_any_cast &)
+    {
+    }
+
+    bool forceReflow = false;
+
+    if (!wrapStateInitialized || wrap != wrapEnabled)
+    {
+        wrapStateInitialized = true;
+        wrapEnabled = wrap;
+        forceReflow = true;
+        wrapSizingPending = wrap;
+
+        if (wrap)
+        {
+            // Wrapping is driven by the current layout bound, so the old
+            // content-sized minimums must not constrain Yoga any more.
+            stylesStorage.remove("minWidth");
+            stylesStorage.remove("minHeight");
+            YGNodeStyleSetMinWidth(yogaNode, 0.0f);
+            YGNodeStyleSetMinHeight(yogaNode, 0.0f);
+        }
+
+        lastWrapBoundWidth = -1.0f;
+        hasShapedText = false;
+    }
+
+    if (wrap && boundWidth != lastWrapBoundWidth)
+    {
+        lastWrapBoundWidth = boundWidth;
+        forceReflow = true;
+        hasShapedText = false;
+    }
+
+    if (stylesStorage.isModified() || forceReflow)
     {
         const auto text = stylesStorage.get<std::string>("text", "");
         const auto th = stylesStorage.get<int>("textHeight", 12);
 
-        // Layout styles (color, opacity, bounds, ...) can change every frame.
-        // Only re-run HarfBuzz shaping when the actual text or text height
-        // changes; the shaped glyphs are still valid otherwise.
-        if (!hasShapedText || text != lastShapedText || th != lastShapedTextHeight)
+        if (forceReflow || !hasShapedText || text != lastShapedText || th != lastShapedTextHeight)
         {
             lines.clear();
 
-            size_t start = 0;
-
-            while (true)
-            {
-                const size_t pos = text.find('\n', start);
-                lines.push_back(set->shape(text.substr(start, pos == std::string::npos ? std::string::npos : pos - start)));
-
-                if (pos == std::string::npos)
+            auto appendExplicitLines = [&](const std::string &value) {
+                size_t start = 0;
+                while (true)
                 {
-                    break;
+                    const size_t pos = value.find('\n', start);
+                    lines.push_back(set->shape(value.substr(start, pos == std::string::npos ? std::string::npos : pos - start)));
+                    if (pos == std::string::npos)
+                    {
+                        break;
+                    }
+                    start = pos + 1;
+                }
+            };
+
+            auto appendWrappedLines = [&](const std::string &value, float limit, float textHeight) {
+                if (limit <= 0.0f)
+                {
+                    appendExplicitLines(value);
+                    return;
                 }
 
-                start = pos + 1;
+                const float unitLimit = limit / std::max(textHeight, 1.0f);
+                size_t paragraphStart = 0;
+
+                do
+                {
+                    const size_t newline = value.find('\n', paragraphStart);
+                    const std::string paragraph =
+                        value.substr(paragraphStart, newline == std::string::npos ? std::string::npos : newline - paragraphStart);
+                    paragraphStart = newline == std::string::npos ? std::string::npos : newline + 1;
+
+                    if (paragraph.empty())
+                    {
+                        lines.push_back({});
+                        continue;
+                    }
+
+                    std::vector<std::string> tokens;
+                    std::string token;
+                    bool tokenIsSpace = false;
+                    for (char c : paragraph)
+                    {
+                        const bool isSpace = c == ' ' || c == '\t';
+                        if (token.empty() || isSpace == tokenIsSpace)
+                        {
+                            token.push_back(c);
+                            tokenIsSpace = isSpace;
+                        }
+                        else
+                        {
+                            tokens.push_back(token);
+                            token = std::string(1, c);
+                            tokenIsSpace = isSpace;
+                        }
+                    }
+                    if (!token.empty())
+                    {
+                        tokens.push_back(token);
+                    }
+
+                    std::string current;
+                    auto flushLine = [&]() {
+                        lines.push_back(set->shape(current));
+                        current.clear();
+                    };
+
+                    for (const auto &part : tokens)
+                    {
+                        const std::string candidate = current + part;
+                        if (!current.empty() && set->advance(candidate) > unitLimit)
+                        {
+                            flushLine();
+                            if (part.find_first_not_of(" \t") == std::string::npos)
+                            {
+                                continue;
+                            }
+                            current = part;
+                        }
+                        else
+                        {
+                            current = candidate;
+                        }
+
+                        if (set->advance(current) <= unitLimit)
+                        {
+                            continue;
+                        }
+
+                        std::string remainder;
+                        for (char c : current)
+                        {
+                            const std::string next = remainder + std::string(1, c);
+                            if (!remainder.empty() && set->advance(next) > unitLimit)
+                            {
+                                lines.push_back(set->shape(remainder));
+                                remainder = std::string(1, c);
+                            }
+                            else
+                            {
+                                remainder = next;
+                            }
+                        }
+                        current = remainder;
+                    }
+
+                    if (!current.empty())
+                    {
+                        flushLine();
+                    }
+                } while (paragraphStart != std::string::npos);
+            };
+
+            if (wrap)
+            {
+                appendWrappedLines(text, boundWidth, static_cast<float>(th));
+            }
+            else
+            {
+                appendExplicitLines(text);
             }
 
             lastShapedText = text;
@@ -48,25 +192,53 @@ auto OMDemiurgeTextSdfMultilineNode::syncLayout() -> void
         }
 
         const float textHeight = static_cast<float>(th);
-        float maxWidth = 0.0f;
+        float contentWidth = 0.0f;
         float maxUnitHeight = 0.0f;
 
         for (const auto &line : lines)
         {
             const auto b = set->bound(line);
-            maxWidth = std::max(maxWidth, b.x);
+            contentWidth = std::max(contentWidth, b.x);
             maxUnitHeight = std::max(maxUnitHeight, b.y);
         }
 
         textUnitHeight = maxUnitHeight;
         lineAdvance = stylesStorage.get<float>("textLineHeight", maxUnitHeight * textHeight * 1.25f);
 
-        const float width = maxWidth * textHeight;
-        const float height = textUnitHeight * textHeight + std::max<int>(0, static_cast<int>(lines.size()) - 1) * lineAdvance;
+        const float width = contentWidth * textHeight;
+        const float height =
+            textUnitHeight * textHeight + std::max<int>(0, static_cast<int>(lines.size()) - 1) * lineAdvance;
 
-        stylesStorage.putLayout("minWidth", width);
-        stylesStorage.putLayout("minHeight", height);
-
+        if (wrap)
+        {
+            if (wrapSizingPending)
+            {
+                // The bound used above can still be the previous content-sized
+                // bound. Leave both minimums cancelled for one Yoga pass so the
+                // real parent/width-constrained bound is computed; the next
+                // syncLayout wraps against that bound.
+                YGNodeStyleSetMinWidth(yogaNode, 0.0f);
+                YGNodeStyleSetMinHeight(yogaNode, 0.0f);
+                wrapSizingPending = false;
+            }
+            else
+            {
+                // Re-apply the dimensions produced by the bound-width layout so
+                // the wrapped box participates in Yoga sizing and scroll height.
+                const float wrappedWidth = boundWidth > 0.0f ? boundWidth : width;
+                stylesStorage.putLayout("minWidth", wrappedWidth);
+                stylesStorage.putLayout("minHeight", height);
+                YGNodeStyleSetMinWidth(yogaNode, wrappedWidth);
+                YGNodeStyleSetMinHeight(yogaNode, height);
+            }
+        }
+        else
+        {
+            stylesStorage.putLayout("minWidth", width);
+            stylesStorage.putLayout("minHeight", height);
+            YGNodeStyleSetMinWidth(yogaNode, width);
+            YGNodeStyleSetMinHeight(yogaNode, height);
+        }
     }
 
     OMDemiurgeNode::syncLayout();

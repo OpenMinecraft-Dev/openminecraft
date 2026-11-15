@@ -434,13 +434,15 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
     deviceInfoLabel->style("textHeight", 13);
     deviceInfoLabel->style("color", (int)0xffffffff);
     deviceInfoLabel->style("margin", std::array<OMDemiurgeSize, 4>{8_px, 8_px, 8_px, 8_px});
+    deviceInfoLabel->style("wrap", true);
+    deviceInfoLabel->style("width", OMDemiurgeSize::pixels(std::max(320.0f, renderer->getLogicalExtent().x - 96.0f)));
 
     auto deviceInfoScroll = std::make_shared<node::container::OMDemiurgeScrollPane>();
     deviceInfoScroll->style("width", OMDemiurgeSize::fill());
     deviceInfoScroll->style("height", OMDemiurgeSize::fit());
     deviceInfoScroll->style("flexGrow", 1.0f);
-    deviceInfoScroll->setOrientation(node::container::OMDemiurgeScrollPaneOrientation::Both);
-    deviceInfoScroll->setContentStretch(false);
+    deviceInfoScroll->setOrientation(node::container::OMDemiurgeScrollPaneOrientation::Vertical);
+    deviceInfoScroll->setContentStretch(true);
     deviceInfoScroll->setContentNode(deviceInfoLabel);
     pageMisc->mountDirect(deviceInfoScroll);
 

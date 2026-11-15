@@ -55,6 +55,12 @@ class OMDemiurgeStyles
         styles[s] = t;
     }
 
+    auto remove(const std::string &s)
+    {
+        styles.erase(s);
+        modified = true;
+    }
+
     inline auto invalidate() -> void
     {
         modified = true;

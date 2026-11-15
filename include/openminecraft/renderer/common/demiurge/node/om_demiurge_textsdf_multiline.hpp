@@ -31,6 +31,10 @@ class OMDemiurgeTextSdfMultilineNode : public OMDemiurgeNode
     std::string lastShapedText;
     int lastShapedTextHeight = -1;
     bool hasShapedText = false;
+    bool wrapStateInitialized = false;
+    bool wrapEnabled = false;
+    bool wrapSizingPending = false;
+    float lastWrapBoundWidth = -1.0f;
 };
 } // namespace openminecraft::renderer::common::demiurge::node
 
