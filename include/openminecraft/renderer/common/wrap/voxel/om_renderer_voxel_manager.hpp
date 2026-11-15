@@ -16,7 +16,8 @@ class OMVoxelManager
                    const std::string &texSecTag, std::shared_ptr<world::OMChunkManager<16>>, std::function<void(bool)>,
                    OMVoxelHandler *, std::function<uint32_t(uint32_t, uint64_t, uint64_t, uint64_t, int, int, int)>,
                    OMVoxelColorManager *, const std::string &sunTag, const std::string &moonTag,
-                   const std::string &cloudTag, std::vector<bool>, std::shared_ptr<OMChunkPaletteProvider>);
+                   const std::string &cloudTag, std::vector<bool>, std::shared_ptr<OMChunkPaletteProvider>,
+                   int renderDistance = 9, uint32_t airId = 0);
     ~OMVoxelManager();
 
     auto submit(OMRendererTask *, OMRendererTempTarget *, bool = true) -> OMRendererTask *;
@@ -24,6 +25,8 @@ class OMVoxelManager
 
     auto updateColor() -> void;
     auto calcActualFogColor() -> glm::vec3;
+    // Fog range clamped to the render distance so the unloaded world edge fades out instead of showing a cut.
+    auto effectiveFogRange() const -> glm::vec2;
     void bindCameraBuffer(OMRendererBuffer *);
     auto buildVoxelCloud() -> std::vector<uint32_t>;
     auto hashLayerState() -> std::array<uint32_t, 12>;
@@ -86,6 +89,8 @@ class OMVoxelManager
     glm::vec3 actualFogColor = glm::vec3(1.0f);
     glm::vec3 cameraForward = glm::vec3(0.0f, 0.0f, 1.0f);
     int renderDistance = 8;
+    // Chunk culling / rendering distance in 16-block chunks, configured by the application layer.
+    int chunkRenderDistance = 9;
 
     std::vector<glm::vec4> chunkOffsetCache;
     // Geometry stays resident while a section is out of view. The offset is

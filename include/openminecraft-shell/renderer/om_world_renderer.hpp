@@ -43,7 +43,7 @@ class OMWorldRenderer : public OMRendererHandler
 {
   public:
     OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::OMCamera> camera,
-                    std::shared_ptr<world::OMChunkManager<16>>);
+                    std::shared_ptr<world::OMChunkManager<16>>, int renderDistance = 9);
     ~OMWorldRenderer() override;
 
     // INFO: count frames per second, submit and create tasks, etc.

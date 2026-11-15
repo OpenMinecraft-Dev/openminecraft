@@ -138,7 +138,14 @@ void OMApplication::mainLoop(OMBackend backend)
         auto hnd4 = std::make_shared<renderer::OMSurfaceRenderer>(win(), buswrap);
         auto hnd2 = std::make_shared<renderer::OMDebugRenderer>(win(), buswrap);
 
-        auto hnd = std::make_shared<renderer::OMWorldRenderer>(win(), camera, chunkManager);
+        int renderDistance = 9;
+        if (const char *env = std::getenv("OM_RENDER_DISTANCE"))
+        {
+            renderDistance = std::clamp(std::atoi(env), 2, 64);
+        }
+        logger->info("chunk render distance: {} chunks ({} blocks)", renderDistance, renderDistance * 16);
+
+        auto hnd = std::make_shared<renderer::OMWorldRenderer>(win(), camera, chunkManager, renderDistance);
         auto hnd3 = std::make_shared<renderer::OMComposeRenderer>(win(), hnd4->internal->middleTarget,
                                                                   hnd2->internal->middleTarget, hnd->tempTarget);
         hnd2->camera = camera.get();

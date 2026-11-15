@@ -5,6 +5,7 @@
 #include "openminecraft/renderer/common/wrap/voxel/om_renderer_voxel_objects.hpp"
 #include <array>
 #include <functional>
+#include <atomic>
 #include <memory>
 #include <tuple>
 
@@ -55,6 +56,8 @@ class OMVoxelCompiler
     auto computeVisibility(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>)
         -> uint64_t;
 
+    // Real air block-state id (0 is a valid solid block id, so "air" must never be hard-coded as 0).
+    std::atomic<uint32_t> airId{0};
     OMVoxelHandler *handler = new OMVoxelHandlerDummy();
     std::function<uint32_t(uint32_t, uint64_t, uint64_t, uint64_t, int, int, int)> modelFetcher;
 

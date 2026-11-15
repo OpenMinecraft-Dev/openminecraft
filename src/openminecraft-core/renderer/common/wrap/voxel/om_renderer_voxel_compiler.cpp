@@ -292,7 +292,7 @@ auto OMVoxelCompiler::computeAO(const world::OMChunk<16> &chunk,
     auto currentAabb = handler->queryPartAABB(modelId, pid);
     auto countNeighborsPoint = [&](int dx, int dy, int dz, glm::ivec3 pos) -> int {
         auto tgbs = queryBlockState(chunk, externalAccessor, x + dx, y + dy, z + dz);
-        if (tgbs == 0)
+        if (tgbs == airId.load())
         {
             return 0;
         }

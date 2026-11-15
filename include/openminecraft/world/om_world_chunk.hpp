@@ -21,7 +21,7 @@ template <int Cs> class OMChunk
     // std::atomic members delete implicit copy/move constructors, so implement them explicitly
     OMChunk(const OMChunk &other)
         : chunkx(other.chunkx), chunky(other.chunky), chunkz(other.chunkz), visible(other.visible.load()),
-          blocks(other.blocks), nonAirCount(other.nonAirCount.load()), dirty(other.dirty.load())
+          blocks(other.blocks), nonAirCount(other.nonAirCount.load()), airId(other.airId), dirty(other.dirty.load())
     {
     }
 
@@ -33,13 +33,15 @@ template <int Cs> class OMChunk
         blocks = other.blocks;
         visible.store(other.visible.load());
         nonAirCount.store(other.nonAirCount.load());
+        airId = other.airId;
         dirty.store(other.dirty.load());
         return *this;
     }
 
     OMChunk(OMChunk &&other) noexcept
         : chunkx(other.chunkx), chunky(other.chunky), chunkz(other.chunkz), visible(other.visible.load()),
-          blocks(std::move(other.blocks)), nonAirCount(other.nonAirCount.load()), dirty(other.dirty.load())
+          blocks(std::move(other.blocks)), nonAirCount(other.nonAirCount.load()), airId(other.airId),
+          dirty(other.dirty.load())
     {
     }
 
@@ -51,6 +53,7 @@ template <int Cs> class OMChunk
         blocks = std::move(other.blocks);
         visible.store(other.visible.load());
         nonAirCount.store(other.nonAirCount.load());
+        airId = other.airId;
         dirty.store(other.dirty.load());
         return *this;
     }

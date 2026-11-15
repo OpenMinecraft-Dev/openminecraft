@@ -330,9 +330,12 @@ class OMWorldPaletteProvider : public wrap::voxel::OMChunkPaletteProvider
 };
 
 OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::OMCamera> camera,
-                                 std::shared_ptr<OMChunkManager<16>> chunkManager)
+                                 std::shared_ptr<OMChunkManager<16>> chunkManager, int renderDistance)
     : OMRendererHandler(renderer), camera(std::move(camera)), logger("OMWorldRenderer", this), renderer(renderer)
 {
+    const uint32_t airId =
+        data::block::blockStateRegistry.id(data::block::makeBlockState("minecraft:air[]"));
+
     format.nextGroup()->decideStruct();
 
     uniformBuffer = wrap::OMBufferRef(renderer, "world.uniform");
@@ -451,7 +454,7 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
             return blockStateResolver->fetchModel(reg.block, reg.state, h);
         },
         colorManager, sunTex.getTag(), moonTex.getTag(), cloudTex.getTag(), stats,
-        std::make_shared<OMWorldPaletteProvider>(grassColor, foliageColor, dryFoliageColor));
+        std::make_shared<OMWorldPaletteProvider>(grassColor, foliageColor, dryFoliageColor), renderDistance, airId);
 
     voxelManager->bindCameraBuffer(cameraBuffer);
 }

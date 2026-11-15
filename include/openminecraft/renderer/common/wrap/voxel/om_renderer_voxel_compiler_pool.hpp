@@ -17,7 +17,7 @@ namespace openminecraft::renderer::common::wrap::voxel
 class OMVoxelCompilerPool
 {
   public:
-    OMVoxelCompilerPool(world::OMChunkManager<16> &, OMVoxelCompiler &, int = 4);
+    OMVoxelCompilerPool(world::OMChunkManager<16> &, OMVoxelCompiler &, int = 4, uint32_t airId = 0);
     ~OMVoxelCompilerPool();
 
     void upload(OMVoxelLayer<OMVoxel> *cutout, OMVoxelLayer<OMVoxelComplex> *cutoutComplex,
@@ -47,6 +47,8 @@ class OMVoxelCompilerPool
     std::unordered_map<int, world::OMChunkIndex> cachedOrigin;
     world::OMChunkManager<16> &manager;
     OMVoxelCompiler &compiler;
+    // Real air block-state id (0 is a valid solid block; never hard-code air as 0).
+    uint32_t airId = 0;
 
     std::mutex poolMutex;
 
@@ -66,8 +68,9 @@ class OMVoxelCompilerPool
     std::priority_queue<OMCompileRequest, std::vector<OMCompileRequest>, std::greater<>> queuedChunks;
     std::vector<int> visRequests;
     std::unordered_set<int> visQueued;
-    // Keep one entry per chunk in the queue (fast rotation repeatedly requests the same chunk)
-    std::unordered_set<int> queuedIndex;
+    // Keep one entry per chunk in the queue (fast rotation repeatedly requests the same chunk).
+    // The value is true when a later request for the same chunk demanded a forced (cache-bypassing) rebuild.
+    std::unordered_map<int, bool> queuedIndex;
 
     std::mutex bufferMutex;
     std::unordered_map<int, std::vector<OMVoxel>> cutout, translucent;

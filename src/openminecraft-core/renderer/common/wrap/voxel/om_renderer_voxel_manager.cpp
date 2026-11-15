@@ -81,9 +81,11 @@ OMVoxelManager::OMVoxelManager(
     OMVoxelHandler *handler,
     std::function<uint32_t(uint32_t, uint64_t, uint64_t, uint64_t, int, int, int)> modelFetcher,
     OMVoxelColorManager *colorman, const std::string &sunTag, const std::string &moonTag, const std::string &cloudTag,
-    std::vector<bool> cloudStats, std::shared_ptr<OMChunkPaletteProvider> paletteProvider)
+    std::vector<bool> cloudStats, std::shared_ptr<OMChunkPaletteProvider> paletteProvider, int renderDistance,
+    uint32_t airId)
     : logger("OMVoxelManager", this)
 {
+    this->chunkRenderDistance = std::clamp(renderDistance, 2, 64);
     this->recordTask = recordTask;
     this->renderer = renderer;
     this->chunkManager = man;
@@ -101,7 +103,7 @@ OMVoxelManager::OMVoxelManager(
     compiler.handler = voxelHandler;
     compiler.modelFetcher = modelFetcher;
 
-    compilerPool = new OMVoxelCompilerPool(*man.get(), compiler, 12);
+    compilerPool = new OMVoxelCompilerPool(*man.get(), compiler, 12, airId);
 
     cutoutTargetMS = new OMRendererTempTarget(renderer, "voxel.cutout.ms");
     cutoutTargetMS->setStoreDepth(true);
@@ -753,6 +755,15 @@ auto srgbToLinear(const glm::vec4 &cp) -> glm::vec4
     return {r.x, r.y, r.z, cp.w};
 }
 
+auto OMVoxelManager::effectiveFogRange() const -> glm::vec2
+{
+    const glm::vec2 base = colorManager->getFogRange();
+    // Chunks stop being rendered at the render-distance bubble; make fog fully opaque at that distance so the
+    // boundary (including chunks that are still being meshed) blends into the sky instead of showing a hole.
+    const float edge = static_cast<float>(chunkRenderDistance) * 16.0f;
+    return {std::min(base.x, edge), std::min(base.y, edge * 0.82f)};
+}
+
 auto OMVoxelManager::calcActualFogColor() -> glm::vec3
 {
     glm::vec3 fogColor = colorManager->getFogColor();
@@ -780,7 +791,7 @@ auto OMVoxelManager::calcActualFogColor() -> glm::vec3
 
     const glm::vec3 skyColor = colorManager->getSkyDiscColor();
 
-    const float skyFogEnd = std::min(colorManager->getFogRange().y / 16.0f, static_cast<float>(renderDistance));
+    const float skyFogEnd = std::min(effectiveFogRange().y / 16.0f, static_cast<float>(renderDistance));
 
     float skyColorMix = std::clamp(skyFogEnd / 32.0f, 0.25f, 1.0f);
     skyColorMix = 1.0f - std::pow(skyColorMix, 0.25f);
@@ -863,12 +874,11 @@ auto OMVoxelManager::updateColor() -> void
         OMVoxelSunrise ris = {srgbToLinear(colorManager->getSunriseColor()), colorManager->getSunAngle()};
         sunrise->updateData(&ris);
         auto fg = srgbToLinear(actualFogColor);
-        std::array<float, 5> fogParams = {colorManager->getFogRange().x, colorManager->getFogRange().y, fg.r, fg.g,
-                                          fg.b};
+        const auto fogRange = effectiveFogRange();
+        std::array<float, 5> fogParams = {fogRange.x, fogRange.y, fg.r, fg.g, fg.b};
         fogdata->updateData(fogParams.data());
 
-        std::array<float, 5> cloudFogParams = {colorManager->getFogRange().x * 3, colorManager->getFogRange().y * 3,
-                                               fg.r, fg.g, fg.b};
+        std::array<float, 5> cloudFogParams = {fogRange.x * 3, fogRange.y * 3, fg.r, fg.g, fg.b};
         cloudFogdata->updateData(cloudFogParams.data());
         OMVoxelMoon m = {colorManager->getMoonAngle(), colorManager->getMoonPhase()};
         moonData->updateData(&m);
@@ -1056,12 +1066,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
         const bool chunksLoading = loadVersionNow != lastLoadVersion;
         bool skipCulling = cameraStill && !chunksLoading && !extentChanged && cullingReady;
 
-        // Chunk render distance (in 16-block chunks). 10 gave a stable 600 FPS on this preloaded map;
-        // override with OM_RENDER_DISTANCE (e.g. 12 / 16 for more view distance at lower FPS).
-        static const int effectiveRenderDistance = []() -> int {
-            const char *env = std::getenv("OM_RENDER_DISTANCE");
-            return std::clamp(env != nullptr ? std::atoi(env) : 10, 2, 64);
-        }();
+        const int effectiveRenderDistance = chunkRenderDistance;
         const float cullRadius = static_cast<float>(effectiveRenderDistance) * 16.0f;
         const float cullRadiusSq = cullRadius * cullRadius;
 
@@ -1268,7 +1273,6 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             const int64_t cheapRange =
                 static_cast<int64_t>(effectiveRenderDistance > 0 ? effectiveRenderDistance : 1000) + 1;
             const int64_t camChunkX = cameraPos.getChunkX();
-            const int64_t camChunkY = cameraPos.getChunkY();
             const int64_t camChunkZ = cameraPos.getChunkZ();
 
             const bool rebuildCandidates = cameraMoved || chunksLoading || extentChanged || cullCandidates.empty() ||
@@ -1298,10 +1302,11 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                         }
 
                         const int64_t cdx = candidate->chunkx - camChunkX;
-                        const int64_t cdy = candidate->chunky - camChunkY;
                         const int64_t cdz = candidate->chunkz - camChunkZ;
 
-                        if (std::abs(cdx) <= cheapRange && std::abs(cdz) <= cheapRange && std::abs(cdy) <= cheapRange)
+                        // Render distance is measured on complete chunk columns (16x16 horizontal), not on each
+                        // 16x16x16 section: all sections of a column share the same distance state.
+                        if (std::abs(cdx) <= cheapRange && std::abs(cdz) <= cheapRange)
                         {
                             cullCandidates.push_back(ci);
                         }
@@ -1345,14 +1350,11 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                     }
 
                     const int64_t dcx = chk.chunkx - camChunkX;
-                    const int64_t dcy = chk.chunky - camChunkY;
                     const int64_t dcz = chk.chunkz - camChunkZ;
-                    const bool cheapFar =
-                        std::abs(dcx) > cheapRange || std::abs(dcz) > cheapRange || std::abs(dcy) > cheapRange;
+                    const bool cheapFar = std::abs(dcx) > cheapRange || std::abs(dcz) > cheapRange;
 
                     bool visible = false;
                     bool beyondDistance = cheapFar;
-                    glm::vec3 chunkCenter{0.0f};
                     float compileDistanceSq = 0.0f;
                     auto chunkOffset =
                         basics::OMPosition<16, int64_t, float>(chk.chunkx, chk.chunky, chk.chunkz) - camera.getPosRaw();
@@ -1375,8 +1377,10 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                             {pp1.x, pp1.y, pp1.z},
                         }});
 
-                        chunkCenter = pp0 + glm::vec3(8.0f, 8.0f, 8.0f);
-                        compileDistanceSq = glm::dot(chunkCenter, chunkCenter);
+                        // Horizontal distance to the chunk column centre: a complete chunk is in range as a whole.
+                        const float columnDx = chunkOffset.x + 8.0f;
+                        const float columnDz = chunkOffset.z + 8.0f;
+                        compileDistanceSq = columnDx * columnDx + columnDz * columnDz;
 
                         beyondDistance = cullRadiusSq > 0.0f && compileDistanceSq > cullRadiusSq;
                         if (beyondDistance)
@@ -1390,6 +1394,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
                     {
                         visible = false;
                     }
+
 
                     if (!visible)
                     {

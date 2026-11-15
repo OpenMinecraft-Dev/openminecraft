@@ -105,8 +105,9 @@ auto computeSectionVisibility(const std::array<uint8_t, 4096> &blocking) -> uint
     return matrix | (static_cast<uint64_t>(1) << 63);
 }
 
-OMVoxelCompilerPool::OMVoxelCompilerPool(world::OMChunkManager<16> &manager, OMVoxelCompiler &compiler, int num)
-    : manager(manager), compiler(compiler)
+OMVoxelCompilerPool::OMVoxelCompilerPool(world::OMChunkManager<16> &manager, OMVoxelCompiler &compiler, int num,
+                                         uint32_t airId)
+    : manager(manager), compiler(compiler), airId(airId)
 {
     for (int i = 0; i < num; ++i)
     {
@@ -157,10 +158,19 @@ OMVoxelCompilerPool::OMVoxelCompilerPool(world::OMChunkManager<16> &manager, OMV
                 queuedChunks.pop();
                 next = request.chunk;
                 bool useCache = request.useCache;
-                queuedIndex.erase(next);
+                auto queuedIt = queuedIndex.find(next);
+                if (queuedIt != queuedIndex.end())
+                {
+                    // A stronger request arrived while this one was queued: never reuse the cached mesh.
+                    useCache = useCache && !queuedIt->second;
+                    queuedIndex.erase(queuedIt);
+                }
                 poolMutex.unlock();
 
                 std::unordered_map<world::OMChunkIndex, std::shared_ptr<const world::OMChunk<16>>> neighborCache;
+                // Missing / not-rendered neighbours must be returned as the real air block-state id, NOT 0:
+                // block-state id 0 is a real solid block (e.g. tuff), so returning 0 culls the boundary faces.
+                uint32_t airBlock = airId;
                 auto externalAccessor = [&](glm::ivec3 pos, int64_t chunkx, int64_t chunky,
                                             int64_t chunkz) -> uint32_t {
                     if (pos.x < 0)
@@ -209,10 +219,17 @@ OMVoxelCompilerPool::OMVoxelCompilerPool(world::OMChunkManager<16> &manager, OMV
                     {
                         return cachedNeighbor->second->fetch(pos.x, pos.y, pos.z);
                     }
-                    return 0;
+                    // No chunk at all (map edge): real air, never the hard-coded id 0 (0 can be a solid block).
+                    return airBlock;
                 };
 
                 auto cnk = manager.getChunk(next);
+                if (cnk && airBlock == 0 && cnk->airId != 0)
+                {
+                    // Fallback for loaders that only set the per-chunk air id.
+                    airBlock = cnk->airId;
+                }
+                compiler.airId.store(airBlock);
                 if (cnk && cnk->isEmpty())
                 {
                     // Defensive: empty chunks are not compiled; write empty results (no blocks used)
@@ -392,11 +409,19 @@ void OMVoxelCompilerPool::compile(int i, bool useCache, float distanceSq)
 {
     std::lock_guard g(poolMutex);
 
-    if (!queuedIndex.insert(i).second)
+    auto queuedIt = queuedIndex.find(i);
+    if (queuedIt != queuedIndex.end())
     {
+        // Upgrade an existing request to a forced rebuild if necessary (e.g. a chunk became dirty while a cached
+        // rebuild was already queued). Otherwise the stale cached mesh would be kept.
+        if (!useCache)
+        {
+            queuedIt->second = true;
+        }
         return;
     }
 
+    queuedIndex.emplace(i, !useCache);
     queuedChunks.push(OMCompileRequest{distanceSq, i, useCache});
 }
 } // namespace openminecraft::renderer::common::wrap::voxel
