@@ -3,6 +3,8 @@
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
 #include <fmt/format.h>
+#include <string>
+#include <vector>
 #include <stdexcept>
 #include <vector>
 
@@ -81,12 +83,13 @@ void OMRendererPipelineOpenGL::build()
 
         if (!status)
         {
-            GLsizei l;
-            std::vector<GLchar> log = {};
-            gl->glGetProgramInfoLog(prog, 0, &l, log.data());
-            log.resize(l);
-            gl->glGetProgramInfoLog(prog, 1024, &l, log.data());
-            throw std::runtime_error(fmt::format("compile error: {}", log.data()));
+            GLint logLength = 0;
+            gl->glGetShaderiv(prog, GL_INFO_LOG_LENGTH, &logLength);
+            std::vector<GLchar> log(static_cast<size_t>(std::max(logLength, 1)), '\0');
+            gl->glGetShaderInfoLog(prog, static_cast<GLsizei>(log.size()), nullptr, log.data());
+            const auto message = fmt::format("shader compile error in {}:\n{}", preshader->filename, log.data());
+            logger.error("{}", message);
+            throw std::runtime_error(message);
         }
 
         gl->glAttachShader(programbase, prog);
@@ -105,7 +108,9 @@ void OMRendererPipelineOpenGL::build()
         gl->glGetProgramiv(programbase, GL_INFO_LOG_LENGTH, &length);
         log.resize(length);
         gl->glGetProgramInfoLog(programbase, length, nullptr, log.data());
-        throw std::runtime_error(fmt::format("link error: {}", log.data()));
+        const auto message = fmt::format("shader link error:\n{}", log.data());
+        logger.error("{}", message);
+        throw std::runtime_error(message);
     }
 
     for (auto s : subprogs)
