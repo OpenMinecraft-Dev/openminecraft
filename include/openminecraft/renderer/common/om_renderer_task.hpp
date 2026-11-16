@@ -4,6 +4,7 @@
 #include "glm/ext/vector_float4.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
+#include "openminecraft/renderer/common/om_renderer_resource_set.hpp"
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/om_renderer_object.hpp"
 #include <cstdint>
@@ -76,6 +77,13 @@ class OMRendererTask : public OMRendererObject
     inline auto pipeline(OMRendererPipeline *pipeline) -> OMRendererTask *
     {
         bindPipeline(pipeline);
+        return this;
+    }
+
+    virtual void bindResourceSet(OMRendererResourceSet *resources) = 0;
+    inline auto resourceSet(OMRendererResourceSet *resources) -> OMRendererTask *
+    {
+        bindResourceSet(resources);
         return this;
     }
     virtual void bindVertexBuffer(std::vector<OMRendererBuffer *> buffer) = 0;

@@ -51,12 +51,20 @@ class OMRendererPipelineVk : public common::OMRendererPipeline
         return pipelineLayout;
     }
 
-    auto getDescSet() -> ::vk::DescriptorSet
+    auto getDescriptorLayoutBindings() const -> const std::vector<::vk::DescriptorSetLayoutBinding> &
     {
-        return descriptorSet;
+        return descriptorSetLayoutBindings;
     }
 
+    auto getDescriptorPoolSizes() const -> const std::vector<::vk::DescriptorPoolSize> &
+    {
+        return descriptorPoolSizes;
+    }
+
+    auto createResourceSet() -> common::OMRendererResourceSet * override;
+
   private:
+    friend class OMRendererResourceSetVk;
     OMRendererVk *renderer;
     std::vector<::vk::ShaderModule> shaders;
     std::vector<::vk::PipelineShaderStageCreateInfo> shaderCreateInfos;
@@ -70,11 +78,7 @@ class OMRendererPipelineVk : public common::OMRendererPipeline
     ::vk::Pipeline pipeline;
     ::vk::PipelineLayout pipelineLayout;
     ::vk::DescriptorSetLayout descriptorSetLayout;
-    ::vk::DescriptorPool descriptorPool;
-    ::vk::DescriptorSet descriptorSet;
     bool available = false;
-
-    std::unordered_map<uint32_t, ::vk::BufferView> bufferViews;
 
     log::OMLogger logger;
 

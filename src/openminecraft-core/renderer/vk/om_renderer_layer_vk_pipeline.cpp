@@ -1,4 +1,5 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_pipeline.hpp"
+#include "openminecraft/renderer/vk/om_renderer_layer_vk_resource_set.hpp"
 #include "openminecraft/i18n/om_i18n_res.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
@@ -31,17 +32,8 @@ OMRendererPipelineVk::~OMRendererPipelineVk()
     {
         if (available)
         {
-            for (auto &[binding, view] : bufferViews)
-            {
-                renderer->logicalDevice.destroyBufferView(view, renderer->allocator);
-            }
-            bufferViews.clear();
-
-            if (descriptorPool || descriptorSet)
-            {
-                renderer->logicalDevice.freeDescriptorSets(descriptorPool, descriptorSet);
-                renderer->logicalDevice.destroyDescriptorPool(descriptorPool, renderer->allocator);
-            }
+            delete defaultSet;
+            defaultSet = nullptr;
             renderer->logicalDevice.destroyDescriptorSetLayout(descriptorSetLayout, renderer->allocator);
             renderer->logicalDevice.destroyPipeline(pipeline, renderer->allocator);
             renderer->logicalDevice.destroyPipelineLayout(pipelineLayout, renderer->allocator);
@@ -225,59 +217,17 @@ void OMRendererPipelineVk::bindOutput(common::OMRendererRenderTarget *target)
 
 void OMRendererPipelineVk::bindInput(int idx, common::OMRendererBuffer *buff)
 {
-    try
-    {
-        if (buff->usage == common::UniformTexel)
-        {
-            auto bv = renderer->logicalDevice.createBufferView(
-                BufferViewCreateInfo({}, reinterpret_cast<OMRendererBufferVk *>(buff)->buffer, convertTo(buff->format),
-                                     0, static_cast<DeviceSize>(buff->length)),
-                renderer->allocator);
-            renderer->logicalDevice.updateDescriptorSets(
-                WriteDescriptorSet(descriptorSet, idx, 0, descriptorSetLayoutBindings[idx].descriptorType, {}, {},
-                                   {bv}),
-                nullptr);
-
-            // The buffer view now lives in the descriptor set.  Destroy the view that was previously bound to this
-            // binding, otherwise every rebind (which happens whenever a texel buffer is reallocated, e.g. the voxel
-            // chunk offset buffer or the glyph atlas) leaks a view which keeps referencing an already destroyed
-            // VkBuffer.
-            auto previous = bufferViews.find(static_cast<uint32_t>(idx));
-            if (previous != bufferViews.end())
-            {
-                renderer->logicalDevice.destroyBufferView(previous->second, renderer->allocator);
-                previous->second = bv;
-            }
-            else
-            {
-                bufferViews.emplace(static_cast<uint32_t>(idx), bv);
-            }
-            return;
-        }
-        std::vector c = {DescriptorBufferInfo(reinterpret_cast<OMRendererBufferVk *>(buff)->buffer, 0,
-                                              static_cast<DeviceSize>(buff->length))};
-        renderer->logicalDevice.updateDescriptorSets(
-            WriteDescriptorSet(descriptorSet, idx, 0, descriptorSetLayoutBindings[idx].descriptorType, {}, c), nullptr);
-    }
-    catch (SystemError &e)
-    {
-        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.pipeline.desc"));
-    }
+    defaultResourceSet()->bindInput(idx, buff);
 }
+
 void OMRendererPipelineVk::bindInput(int idx, common::OMRendererTexture *texture)
 {
-    try
-    {
-        auto imageInfo = DescriptorImageInfo(reinterpret_cast<OMRendererTextureVk *>(texture)->sampler,
-                                             reinterpret_cast<OMRendererTextureVk *>(texture)->imageView,
-                                             ImageLayout::eShaderReadOnlyOptimal);
-        renderer->logicalDevice.updateDescriptorSets(
-            WriteDescriptorSet(descriptorSet, idx, 0, DescriptorType::eCombinedImageSampler, imageInfo, {}), nullptr);
-    }
-    catch (SystemError &e)
-    {
-        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.pipeline.desc"));
-    }
+    defaultResourceSet()->bindInput(idx, texture);
+}
+
+auto OMRendererPipelineVk::createResourceSet() -> common::OMRendererResourceSet *
+{
+    return new OMRendererResourceSetVk(renderer, this);
 }
 
 static auto convert(common::OMRendererPipelineBlendOp p) -> BlendOp
@@ -411,16 +361,6 @@ void OMRendererPipelineVk::build()
     {
         descriptorSetLayout = renderer->logicalDevice.createDescriptorSetLayout(
             DescriptorSetLayoutCreateInfo({}, descriptorSetLayoutBindings), renderer->allocator);
-
-        if (descriptorSetLayoutBindings.size() > 0)
-        {
-            descriptorPool = renderer->logicalDevice.createDescriptorPool(
-                DescriptorPoolCreateInfo(DescriptorPoolCreateFlagBits::eFreeDescriptorSet,
-                                         descriptorSetLayoutBindings.size(), descriptorPoolSizes),
-                renderer->allocator);
-            descriptorSet =
-                renderer->logicalDevice.allocateDescriptorSets({descriptorPool, 1, &descriptorSetLayout})[0];
-        }
 
         pipelineLayout = renderer->logicalDevice.createPipelineLayout(PipelineLayoutCreateInfo({}, descriptorSetLayout),
                                                                       renderer->allocator);
@@ -568,11 +508,6 @@ void OMRendererPipelineVk::build()
         renderer->allocator);
     if (result.result != Result::eSuccess)
     {
-        if (descriptorPool || descriptorSet)
-        {
-            renderer->logicalDevice.freeDescriptorSets(descriptorPool, descriptorSet);
-            renderer->logicalDevice.destroyDescriptorPool(descriptorPool, renderer->allocator);
-        }
         renderer->logicalDevice.destroyDescriptorSetLayout(descriptorSetLayout, renderer->allocator);
         renderer->logicalDevice.destroyPipelineLayout(pipelineLayout, renderer->allocator);
         throw OMRendererException(

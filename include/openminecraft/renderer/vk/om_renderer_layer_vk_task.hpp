@@ -6,6 +6,7 @@
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk.hpp"
+#include "openminecraft/renderer/vk/om_renderer_layer_vk_resource_set.hpp"
 #include <cstdint>
 
 namespace openminecraft::renderer::vk
@@ -17,6 +18,7 @@ class OMRendererTaskVk : public common::OMRendererTask
     ~OMRendererTaskVk() override;
 
     void bindPipeline(common::OMRendererPipeline *pipeline) override;
+    void bindResourceSet(common::OMRendererResourceSet *resources) override;
     void setScissor(float x, float y, float width, float height) override;
     void bindVertexBuffer(std::vector<common::OMRendererBuffer *> buffer) override;
     void bindIndexBuffer(common::OMRendererBuffer *buffer) override;
@@ -51,6 +53,7 @@ class OMRendererTaskVk : public common::OMRendererTask
     bool isResolved = false;
     bool begin = false;
     common::OMRendererPipeline *pipe;
+    OMRendererResourceSetVk *resourceSet = nullptr;
 };
 }; // namespace openminecraft::renderer::vk
 

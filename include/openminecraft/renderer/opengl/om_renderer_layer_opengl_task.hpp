@@ -5,6 +5,7 @@
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_pipeline.hpp"
+#include "openminecraft/renderer/opengl/om_renderer_layer_opengl_resource_set.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_rendertarget.hpp"
 #include <array>
 #include <cstdint>
@@ -86,6 +87,7 @@ class OMRendererTaskOpenGL : public common::OMRendererTask
     ~OMRendererTaskOpenGL() override;
 
     void bindPipeline(common::OMRendererPipeline *pipeline) override;
+    void bindResourceSet(common::OMRendererResourceSet *resources) override;
     void setScissor(float x, float y, float width, float height) override;
     void bindVertexBuffer(std::vector<common::OMRendererBuffer *> buffer) override;
     void bindVertexBufferInstanced(std::vector<common::OMRendererBuffer *> buffer, int off) override;
@@ -107,6 +109,8 @@ class OMRendererTaskOpenGL : public common::OMRendererTask
     void popDebugTag() override;
 
     void execute();
+
+    OMRendererResourceSetOpenGL *resourceSet = nullptr;
 
   private:
     auto primitiveType() -> GLenum;

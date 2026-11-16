@@ -80,12 +80,29 @@ void OMRendererTaskVk::bindPipeline(common::OMRendererPipeline *pipeline)
     {
         commandBuffer.bindPipeline(PipelineBindPoint::eGraphics,
                                    reinterpret_cast<OMRendererPipelineVk *>(pipeline)->getPipeline());
-        if (reinterpret_cast<OMRendererPipelineVk *>(pipeline)->getDescSet())
-        {
-            commandBuffer.bindDescriptorSets(PipelineBindPoint::eGraphics,
-                                             reinterpret_cast<OMRendererPipelineVk *>(pipeline)->getPipelineLayout(), 0,
-                                             reinterpret_cast<OMRendererPipelineVk *>(pipeline)->getDescSet(), nullptr);
-        }
+    }
+    catch (SystemError &e)
+    {
+        throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.task"));
+    }
+
+    bindResourceSet(pipeline->defaultResourceSet());
+}
+
+void OMRendererTaskVk::bindResourceSet(common::OMRendererResourceSet *resources)
+{
+    resourceSet = reinterpret_cast<OMRendererResourceSetVk *>(resources);
+
+    if (resourceSet == nullptr || pipe == nullptr || !resourceSet->descriptorSet())
+    {
+        return;
+    }
+
+    try
+    {
+        commandBuffer.bindDescriptorSets(PipelineBindPoint::eGraphics,
+                                         reinterpret_cast<OMRendererPipelineVk *>(pipe)->getPipelineLayout(), 0,
+                                         resourceSet->descriptorSet(), nullptr);
     }
     catch (SystemError &e)
     {

@@ -9,6 +9,7 @@ enum OMRendererObjectType
     DataBuffer,
     Handler,
     Pipeline,
+    ResourceSet,
     RenderTarget,
     Shader,
     Task,
@@ -20,6 +21,7 @@ enum OMRendererObjectType
 class OMRendererObject
 {
   public:
+    virtual ~OMRendererObject() = default;
     virtual auto objType() -> OMRendererObjectType = 0;
 };
 } // namespace openminecraft::renderer

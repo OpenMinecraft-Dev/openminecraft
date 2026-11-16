@@ -27,18 +27,23 @@ class OMRendererPipelineOpenGL : public common::OMRendererPipeline
     void setBlendFunc(common::OMReedererPipelineBlendState state) override;
 
     void bindInput(int idx, common::OMRendererBuffer *buff) override;
+    auto getRenderer() -> OMRendererOpenGL *
+    {
+        return rendererRef;
+    }
     void bindInput(int idx, common::OMRendererTexture *texture) override;
     void bindInputName(std::string name) override;
+    auto createResourceSet() -> common::OMRendererResourceSet * override;
 
     common::OMRendererRenderTarget *target;
     GLuint program = 0;
     common::basics::OMVertexFormat format;
-    std::vector<OMRendererObject *> inputs;
     std::vector<common::OMRendererPipelineInputType> inputTypes;
     std::vector<std::string> inputNames;
     std::vector<common::OMReedererPipelineBlendState> blendState;
 
   private:
+    OMRendererOpenGL *rendererRef;
     OMRendererOpenGLFuncs *gl;
     std::vector<std::shared_ptr<common::OMShader>> preshaders;
     log::OMLogger logger;

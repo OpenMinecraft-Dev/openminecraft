@@ -1,4 +1,5 @@
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_pipeline.hpp"
+#include "openminecraft/renderer/opengl/om_renderer_layer_opengl_resource_set.hpp"
 #include "GL/glcorearb.h"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
@@ -13,10 +14,14 @@ namespace openminecraft::renderer::opengl
 OMRendererPipelineOpenGL::OMRendererPipelineOpenGL(OMRendererOpenGL *renderer)
     : common::OMRendererPipeline(renderer), logger("OMRendererPipelineOpenGL", this)
 {
+    this->rendererRef = renderer;
     this->gl = &renderer->gl;
 }
 OMRendererPipelineOpenGL::~OMRendererPipelineOpenGL()
 {
+    delete defaultSet;
+    defaultSet = nullptr;
+
     if (program != 0)
     {
         gl->glDeleteProgram(program);
@@ -31,7 +36,6 @@ void OMRendererPipelineOpenGL::bindInputName(std::string name)
 void OMRendererPipelineOpenGL::appendInput(common::OMRendererPipelineInputType t)
 {
     inputTypes.push_back(t);
-    inputs.resize(inputTypes.size());
 }
 void OMRendererPipelineOpenGL::attachShader(std::shared_ptr<common::OMShader> shader)
 {
@@ -147,10 +151,15 @@ void OMRendererPipelineOpenGL::setBlendFunc(common::OMReedererPipelineBlendState
 
 void OMRendererPipelineOpenGL::bindInput(int idx, common::OMRendererBuffer *buff)
 {
-    inputs[idx] = buff;
+    defaultResourceSet()->bindInput(idx, buff);
 }
 void OMRendererPipelineOpenGL::bindInput(int idx, common::OMRendererTexture *texture)
 {
-    inputs[idx] = texture;
+    defaultResourceSet()->bindInput(idx, texture);
+}
+
+auto OMRendererPipelineOpenGL::createResourceSet() -> common::OMRendererResourceSet *
+{
+    return new OMRendererResourceSetOpenGL(rendererRef, this);
 }
 } // namespace openminecraft::renderer::opengl

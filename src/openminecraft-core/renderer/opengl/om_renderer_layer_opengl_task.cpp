@@ -156,47 +156,8 @@ void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
     gl->glBindVertexArray(vao);
     vaos.push_back(vao);
 
-    for (int i = 0; i < glpipe->inputTypes.size(); i++)
-    {
-        auto obj = glpipe->inputs[i];
-        switch (glpipe->inputTypes[i])
-        {
-        case common::ImageSampler: {
-            ops.push_back({ActiveTexture, static_cast<GLuint>(GL_TEXTURE0 + i)});
-            auto tex = reinterpret_cast<OMRendererTextureOpenGL *>(glpipe->inputs[i]);
-            switch (tex->type)
-            {
-            case common::Dim2:
-                ops.push_back({BindTexture, GL_TEXTURE_2D, tex->texture});
-                break;
-            case common::Dim2Array:
-                ops.push_back({BindTexture, GL_TEXTURE_2D_ARRAY, tex->texture});
-                break;
-            case common::Dim2Multisample:
-                ops.push_back({BindTexture, GL_TEXTURE_2D_MULTISAMPLE, tex->texture});
-                break;
-            }
-
-            break;
-        }
-        case common::UniformTexelBuffer:
-            ops.push_back({ActiveTexture, static_cast<GLuint>(GL_TEXTURE0 + i)});
-            ops.push_back(
-                {BindTexture, GL_TEXTURE_BUFFER, reinterpret_cast<OMRendererBufferOpenGL *>(glpipe->inputs[i])->texel});
-
-            break;
-        case common::UniformBuffer:
-            ops.push_back({BindBufferBase,
-                           {GL_UNIFORM_BUFFER, static_cast<GLuint>(i),
-                            reinterpret_cast<OMRendererBufferOpenGL *>(glpipe->inputs[i])->buffer}});
-            break;
-        case common::ShaderStorageBuffer:
-            ops.push_back({BindBufferBase,
-                           {GL_SHADER_STORAGE_BUFFER, static_cast<GLuint>(i),
-                            reinterpret_cast<OMRendererBufferOpenGL *>(glpipe->inputs[i])->buffer}});
-            break;
-        }
-    }
+    resourceSet = nullptr;
+    bindResourceSet(glpipe->defaultResourceSet());
 
     auto s = glpipe->blendState;
     ops.push_back({glpipe->depthClamp ? Enable : Disable, GL_DEPTH_CLAMP});
@@ -426,6 +387,64 @@ void OMRendererTaskOpenGL::bindVertexBufferInstanced(std::vector<common::OMRende
             index++;
         }
         reinterpret_cast<OMRendererBufferOpenGL *>(buffer[binding.binding])->unbind();
+    }
+}
+
+void OMRendererTaskOpenGL::bindResourceSet(common::OMRendererResourceSet *resources)
+{
+    resourceSet = reinterpret_cast<OMRendererResourceSetOpenGL *>(resources);
+
+    if (resourceSet == nullptr || pipeline == nullptr)
+    {
+        return;
+    }
+
+    auto glpipe = pipeline;
+    const auto &objects = resourceSet->inputs();
+
+    for (int i = 0; i < static_cast<int>(glpipe->inputTypes.size()) && i < static_cast<int>(objects.size()); i++)
+    {
+        auto obj = objects[i];
+        if (obj == nullptr)
+        {
+            continue;
+        }
+
+        switch (glpipe->inputTypes[i])
+        {
+        case common::ImageSampler: {
+            ops.push_back({ActiveTexture, static_cast<GLuint>(GL_TEXTURE0 + i)});
+            auto tex = reinterpret_cast<OMRendererTextureOpenGL *>(obj);
+            switch (tex->type)
+            {
+            case common::Dim2:
+                ops.push_back({BindTexture, GL_TEXTURE_2D, tex->texture});
+                break;
+            case common::Dim2Array:
+                ops.push_back({BindTexture, GL_TEXTURE_2D_ARRAY, tex->texture});
+                break;
+            case common::Dim2Multisample:
+                ops.push_back({BindTexture, GL_TEXTURE_2D_MULTISAMPLE, tex->texture});
+                break;
+            }
+            break;
+        }
+        case common::UniformTexelBuffer:
+            ops.push_back({ActiveTexture, static_cast<GLuint>(GL_TEXTURE0 + i)});
+            ops.push_back({BindTexture, GL_TEXTURE_BUFFER,
+                           reinterpret_cast<OMRendererBufferOpenGL *>(obj)->texel});
+            break;
+        case common::UniformBuffer:
+            ops.push_back({BindBufferBase,
+                           {GL_UNIFORM_BUFFER, static_cast<GLuint>(i),
+                            reinterpret_cast<OMRendererBufferOpenGL *>(obj)->buffer}});
+            break;
+        case common::ShaderStorageBuffer:
+            ops.push_back({BindBufferBase,
+                           {GL_SHADER_STORAGE_BUFFER, static_cast<GLuint>(i),
+                            reinterpret_cast<OMRendererBufferOpenGL *>(obj)->buffer}});
+            break;
+        }
     }
 }
 
