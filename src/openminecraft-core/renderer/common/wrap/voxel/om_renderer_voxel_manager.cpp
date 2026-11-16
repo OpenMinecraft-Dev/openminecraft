@@ -629,54 +629,74 @@ OMVoxelManager::OMVoxelManager(
     starBaseData = OMBufferRef(renderer, "voxel.starBase");
     renderer->registerBuffer(starBaseData.getTag(), Uniform, sizeof(float) * 2);
 
-    pipeline->bindInput(1, textureAtlas);
-    pipeline->bindInput(2, chunkOffsetBuffer);
-    pipeline->bindInput(3, fogdata);
-    pipeline->bindInput(4, lightmap->colorTexture());
+    resources(pipeline)->bindInput(1, textureAtlas);
+    resources(pipeline)->bindInput(2, chunkOffsetBuffer);
+    resources(pipeline)->bindInput(3, fogdata);
+    resources(pipeline)->bindInput(4, lightmap->colorTexture());
 
-    complexPipeline->bindInput(1, textureAtlas);
-    complexPipeline->bindInput(2, textureAtlasSecondary);
-    complexPipeline->bindInput(3, chunkOffsetBuffer);
-    complexPipeline->bindInput(4, fogdata);
-    complexPipeline->bindInput(5, lightmap->colorTexture());
+    resources(complexPipeline)->bindInput(1, textureAtlas);
+    resources(complexPipeline)->bindInput(2, textureAtlasSecondary);
+    resources(complexPipeline)->bindInput(3, chunkOffsetBuffer);
+    resources(complexPipeline)->bindInput(4, fogdata);
+    resources(complexPipeline)->bindInput(5, lightmap->colorTexture());
 
-    fluidPipeline->bindInput(1, textureAtlas);
-    fluidPipeline->bindInput(2, textureAtlasSecondary);
-    fluidPipeline->bindInput(3, chunkOffsetBuffer);
-    fluidPipeline->bindInput(4, fogdata);
-    fluidPipeline->bindInput(5, lightmap->colorTexture());
+    resources(fluidPipeline)->bindInput(1, textureAtlas);
+    resources(fluidPipeline)->bindInput(2, textureAtlasSecondary);
+    resources(fluidPipeline)->bindInput(3, chunkOffsetBuffer);
+    resources(fluidPipeline)->bindInput(4, fogdata);
+    resources(fluidPipeline)->bindInput(5, lightmap->colorTexture());
 
-    translucentPipeline->bindInput(1, textureAtlas);
-    translucentPipeline->bindInput(2, chunkOffsetBuffer);
-    translucentPipeline->bindInput(3, fogdata);
-    translucentPipeline->bindInput(4, lightmap->colorTexture());
+    resources(translucentPipeline)->bindInput(1, textureAtlas);
+    resources(translucentPipeline)->bindInput(2, chunkOffsetBuffer);
+    resources(translucentPipeline)->bindInput(3, fogdata);
+    resources(translucentPipeline)->bindInput(4, lightmap->colorTexture());
 
-    translucentComplexPipeline->bindInput(1, textureAtlas);
-    translucentComplexPipeline->bindInput(2, textureAtlasSecondary);
-    translucentComplexPipeline->bindInput(3, chunkOffsetBuffer);
-    translucentComplexPipeline->bindInput(4, fogdata);
-    translucentComplexPipeline->bindInput(5, lightmap->colorTexture());
+    resources(translucentComplexPipeline)->bindInput(1, textureAtlas);
+    resources(translucentComplexPipeline)->bindInput(2, textureAtlasSecondary);
+    resources(translucentComplexPipeline)->bindInput(3, chunkOffsetBuffer);
+    resources(translucentComplexPipeline)->bindInput(4, fogdata);
+    resources(translucentComplexPipeline)->bindInput(5, lightmap->colorTexture());
 
-    translucentFluidPipeline->bindInput(1, textureAtlas);
-    translucentFluidPipeline->bindInput(2, textureAtlasSecondary);
-    translucentFluidPipeline->bindInput(3, chunkOffsetBuffer);
-    translucentFluidPipeline->bindInput(4, fogdata);
-    translucentFluidPipeline->bindInput(5, lightmap->colorTexture());
+    resources(translucentFluidPipeline)->bindInput(1, textureAtlas);
+    resources(translucentFluidPipeline)->bindInput(2, textureAtlasSecondary);
+    resources(translucentFluidPipeline)->bindInput(3, chunkOffsetBuffer);
+    resources(translucentFluidPipeline)->bindInput(4, fogdata);
+    resources(translucentFluidPipeline)->bindInput(5, lightmap->colorTexture());
 
-    skyDiscPipeline->bindInput(1, skydisc);
-    lightmapPipeline->bindInput(0, lightmapData);
-    skyPipeline->bindInput(0, skydisc);
-    sunrisePipeline->bindInput(1, sunrise);
-    sunPipeline->bindInput(1, sunrise);
-    sunPipeline->bindInput(2, sunTex);
-    moonPipeline->bindInput(1, moonData);
-    moonPipeline->bindInput(2, moonTex);
-    starPipeline->bindInput(1, starBaseData);
-    cloudPipeline->bindInput(1, cloudData);
-    cloudPipeline->bindInput(2, cloudFogdata);
+    resources(skyDiscPipeline)->bindInput(1, skydisc);
+    resources(lightmapPipeline)->bindInput(0, lightmapData);
+    resources(skyPipeline)->bindInput(0, skydisc);
+    resources(sunrisePipeline)->bindInput(1, sunrise);
+    resources(sunPipeline)->bindInput(1, sunrise);
+    resources(sunPipeline)->bindInput(2, sunTex);
+    resources(moonPipeline)->bindInput(1, moonData);
+    resources(moonPipeline)->bindInput(2, moonTex);
+    resources(starPipeline)->bindInput(1, starBaseData);
+    resources(cloudPipeline)->bindInput(1, cloudData);
+    resources(cloudPipeline)->bindInput(2, cloudFogdata);
 }
+auto OMVoxelManager::resources(OMRendererPipeline *pipeline) -> OMRendererResourceSet *
+{
+    auto it = pipelineResources.find(pipeline);
+
+    if (it == pipelineResources.end())
+    {
+        auto *set = pipeline->createResourceSet();
+        pipelineResources.emplace(pipeline, set);
+        return set;
+    }
+
+    return it->second;
+}
+
 OMVoxelManager::~OMVoxelManager()
 {
+    for (auto &p : pipelineResources)
+    {
+        delete p.second;
+    }
+    pipelineResources.clear();
+
     delete skyPipeline;
     delete lightmap;
     delete lightmapPipeline;
@@ -1539,12 +1559,12 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
             renderer->registerBuffer(chunkOffsetBuffer.getTag(), UniformTexel,
                                      static_cast<uint64_t>(chunkManager->numChunks()) * sizeof(glm::vec4) * 2);
             chunkOffsetBuffer->format = basics::Vec4f;
-            pipeline->bindInput(2, chunkOffsetBuffer);
-            complexPipeline->bindInput(3, chunkOffsetBuffer);
-            fluidPipeline->bindInput(3, chunkOffsetBuffer);
-            translucentPipeline->bindInput(2, chunkOffsetBuffer);
-            translucentComplexPipeline->bindInput(3, chunkOffsetBuffer);
-            translucentFluidPipeline->bindInput(3, chunkOffsetBuffer);
+            resources(pipeline)->bindInput(2, chunkOffsetBuffer);
+            resources(complexPipeline)->bindInput(3, chunkOffsetBuffer);
+            resources(fluidPipeline)->bindInput(3, chunkOffsetBuffer);
+            resources(translucentPipeline)->bindInput(2, chunkOffsetBuffer);
+            resources(translucentComplexPipeline)->bindInput(3, chunkOffsetBuffer);
+            resources(translucentFluidPipeline)->bindInput(3, chunkOffsetBuffer);
             chunkOffsetBufferReallocated = true;
         }
 
@@ -1689,44 +1709,44 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
         cloudTargetMS->setClearDepth(false);
         cloudTargetMS->constructWithDepth(cutoutTargetMS->depthTexTag(), renderer->getExtent(), samples);
         cloudTarget->construct(renderer->getExtent());
-        composePipeline->bindInput(0, (samples == 1 ? cutoutTargetMS : cutoutTarget)->colorTexture());
-        composePipeline->bindInput(1, (samples == 1 ? translucentTargetMS : translucentTarget)->colorTexture());
-        composePipeline->bindInput(2, (samples == 1 ? translucentTargetMS : translucentTarget)->additionalTex(0));
-        cloudComposePipeline->bindInput(0, (samples == 1 ? cloudTargetMS : cloudTarget)->colorTexture());
-        cloudComposePipeline->bindInput(1, (samples == 1 ? cloudTargetMS : cloudTarget)->additionalTex(0));
+        resources(composePipeline)->bindInput(0, (samples == 1 ? cutoutTargetMS : cutoutTarget)->colorTexture());
+        resources(composePipeline)->bindInput(1, (samples == 1 ? translucentTargetMS : translucentTarget)->colorTexture());
+        resources(composePipeline)->bindInput(2, (samples == 1 ? translucentTargetMS : translucentTarget)->additionalTex(0));
+        resources(cloudComposePipeline)->bindInput(0, (samples == 1 ? cloudTargetMS : cloudTarget)->colorTexture());
+        resources(cloudComposePipeline)->bindInput(1, (samples == 1 ? cloudTargetMS : cloudTarget)->additionalTex(0));
     }
 
     auto tsk = task->target(lightmap->target())
                    ->beginDebugTag("environment")
-                   ->pipeline(lightmapPipeline)
+                   ->pipeline(lightmapPipeline)->resourceSet(resources(lightmapPipeline))
                    ->drawN(6)
                    ->clearColor({0.0f, 0.0f, 0.0f, 0.0f})
                    ->clearDepth(1.0f)
                    ->target(cutoutTargetMS->target())
-                   ->pipeline(skyPipeline)
+                   ->pipeline(skyPipeline)->resourceSet(resources(skyPipeline))
                    ->drawN(6)
-                   ->pipeline(skyDiscPipeline)
+                   ->pipeline(skyDiscPipeline)->resourceSet(resources(skyDiscPipeline))
                    ->drawN(10)
-                   ->pipeline(sunrisePipeline)
+                   ->pipeline(sunrisePipeline)->resourceSet(resources(sunrisePipeline))
                    ->drawN(18)
-                   ->pipeline(sunPipeline)
+                   ->pipeline(sunPipeline)->resourceSet(resources(sunPipeline))
                    ->drawN(6)
-                   ->pipeline(moonPipeline)
+                   ->pipeline(moonPipeline)->resourceSet(resources(moonPipeline))
                    ->drawN(6)
-                   ->pipeline(starPipeline)
+                   ->pipeline(starPipeline)->resourceSet(resources(starPipeline))
                    ->vertexBuffer({starBuffer})
                    ->drawInstanceN(6, starBuffer->length / sizeof(float) / 5)
                    ->endDebugTag()
                    ->beginDebugTag("cutout/opaque chunks")
-                   ->pipeline(pipeline)
+                   ->pipeline(pipeline)->resourceSet(resources(pipeline))
                    ->vertexBuffer({voxelLayer->buf()->buffer()})
                    ->indexBuffer(voxelIndexBuffer)
                    ->drawIndexedInstanceN(6, voxelLayer->buf()->usedSize() / sizeof(OMVoxel))
-                   ->pipeline(complexPipeline)
+                   ->pipeline(complexPipeline)->resourceSet(resources(complexPipeline))
                    ->vertexBuffer({voxelComplexLayer->buf()->buffer()})
                    ->indexBuffer(voxelIndexBuffer)
                    ->drawIndexedInstanceN(6, voxelComplexLayer->buf()->usedSize() / sizeof(OMVoxelComplex))
-                   ->pipeline(fluidPipeline)
+                   ->pipeline(fluidPipeline)->resourceSet(resources(fluidPipeline))
                    ->vertexBuffer({voxelFluidLayer->buf()->buffer()})
                    ->indexBuffer(voxelIndexBuffer)
                    ->drawIndexedInstanceN(6, voxelFluidLayer->buf()->usedSize() / sizeof(OMVoxelFluid))
@@ -1743,7 +1763,7 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
             ->clearColor(glm::vec4(0.0), 0)
             ->clearColor(glm::vec4(1.0), 1)
             ->target(cloudTargetMS->target())
-            ->pipeline(cloudPipeline)
+            ->pipeline(cloudPipeline)->resourceSet(resources(cloudPipeline))
             ->vertexBuffer({cloudBuffer})
             ->drawInstanceN(36, cloudBuffer->length / sizeof(uint32_t))
             ->endDebugTag();
@@ -1767,17 +1787,17 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
         ->clearColor(glm::vec4(0.0), 0)
         ->clearColor(glm::vec4(1.0), 1)
         ->target(translucentTargetMS->target())
-        ->pipeline(cloudComposePipeline)
+        ->pipeline(cloudComposePipeline)->resourceSet(resources(cloudComposePipeline))
         ->drawN(6)
-        ->pipeline(translucentPipeline)
+        ->pipeline(translucentPipeline)->resourceSet(resources(translucentPipeline))
         ->vertexBuffer({voxelTranslucentLayer->buf()->buffer()})
         ->indexBuffer(voxelIndexBuffer)
         ->drawIndexedInstanceN(6, voxelTranslucentLayer->buf()->usedSize() / sizeof(OMVoxel))
-        ->pipeline(translucentComplexPipeline)
+        ->pipeline(translucentComplexPipeline)->resourceSet(resources(translucentComplexPipeline))
         ->vertexBuffer({voxelTranslucentComplexLayer->buf()->buffer()})
         ->indexBuffer(voxelIndexBuffer)
         ->drawIndexedInstanceN(6, voxelTranslucentComplexLayer->buf()->usedSize() / sizeof(OMVoxelComplex))
-        ->pipeline(translucentFluidPipeline)
+        ->pipeline(translucentFluidPipeline)->resourceSet(resources(translucentFluidPipeline))
         ->vertexBuffer({voxelTranslucentFluidLayer->buf()->buffer()})
         ->indexBuffer(voxelIndexBuffer)
         ->drawIndexedInstanceN(6, voxelTranslucentFluidLayer->buf()->usedSize() / sizeof(OMVoxelFluid))
@@ -1789,27 +1809,27 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
     }
     return tsk->removeClearColor(1)
         ->target(resolveTarget->target())
-        ->pipeline(composePipeline)
+        ->pipeline(composePipeline)->resourceSet(resources(composePipeline))
         ->drawN(6)
-        ->pipeline(debugPipeline)
+        ->pipeline(debugPipeline)->resourceSet(resources(debugPipeline))
         ->vertexBuffer({debugOffsetBuffer})
         ->drawN(2 * 12);
 }
 
 void OMVoxelManager::bindCameraBuffer(OMRendererBuffer *cameraBuffer)
 {
-    pipeline->bindInput(0, cameraBuffer);
-    debugPipeline->bindInput(0, cameraBuffer);
-    complexPipeline->bindInput(0, cameraBuffer);
-    fluidPipeline->bindInput(0, cameraBuffer);
-    translucentPipeline->bindInput(0, cameraBuffer);
-    translucentComplexPipeline->bindInput(0, cameraBuffer);
-    translucentFluidPipeline->bindInput(0, cameraBuffer);
-    skyDiscPipeline->bindInput(0, cameraBuffer);
-    sunrisePipeline->bindInput(0, cameraBuffer);
-    sunPipeline->bindInput(0, cameraBuffer);
-    moonPipeline->bindInput(0, cameraBuffer);
-    starPipeline->bindInput(0, cameraBuffer);
-    cloudPipeline->bindInput(0, cameraBuffer);
+    resources(pipeline)->bindInput(0, cameraBuffer);
+    resources(debugPipeline)->bindInput(0, cameraBuffer);
+    resources(complexPipeline)->bindInput(0, cameraBuffer);
+    resources(fluidPipeline)->bindInput(0, cameraBuffer);
+    resources(translucentPipeline)->bindInput(0, cameraBuffer);
+    resources(translucentComplexPipeline)->bindInput(0, cameraBuffer);
+    resources(translucentFluidPipeline)->bindInput(0, cameraBuffer);
+    resources(skyDiscPipeline)->bindInput(0, cameraBuffer);
+    resources(sunrisePipeline)->bindInput(0, cameraBuffer);
+    resources(sunPipeline)->bindInput(0, cameraBuffer);
+    resources(moonPipeline)->bindInput(0, cameraBuffer);
+    resources(starPipeline)->bindInput(0, cameraBuffer);
+    resources(cloudPipeline)->bindInput(0, cameraBuffer);
 }
 } // namespace openminecraft::renderer::common::wrap::voxel

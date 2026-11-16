@@ -37,6 +37,7 @@ OMRendererBlurHandler::OMRendererBlurHandler(OMRenderer *renderer, int passes) :
                        ->blend(true)
                        ->depth(false, false)
                        ->buildN();
+    biltResources = biltPipeline->createResourceSet();
     blurp1Pipeline =
         renderer->createPipeline()
             ->input(UniformBuffer)
@@ -51,7 +52,8 @@ OMRendererBlurHandler::OMRendererBlurHandler(OMRenderer *renderer, int passes) :
             ->blend(true)
             ->depth(false, false)
             ->buildN();
-    blurp1Pipeline->bindInput(0, blurArgs);
+    blurp1Resources = blurp1Pipeline->createResourceSet();
+    blurp1Resources->bindInput(0, blurArgs);
     blurp2Pipeline =
         renderer->createPipeline()
             ->input(UniformBuffer)
@@ -66,7 +68,8 @@ OMRendererBlurHandler::OMRendererBlurHandler(OMRenderer *renderer, int passes) :
             ->blend(true)
             ->depth(false, false)
             ->buildN();
-    blurp2Pipeline->bindInput(0, blurArgs2);
+    blurp2Resources = blurp2Pipeline->createResourceSet();
+    blurp2Resources->bindInput(0, blurArgs2);
 
     composePipeline =
         renderer->createPipeline()
@@ -82,9 +85,14 @@ OMRendererBlurHandler::OMRendererBlurHandler(OMRenderer *renderer, int passes) :
             ->blend(true)
             ->depth(false, false)
             ->buildN();
+    composeResources = composePipeline->createResourceSet();
 }
 OMRendererBlurHandler::~OMRendererBlurHandler()
 {
+    delete biltResources;
+    delete blurp1Resources;
+    delete blurp2Resources;
+    delete composeResources;
     delete blurp1Pipeline;
     delete blurp2Pipeline;
     delete composePipeline;
@@ -95,14 +103,16 @@ OMRendererBlurHandler::~OMRendererBlurHandler()
 
 auto OMRendererBlurHandler::firstLayerTask(OMRendererTask *pre, std::string name) -> OMRendererTask *
 {
-    auto task = renderer->createTask(name)->target(blurTemp2->target())->pipeline(biltPipeline)->drawN(6);
+    auto task = renderer->createTask(name)->target(blurTemp2->target())->pipeline(biltPipeline)->resourceSet(biltResources)->drawN(6);
     for (int i = 0; i < passes; ++i)
     {
         task->target(blurTemp->target())
             ->pipeline(blurp1Pipeline)
+            ->resourceSet(blurp1Resources)
             ->drawN(6)
             ->target(blurTemp2->target())
             ->pipeline(blurp2Pipeline)
+            ->resourceSet(blurp2Resources)
             ->drawN(6);
     }
     task->finishN();
@@ -111,7 +121,7 @@ auto OMRendererBlurHandler::firstLayerTask(OMRendererTask *pre, std::string name
 }
 auto OMRendererBlurHandler::secondLayerTask(OMRendererTask *task) -> OMRendererTask *
 {
-    return task->pipeline(composePipeline)->drawN(6);
+    return task->pipeline(composePipeline)->resourceSet(composeResources)->drawN(6);
 }
 void OMRendererBlurHandler::update(OMRendererBlurArg a)
 {
@@ -131,14 +141,14 @@ void OMRendererBlurHandler::submitTasks()
 {
     blurTemp->construct(renderer->getExtent());
     blurTemp2->construct(renderer->getExtent());
-    blurp1Pipeline->bindInput(1, blurTemp2->colorTexture());
-    blurp2Pipeline->bindInput(1, blurTemp->colorTexture());
-    composePipeline->bindInput(1, blurTemp2->colorTexture());
+    blurp1Resources->bindInput(1, blurTemp2->colorTexture());
+    blurp2Resources->bindInput(1, blurTemp->colorTexture());
+    composeResources->bindInput(1, blurTemp2->colorTexture());
 }
 
 void OMRendererBlurHandler::bind(OMRendererTexture *uplayer, OMRendererTexture *bottomLayer)
 {
-    biltPipeline->bindInput(0, bottomLayer);
-    composePipeline->bindInput(0, uplayer);
+    biltResources->bindInput(0, bottomLayer);
+    composeResources->bindInput(0, uplayer);
 }
 } // namespace openminecraft::renderer::common::wrap

@@ -82,7 +82,7 @@ auto OMDemiurgeShaderSceneChannel::submitTask(OMRendererTask *task, uint32_t lay
         }
 
         applyClipScissor(task, i);
-        task->pipeline(pipeline)->vertexBufferInstanced({instanceBuffer}, i)->drawInstance(6, 1, i);
+        task->pipeline(pipeline)->resourceSet(resourceSets[i])->vertexBufferInstanced({instanceBuffer}, i)->drawInstance(6, 1, i);
     }
 }
 
@@ -118,16 +118,19 @@ auto OMDemiurgeShaderSceneChannel::ensurePipeline(int i) -> OMRendererPipeline *
                          ->depthOp(LessOrEqual)
                          ->buildN();
 
+    auto *set = pipeline->createResourceSet();
+
     if (uniform)
     {
-        pipeline->bindInput(0, uniform);
+        set->bindInput(0, uniform);
     }
 
     if (timeBuffer)
     {
-        pipeline->bindInput(1, timeBuffer);
+        set->bindInput(1, timeBuffer);
     }
 
+    resourceSets.emplace(i, set);
     pipelines.emplace(i, pipeline);
     return pipeline;
 }

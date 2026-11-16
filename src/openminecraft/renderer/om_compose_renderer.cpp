@@ -33,6 +33,7 @@ OMComposeRenderer::OMComposeRenderer(openminecraft::renderer::OMRenderer *render
                        ->blend(true)
                        ->depth(false, false)
                        ->buildN();
+    mainResources = mainPipeline->createResourceSet();
 
     // Debug HUD is composited with a plain blit (no blur).
     overlayPipeline =
@@ -47,6 +48,7 @@ OMComposeRenderer::OMComposeRenderer(openminecraft::renderer::OMRenderer *render
             ->blend(true)
             ->depth(false, false)
             ->buildN();
+    overlayResources = overlayPipeline->createResourceSet();
 
     blurHandler = std::make_shared<wrap::OMRendererBlurHandler>(renderer, 1);
     renderer->registerHandler(blurHandler);
@@ -55,6 +57,8 @@ OMComposeRenderer::OMComposeRenderer(openminecraft::renderer::OMRenderer *render
 
 OMComposeRenderer::~OMComposeRenderer()
 {
+    delete mainResources;
+    delete overlayResources;
     delete mainPipeline;
     delete overlayPipeline;
     delete uplayerTarget;
@@ -64,8 +68,8 @@ void OMComposeRenderer::submitTasks()
 {
     uplayerTarget->construct(renderer->getExtent());
 
-    mainPipeline->bindInput(0, scene->colorTexture());
-    overlayPipeline->bindInput(0, overlay->colorTexture());
+    mainResources->bindInput(0, scene->colorTexture());
+    overlayResources->bindInput(0, overlay->colorTexture());
     blurHandler->bind(surface->colorTexture(), scene->colorTexture());
 
     auto voxel = renderer->fetchTask("voxel");
@@ -89,9 +93,9 @@ void OMComposeRenderer::submitTasks()
     {
         main->dependOn(uiDebug);
     }
-    main->target(renderer->getDefaultRenderTarget())->pipeline(mainPipeline)->drawN(6);
+    main->target(renderer->getDefaultRenderTarget())->pipeline(mainPipeline)->resourceSet(mainResources)->drawN(6);
 
-    main->pipeline(overlayPipeline)->drawN(6);
+    main->pipeline(overlayPipeline)->resourceSet(overlayResources)->drawN(6);
     blurHandler->secondLayerTask(main);
 
     main->finishN();

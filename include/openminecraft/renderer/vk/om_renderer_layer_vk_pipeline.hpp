@@ -30,8 +30,6 @@ class OMRendererPipelineVk : public common::OMRendererPipeline
     void vertexFormat(common::basics::OMVertexFormat format) override;
     void bindOutput(common::OMRendererRenderTarget *target) override;
 
-    void bindInput(int idx, common::OMRendererBuffer *buff) override;
-    void bindInput(int idx, common::OMRendererTexture *texture) override;
     void bindInputName(std::string name) override
     {
     }

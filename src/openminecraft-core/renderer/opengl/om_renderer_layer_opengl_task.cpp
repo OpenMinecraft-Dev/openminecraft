@@ -157,7 +157,6 @@ void OMRendererTaskOpenGL::bindPipeline(common::OMRendererPipeline *pipeline)
     vaos.push_back(vao);
 
     resourceSet = nullptr;
-    bindResourceSet(glpipe->defaultResourceSet());
 
     auto s = glpipe->blendState;
     ops.push_back({glpipe->depthClamp ? Enable : Disable, GL_DEPTH_CLAMP});

@@ -6,6 +6,8 @@
 #include "openminecraft/renderer/common/wrap/om_renderer_temptarget.hpp"
 #include "openminecraft/renderer/common/wrap/voxel/om_renderer_voxel_compiler_pool.hpp"
 #include "openminecraft/renderer/common/wrap/voxel/om_renderer_voxel_objects.hpp"
+#include "openminecraft/renderer/common/om_renderer_resource_set.hpp"
+#include <unordered_map>
 
 namespace openminecraft::renderer::common::wrap::voxel
 {
@@ -37,6 +39,7 @@ class OMVoxelManager
     OMRendererTempTarget *cutoutTargetMS, *cutoutTarget;
     OMRendererTempTarget *cloudTargetMS, *cloudTarget;
     OMRendererPipeline *pipeline, *debugPipeline, *complexPipeline, *fluidPipeline;
+    auto resources(OMRendererPipeline *pipeline) -> OMRendererResourceSet *;
     OMRendererPipeline *translucentPipeline, *translucentComplexPipeline, *translucentFluidPipeline;
     OMRendererPipeline *composePipeline;
     OMRendererPipeline *skyDiscPipeline;
@@ -66,6 +69,7 @@ class OMVoxelManager
     OMRendererPipeline *starPipeline;
 
     OMRendererPipeline *cloudPipeline, *cloudComposePipeline;
+    std::unordered_map<OMRendererPipeline *, OMRendererResourceSet *> pipelineResources;
     std::vector<bool> cloudStats;
     OMBufferRef cloudBuffer;
 

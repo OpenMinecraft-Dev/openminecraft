@@ -32,9 +32,7 @@ OMRendererPipelineVk::~OMRendererPipelineVk()
     {
         if (available)
         {
-            delete defaultSet;
-            defaultSet = nullptr;
-            renderer->logicalDevice.destroyDescriptorSetLayout(descriptorSetLayout, renderer->allocator);
+                    renderer->logicalDevice.destroyDescriptorSetLayout(descriptorSetLayout, renderer->allocator);
             renderer->logicalDevice.destroyPipeline(pipeline, renderer->allocator);
             renderer->logicalDevice.destroyPipelineLayout(pipelineLayout, renderer->allocator);
         }
@@ -213,16 +211,6 @@ void OMRendererPipelineVk::vertexFormat(common::basics::OMVertexFormat format)
 void OMRendererPipelineVk::bindOutput(common::OMRendererRenderTarget *target)
 {
     this->target = target;
-}
-
-void OMRendererPipelineVk::bindInput(int idx, common::OMRendererBuffer *buff)
-{
-    defaultResourceSet()->bindInput(idx, buff);
-}
-
-void OMRendererPipelineVk::bindInput(int idx, common::OMRendererTexture *texture)
-{
-    defaultResourceSet()->bindInput(idx, texture);
 }
 
 auto OMRendererPipelineVk::createResourceSet() -> common::OMRendererResourceSet *

@@ -61,12 +61,13 @@ auto OMDemiurgeImageChannel::submitTask(OMRendererTask *task, uint32_t layer) ->
                                    ->depth(true, true)
                                    ->depthOp(LessOrEqual)
                                    ->buildN();
-                pipelines[i]->bindInput(0, uniform);
-                pipelines[i]->bindInput(1, renderer->getTexture(textures[i]));
+                resourceSets[i] = pipelines[i]->createResourceSet();
+                resourceSets[i]->bindInput(0, uniform);
+                resourceSets[i]->bindInput(1, renderer->getTexture(textures[i]));
             }
 
             applyClipScissor(task, i);
-            task->pipeline(pipelines[i])->vertexBufferInstanced({instanceBuffer}, i)->drawInstance(6, 1, i);
+            task->pipeline(pipelines[i])->resourceSet(resourceSets[i])->vertexBufferInstanced({instanceBuffer}, i)->drawInstance(6, 1, i);
         }
     }
 }

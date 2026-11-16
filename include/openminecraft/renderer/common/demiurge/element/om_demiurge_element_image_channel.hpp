@@ -29,6 +29,11 @@ class OMDemiurgeImageChannel : public OMDemiurgeQuadChannel<OMDemiurgeElementIma
             renderer->unregisterBuffer(instanceBuffer.getTag());
             instanceBuffer = wrap::OMBufferRef();
         }
+        for (auto p : resourceSets)
+        {
+            delete p.second;
+        }
+        resourceSets.clear();
         for (auto p : pipelines)
         {
             delete p.second;
@@ -45,6 +50,7 @@ class OMDemiurgeImageChannel : public OMDemiurgeQuadChannel<OMDemiurgeElementIma
     wrap::OMRenderTargetRef target;
     std::unordered_map<int, std::string> textures;
     std::unordered_map<int, OMRendererPipeline *> pipelines;
+    std::unordered_map<int, OMRendererResourceSet *> resourceSets;
 };
 } // namespace openminecraft::renderer::common::demiurge::element
 

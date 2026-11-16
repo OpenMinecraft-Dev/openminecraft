@@ -26,12 +26,10 @@ class OMRendererPipelineOpenGL : public common::OMRendererPipeline
     void build() override;
     void setBlendFunc(common::OMReedererPipelineBlendState state) override;
 
-    void bindInput(int idx, common::OMRendererBuffer *buff) override;
     auto getRenderer() -> OMRendererOpenGL *
     {
         return rendererRef;
     }
-    void bindInput(int idx, common::OMRendererTexture *texture) override;
     void bindInputName(std::string name) override;
     auto createResourceSet() -> common::OMRendererResourceSet * override;
 

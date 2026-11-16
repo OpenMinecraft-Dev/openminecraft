@@ -37,6 +37,12 @@ class OMDemiurgeShaderSceneChannel : public OMDemiurgeQuadChannel<OMDemiurgeElem
             timeBuffer = wrap::OMBufferRef();
         }
 
+        for (auto p : resourceSets)
+        {
+            delete p.second;
+        }
+        resourceSets.clear();
+
         for (auto p : pipelines)
         {
             delete p.second;
@@ -49,6 +55,12 @@ class OMDemiurgeShaderSceneChannel : public OMDemiurgeQuadChannel<OMDemiurgeElem
         auto it = pipelines.find(i);
         if (it != pipelines.end())
         {
+            auto rs = resourceSets.find(i);
+            if (rs != resourceSets.end())
+            {
+                delete rs->second;
+                resourceSets.erase(rs);
+            }
             delete it->second;
             pipelines.erase(it);
         }
@@ -65,6 +77,12 @@ class OMDemiurgeShaderSceneChannel : public OMDemiurgeQuadChannel<OMDemiurgeElem
         auto it = pipelines.find(i);
         if (it != pipelines.end())
         {
+            auto rs = resourceSets.find(i);
+            if (rs != resourceSets.end())
+            {
+                delete rs->second;
+                resourceSets.erase(rs);
+            }
             delete it->second;
             pipelines.erase(it);
         }
@@ -99,6 +117,7 @@ class OMDemiurgeShaderSceneChannel : public OMDemiurgeQuadChannel<OMDemiurgeElem
 
     std::unordered_map<int, std::string> shaders;
     std::unordered_map<int, OMRendererPipeline *> pipelines;
+    std::unordered_map<int, OMRendererResourceSet *> resourceSets;
 };
 } // namespace openminecraft::renderer::common::demiurge::element
 

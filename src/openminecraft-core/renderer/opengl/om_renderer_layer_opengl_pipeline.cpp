@@ -1,3 +1,5 @@
+#define NOMINMAX
+
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_pipeline.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_resource_set.hpp"
 #include "GL/glcorearb.h"
@@ -19,9 +21,6 @@ OMRendererPipelineOpenGL::OMRendererPipelineOpenGL(OMRendererOpenGL *renderer)
 }
 OMRendererPipelineOpenGL::~OMRendererPipelineOpenGL()
 {
-    delete defaultSet;
-    defaultSet = nullptr;
-
     if (program != 0)
     {
         gl->glDeleteProgram(program);
@@ -147,15 +146,6 @@ void OMRendererPipelineOpenGL::build()
 void OMRendererPipelineOpenGL::setBlendFunc(common::OMReedererPipelineBlendState state)
 {
     this->blendState.push_back(state);
-}
-
-void OMRendererPipelineOpenGL::bindInput(int idx, common::OMRendererBuffer *buff)
-{
-    defaultResourceSet()->bindInput(idx, buff);
-}
-void OMRendererPipelineOpenGL::bindInput(int idx, common::OMRendererTexture *texture)
-{
-    defaultResourceSet()->bindInput(idx, texture);
 }
 
 auto OMRendererPipelineOpenGL::createResourceSet() -> common::OMRendererResourceSet *

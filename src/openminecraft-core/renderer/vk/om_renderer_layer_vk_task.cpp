@@ -86,7 +86,6 @@ void OMRendererTaskVk::bindPipeline(common::OMRendererPipeline *pipeline)
         throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.task"));
     }
 
-    bindResourceSet(pipeline->defaultResourceSet());
 }
 
 void OMRendererTaskVk::bindResourceSet(common::OMRendererResourceSet *resources)

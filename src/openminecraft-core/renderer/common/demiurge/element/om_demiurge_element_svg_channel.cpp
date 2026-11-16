@@ -26,7 +26,7 @@ auto OMDemiurgeSvgChannel::storeGlyph(std::string s, glm::vec2 siz) -> int
         glyphTag = baseGlyphTag + ".g" + std::to_string(++glyphGeneration);
         glyphBuffer = wrap::OMBufferRef(renderer, glyphTag);
         renderer->registerBuffer(glyphTag, UniformTexel, 8 * glyphData.size() * sizeof(float));
-        pipeline->bindInput(1, glyphBuffer);
+        resources->bindInput(1, glyphBuffer);
         glyphBuffer->updateDataPart(glyphData.data(), 0, glyphData.size() * sizeof(float));
         recreation();
     }
@@ -81,7 +81,8 @@ void OMDemiurgeSvgChannel::init(const std::string &uniformTag, const std::string
                    ->depth(true, true)
                    ->depthOp(LessOrEqual)
                    ->buildN();
-    pipeline->bindInput(0, uniform);
-    pipeline->bindInput(1, glyphBuffer);
+    resources = pipeline->createResourceSet();
+    resources->bindInput(0, uniform);
+    resources->bindInput(1, glyphBuffer);
 }
 } // namespace openminecraft::renderer::common::demiurge::element

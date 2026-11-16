@@ -178,19 +178,9 @@ class OMRendererPipeline : public OMRendererObject
         return this;
     }
 
-    virtual void bindInput(int idx, common::OMRendererBuffer *buff) = 0;
-    virtual void bindInput(int idx, common::OMRendererTexture *texture) = 0;
     virtual void bindInputName(std::string name) = 0;
 
     virtual auto createResourceSet() -> OMRendererResourceSet * = 0;
-    auto defaultResourceSet() -> OMRendererResourceSet *
-    {
-        if (defaultSet == nullptr)
-        {
-            defaultSet = createResourceSet();
-        }
-        return defaultSet;
-    }
     inline auto inputName(std::string name) -> OMRendererPipeline *
     {
         bindInputName(name);
@@ -312,8 +302,6 @@ class OMRendererPipeline : public OMRendererObject
     bool enablePrimitiveRestart = false;
     bool enableBlendLogicOp = false;
     OMRendererPipelineBlendLogicOp blendLogicOperator = NoOp;
-  protected:
-    OMRendererResourceSet *defaultSet = nullptr;
 };
 } // namespace openminecraft::renderer::common
 

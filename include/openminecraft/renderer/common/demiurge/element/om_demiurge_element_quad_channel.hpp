@@ -5,6 +5,7 @@
 #include "openminecraft/renderer/common/demiurge/element/om_demiurge_element_channel.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
+#include "openminecraft/renderer/common/om_renderer_resource_set.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_object_ref.hpp"
 #include <functional>
 #include <iostream>
@@ -28,6 +29,8 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
             renderer->unregisterBuffer(instanceBuffer.getTag());
             instanceBuffer = wrap::OMBufferRef();
         }
+        delete resources;
+        resources = nullptr;
         delete pipeline;
     }
 
@@ -66,6 +69,7 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
         auto flush = [&](int end, int start, const std::optional<OMDemiurgeRect> &clip) -> void {
             applyClipScissor(task, clip);
             task->pipeline(pipeline)
+                ->resourceSet(resources)
                 ->vertexBufferInstanced({instanceBuffer}, start)
                 ->drawInstance(6, end - start, start);
         };
@@ -177,7 +181,8 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
                        ->depthOp(LessOrEqual)
                        ->writeColor(writeColor)
                        ->buildN();
-        pipeline->bindInput(0, uniform);
+        resources = pipeline->createResourceSet();
+        resources->bindInput(0, uniform);
     }
 
     OMRenderer *renderer;
@@ -189,6 +194,7 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
     uint64_t instanceGeneration = 0;
 
     OMRendererPipeline *pipeline;
+    OMRendererResourceSet *resources = nullptr;
     std::shared_ptr<OMShader> vtxShader, frgShader;
 };
 } // namespace openminecraft::renderer::common::demiurge::element
