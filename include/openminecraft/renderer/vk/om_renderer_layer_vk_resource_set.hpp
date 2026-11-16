@@ -2,6 +2,9 @@
 #define OM_RENDERER_LAYER_VK_RESOURCE_SET_HPP
 
 #include "openminecraft/renderer/common/om_renderer_resource_set.hpp"
+#ifdef OM_VULKAN_DYNAMIC
+#define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
+#endif
 #include "vulkan/vulkan.hpp"
 #include <unordered_map>
 #include <vector>
