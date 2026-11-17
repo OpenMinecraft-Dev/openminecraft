@@ -65,6 +65,10 @@ class OMRendererGpuCpuBridge : public OMRendererSyncPoint
     {
         return Kind::GpuCpuBridge;
     }
+
+    // Non-blocking completion query. Never waits for the GPU.
+    virtual auto isSignaled() -> bool = 0;
+    virtual void reset() = 0;
 };
 } // namespace openminecraft::renderer::common
 

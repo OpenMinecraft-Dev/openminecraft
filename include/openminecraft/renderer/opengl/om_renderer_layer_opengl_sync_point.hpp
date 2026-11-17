@@ -22,12 +22,12 @@ class OMRendererGpuCpuBridgeOpenGL : public common::OMRendererGpuCpuBridge
     {
     }
 
-    auto isSignaled() -> bool
+    auto isSignaled() -> bool override
     {
         return true;
     }
 
-    void reset()
+    void reset() override
     {
     }
 };

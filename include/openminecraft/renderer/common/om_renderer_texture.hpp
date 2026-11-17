@@ -10,6 +10,10 @@
 namespace openminecraft::renderer
 {
 class OMRenderer;
+namespace common
+{
+class OMRendererGpuCpuBridge;
+}
 }
 namespace openminecraft::renderer::common
 {
@@ -136,6 +140,18 @@ class OMRendererTexture : public OMRendererObject
     }
 
     virtual void setupSampler() = 0;
+
+    // CPU-side completion query for the most recent upload. The future
+    // resource manager combines this with graphics frame completion before
+    // deleting a texture.
+    virtual auto uploadComplete() -> bool
+    {
+        return true;
+    }
+    virtual auto uploadBridge() -> OMRendererGpuCpuBridge *
+    {
+        return nullptr;
+    }
 
     virtual auto fetchData(uint64_t layer = 0) -> std::shared_ptr<void> = 0;
 

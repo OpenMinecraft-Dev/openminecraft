@@ -31,6 +31,8 @@ class OMRendererTextureVk : public common::OMRendererTexture
     void updateDataMulti(const std::vector<common::OMRendererTexture::OMTextureDataUpdate> &updates) override;
     void setupSampler() override;
     auto fetchData(uint64_t layer = 0) -> std::shared_ptr<void> override;
+    auto uploadComplete() -> bool override;
+    auto uploadBridge() -> common::OMRendererGpuCpuBridge * override;
 
     ::vk::Format format;
     ::vk::Image image;
@@ -44,7 +46,7 @@ class OMRendererTextureVk : public common::OMRendererTexture
     struct OMTextureUpdateSlot
     {
         ::vk::CommandBuffer cmd = nullptr;
-        ::vk::Fence fence = nullptr;
+        common::OMRendererGpuCpuBridge *bridge = nullptr;
         common::OMRendererBuffer *staging = nullptr;
         bool inFlight = false;
         uint64_t capacity = 0;

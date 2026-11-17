@@ -481,13 +481,15 @@ void OMRendererVk::render(OMTicker &t)
         }
         t.pop();
 
-        thisFrame = (thisFrame + 1) % framesInFlight;
         t.push("vk_posttasks");
         for (auto r : handlers)
         {
             r->afterFrame();
         }
         t.pop();
+
+        // Advance after afterFrame so hooks observe the frame they just submitted.
+        thisFrame = (thisFrame + 1) % framesInFlight;
 
         t.pop();
         return;

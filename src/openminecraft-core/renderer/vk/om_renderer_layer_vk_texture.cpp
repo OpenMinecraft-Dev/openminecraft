@@ -1,4 +1,5 @@
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_texture.hpp"
+#include "openminecraft/renderer/vk/om_renderer_layer_vk_sync_point.hpp"
 
 #include "openminecraft/i18n/om_i18n_res.hpp"
 #include "openminecraft/log/om_log_common.hpp"
@@ -332,15 +333,15 @@ void OMRendererTextureVk::setupSampler()
 
 auto OMRendererTextureVk::acquireUpdateSlot(uint64_t bytes) -> OMTextureUpdateSlot &
 {
-    if (updateSlot.inFlight && updateSlot.fence)
+    if (updateSlot.inFlight && updateSlot.bridge)
     {
-        auto result = renderer->logicalDevice.waitForFences(1, &updateSlot.fence, true, std::numeric_limits<uint64_t>::max());
+        updateSlot.bridge->waitCpu();
         updateSlot.inFlight = false;
     }
 
-    if (!updateSlot.fence)
+    if (!updateSlot.bridge)
     {
-        updateSlot.fence = renderer->logicalDevice.createFence(::vk::FenceCreateInfo(), renderer->allocator);
+        updateSlot.bridge = renderer->createGpuCpuBridge(false);
     }
 
     if (!updateSlot.cmd)
@@ -370,7 +371,8 @@ OMRendererTextureVk::~OMRendererTextureVk()
 
         delete updateSlot.staging;
         updateSlot.staging = nullptr;
-        renderer->logicalDevice.destroyFence(updateSlot.fence, renderer->allocator);
+        delete updateSlot.bridge;
+        updateSlot.bridge = nullptr;
     }
     catch (SystemError &e)
     {
@@ -453,8 +455,9 @@ void OMRendererTextureVk::updateData(void *p, uint64_t layer)
                               1);
 
         cmdBuff.end();
-        renderer->logicalDevice.resetFences(slot.fence);
-        renderer->transferQueue.submit(SubmitInfo({}, {}, {}, 1, &cmdBuff), slot.fence);
+        auto *bridge = reinterpret_cast<OMRendererGpuCpuBridgeVk *>(slot.bridge);
+        bridge->reset();
+        renderer->transferQueue.submit(SubmitInfo({}, {}, {}, 1, &cmdBuff), bridge->fence());
         slot.inFlight = true;
 
         uploaded[layer] = true;
@@ -553,8 +556,9 @@ void OMRendererTextureVk::updateDataMulti(const std::vector<common::OMRendererTe
         }
 
         cmdBuff.end();
-        renderer->logicalDevice.resetFences(slot.fence);
-        renderer->transferQueue.submit(SubmitInfo({}, {}, {}, 1, &cmdBuff), slot.fence);
+        auto *bridge = reinterpret_cast<OMRendererGpuCpuBridgeVk *>(slot.bridge);
+        bridge->reset();
+        renderer->transferQueue.submit(SubmitInfo({}, {}, {}, 1, &cmdBuff), bridge->fence());
         slot.inFlight = true;
     }
     catch (SystemError &e)
@@ -587,8 +591,9 @@ void OMRendererTextureVk::updateDataPart(void *p, uint64_t x, uint64_t y, uint64
                               1);
 
         cmdBuff.end();
-        renderer->logicalDevice.resetFences(slot.fence);
-        renderer->transferQueue.submit(SubmitInfo({}, {}, {}, 1, &cmdBuff), slot.fence);
+        auto *bridge = reinterpret_cast<OMRendererGpuCpuBridgeVk *>(slot.bridge);
+        bridge->reset();
+        renderer->transferQueue.submit(SubmitInfo({}, {}, {}, 1, &cmdBuff), bridge->fence());
         slot.inFlight = true;
 
         uploaded[layer] = true;
@@ -598,6 +603,20 @@ void OMRendererTextureVk::updateDataPart(void *p, uint64_t x, uint64_t y, uint64
         throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.image.update"));
     }
 }
+auto OMRendererTextureVk::uploadComplete() -> bool
+{
+    if (!updateSlot.inFlight)
+    {
+        return true;
+    }
+    return updateSlot.bridge != nullptr && updateSlot.bridge->isSignaled();
+}
+
+auto OMRendererTextureVk::uploadBridge() -> common::OMRendererGpuCpuBridge *
+{
+    return updateSlot.bridge;
+}
+
 auto OMRendererTextureVk::fetchData(uint64_t layer) -> std::shared_ptr<void>
 {
     try

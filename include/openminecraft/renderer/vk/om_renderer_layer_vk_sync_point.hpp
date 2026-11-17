@@ -33,8 +33,8 @@ class OMRendererGpuCpuBridgeVk : public common::OMRendererGpuCpuBridge
     ~OMRendererGpuCpuBridgeVk() override;
 
     void waitCpu() override;
-    auto isSignaled() -> bool;
-    void reset();
+    auto isSignaled() -> bool override;
+    void reset() override;
 
     auto fence() const -> ::vk::Fence
     {
