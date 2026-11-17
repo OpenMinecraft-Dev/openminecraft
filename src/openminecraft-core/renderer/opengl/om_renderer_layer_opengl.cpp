@@ -52,6 +52,7 @@ OMRendererOpenGL::OMRendererOpenGL(AppInfo info, void *window, std::string shade
     SDL_GL_MakeCurrent(reinterpret_cast<SDL_Window *>(window), reinterpret_cast<SDL_GLContext>(glContext));
 
     this->initGlFuncs();
+    frameContext = std::make_unique<OMRendererFrameContextOpenGL>(this, 0);
 
     defaultTarget = createRenderTarget();
     defaultTarget->build();
@@ -335,20 +336,9 @@ void OMRendererOpenGL::render(util::OMTicker &t)
     }
     t.pop();
 
-    int i = 0;
-    for (auto &tsklist : layeredTasks)
-    {
-        t.push(fmt::format("gl_task_layer{}", i));
-        for (auto tsk : tsklist)
-        {
-            if (!tsk->isDisabled())
-            {
-                reinterpret_cast<OMRendererTaskOpenGL *>(tsk)->execute();
-            }
-        }
-        t.pop();
-        ++i;
-    }
+    t.push("gl_execute_tasks");
+    frameContext->executeTasks(layeredTasks);
+    t.pop();
 
     t.push("gl_swap");
     SDL_GL_SwapWindow(reinterpret_cast<SDL_Window *>(window));

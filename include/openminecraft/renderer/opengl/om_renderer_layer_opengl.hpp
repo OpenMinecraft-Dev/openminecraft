@@ -6,6 +6,7 @@
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
+#include "openminecraft/renderer/opengl/om_renderer_layer_opengl_frame_context.hpp"
 #include "openminecraft/util/om_util_ticker.hpp"
 namespace openminecraft::renderer::opengl
 {
@@ -49,6 +50,7 @@ class OMRendererOpenGL : public OMRenderer
     std::chrono::steady_clock::time_point frameStamp = {};
 
     OMRendererOpenGLFuncs gl;
+    std::unique_ptr<OMRendererFrameContextOpenGL> frameContext;
     common::OMRendererRenderTarget *defaultTarget;
 
   private:

@@ -213,15 +213,7 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
 
         for (int i = 0; i < framesInFlight; i++)
         {
-            OMFrameSync sync{};
-            sync.pipelineSemaphores.push_back(createGpuEvent());
-            sync.inFlightFence = createGpuCpuBridge(true);
-            frameSyncs.push_back(sync);
-        }
-
-        for (int i = 0; i < swapchainManager->swapchainImageViews.size(); i++)
-        {
-            frameRenderSemaphores.push_back(createGpuEvent());
+            frameContexts.emplace_back(std::make_unique<OMRendererFrameContextVk>(this, static_cast<uint32_t>(i)));
         }
     }
     catch (SystemError &e)
@@ -332,27 +324,13 @@ void OMRendererVk::resetFrameSynchronization()
 {
     try
     {
-        for (auto &sync : frameSyncs)
-        {
-            for (auto *sem : sync.pipelineSemaphores)
-            {
-                delete sem;
-            }
-            sync.pipelineSemaphores.clear();
-        }
+        frameContexts.clear();
+        inflightImageFences.clear();
 
-        for (auto *sem : frameRenderSemaphores)
+        for (int i = 0; i < framesInFlight; i++)
         {
-            delete sem;
+            frameContexts.emplace_back(std::make_unique<OMRendererFrameContextVk>(this, static_cast<uint32_t>(i)));
         }
-        frameRenderSemaphores.clear();
-
-        for (size_t i = 0; i < swapchainManager->swapchainImageViews.size(); ++i)
-        {
-            frameRenderSemaphores.push_back(createGpuEvent());
-        }
-
-        inflights.clear();
     }
     catch (SystemError &e)
     {
@@ -364,20 +342,9 @@ void OMRendererVk::updateSyncObjects()
 {
     try
     {
-        for (auto &sync : frameSyncs)
+        for (auto &context : frameContexts)
         {
-            while (sync.pipelineSemaphores.size() != layeredTasks.size())
-            {
-                if (sync.pipelineSemaphores.size() < layeredTasks.size())
-                {
-                    sync.pipelineSemaphores.push_back(createGpuEvent());
-                }
-                else
-                {
-                    delete *sync.pipelineSemaphores.rbegin();
-                    sync.pipelineSemaphores.pop_back();
-                }
-            }
+            context->ensurePipelineSemaphores(layeredTasks.size());
         }
     }
     catch (SystemError &e)
@@ -469,47 +436,20 @@ void OMRendererVk::render(OMTicker &t)
         }
         t.pop();
 
-        t.push("vk_waitframe");
-        auto &sync = frameSyncs[thisFrame];
-        sync.inFlightFence->waitCpu();
-        t.pop();
-
-        t.push("vk_acquireimage");
-        auto [nxtRes, imageIndex] = logicalDevice.acquireNextImageKHR(
-            swapchainManager->swapchain, std::numeric_limits<uint64_t>::max(), reinterpret_cast<OMRendererGpuEventVk *>(sync.imageAvailable())->semaphore(), {});
-        if (nxtRes != Result::eSuccess && nxtRes != Result::eSuboptimalKHR)
+        t.push("vk_frame_begin");
+        auto *frame = frameContexts[thisFrame].get();
+        if (!frame->beginFrame())
         {
-            if (nxtRes == Result::eErrorOutOfDateKHR || nxtRes == Result::eErrorSurfaceLostKHR)
-            {
-                lastError = nxtRes;
-                t.pop();
-                goto rebuild;
-            }
-            throw OMRendererException(VkErrorTranslate(SystemError(nxtRes), "openminecraft.renderer.vk.err.nextimage"));
+            lastError = Result::eErrorOutOfDateKHR;
+            t.pop();
+            goto rebuild;
         }
-        if (nxtRes == Result::eSuboptimalKHR)
-        {
-            needRebuild = true;
-        }
-        t.pop();
-
-        t.push("vk_inflight_sync");
-        if (inflights.count(imageIndex) > 0)
-        {
-            inflights[imageIndex].inFlightFence->waitCpu();
-        }
-        inflights[imageIndex] = sync;
-
-        reinterpret_cast<OMRendererGpuCpuBridgeVk *>(sync.inFlightFence)->reset();
         t.pop();
 
         std::vector<CommandBuffer> cmdBuffers = {};
         for (int i = 0; i < layeredTasks.size(); ++i)
         {
             t.push(fmt::format("vk_task_layer{}", i));
-            auto *waitSync = sync.pipelineSemaphores[i];
-            auto *dstSync = i + 1 < sync.pipelineSemaphores.size() ? sync.pipelineSemaphores[i + 1]
-                                                                   : frameRenderSemaphores[imageIndex];
 
             cmdBuffers.clear();
             for (auto tsk : layeredTasks[i])
@@ -523,37 +463,23 @@ void OMRendererVk::render(OMTicker &t)
                     }
                     else if (defaultCommandBuffers.count(task))
                     {
-                        cmdBuffers.emplace_back(defaultCommandBuffers[task][imageIndex]);
+                        cmdBuffers.emplace_back(defaultCommandBuffers[task][frame->imageIndex()]);
                     }
                 }
             }
 
-            const PipelineStageFlags msk = PipelineStageFlagBits::eColorAttachmentOutput;
-            Semaphore waitSep = reinterpret_cast<OMRendererGpuEventVk *>(waitSync)->semaphore();
-            Semaphore dstSep = reinterpret_cast<OMRendererGpuEventVk *>(dstSync)->semaphore();
-            SubmitInfo submitInfo(1, &waitSep, &msk, cmdBuffers.size(), cmdBuffers.data(), 1, &dstSep);
-
-            queues.first.submit(submitInfo,
-                                i == layeredTasks.size() - 1 ? reinterpret_cast<OMRendererGpuCpuBridgeVk *>(sync.inFlightFence)->fence() : nullptr);
+            frame->submit(cmdBuffers, static_cast<uint32_t>(i), i == layeredTasks.size() - 1);
             t.pop();
         }
 
         t.push("vk_present");
-        Semaphore presentWait = reinterpret_cast<OMRendererGpuEventVk *>(frameRenderSemaphores[imageIndex])->semaphore();
-        PresentInfoKHR presentInfo(1, &presentWait, 1, &swapchainManager->swapchain, &imageIndex);
-        t.pop();
-        auto result = queues.second.presentKHR(presentInfo);
-        if (result == Result::eSuboptimalKHR || result == Result::eErrorOutOfDateKHR ||
-            result == Result::eErrorSurfaceLostKHR)
+        if (!frame->present())
         {
-            lastError = result;
+            lastError = Result::eErrorOutOfDateKHR;
+            t.pop();
             goto rebuild;
         }
-        if (result != Result::eSuccess)
-        {
-            throw OMRendererException(
-                VkErrorTranslate(SystemError(result), "openminecraft.renderer.vk.err.queuepresent"));
-        }
+        t.pop();
 
         thisFrame = (thisFrame + 1) % framesInFlight;
         t.push("vk_posttasks");
@@ -564,7 +490,6 @@ void OMRendererVk::render(OMTicker &t)
         t.pop();
 
         t.pop();
-        currentFence = sync.inFlightFence;
         return;
     }
     catch (SystemError &e)
@@ -1068,18 +993,8 @@ OMRendererVk::~OMRendererVk()
         scheThr->join();
         delete scheThr;
 
-        for (auto sync : frameSyncs)
-        {
-            for (auto *s : sync.pipelineSemaphores)
-            {
-                delete s;
-            }
-            delete sync.inFlightFence;
-        }
-        for (auto *sep : frameRenderSemaphores)
-        {
-            delete sep;
-        }
+        frameContexts.clear();
+        inflightImageFences.clear();
 
         delete defaultDepthBuffer;
         for (auto &fb : defaultFramebuffers)

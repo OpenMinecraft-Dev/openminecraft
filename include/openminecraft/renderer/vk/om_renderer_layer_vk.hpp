@@ -9,6 +9,7 @@
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_validation.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_sync_point.hpp"
+#include "openminecraft/renderer/vk/om_renderer_layer_vk_frame_context.hpp"
 #include "openminecraft/util/om_util_result.hpp"
 #include "openminecraft/util/om_util_ticker.hpp"
 #include "vulkan/vulkan_handles.hpp"
@@ -39,17 +40,6 @@ auto vkRealloc(void *, void *o, size_t size, size_t align, VkSystemAllocationSco
 void vkFree(void *, void *p);
 void vkInternalAlloc(void *, size_t size, VkInternalAllocationType t, VkSystemAllocationScope s);
 void vkInternalFree(void *, size_t size, VkInternalAllocationType t, VkSystemAllocationScope s);
-
-struct OMFrameSync
-{
-    std::vector<common::OMRendererGpuEvent *> pipelineSemaphores;
-    common::OMRendererGpuCpuBridge *inFlightFence = nullptr;
-
-    inline auto imageAvailable() -> common::OMRendererGpuEvent *
-    {
-        return pipelineSemaphores[0];
-    }
-};
 
 class OMRendererVk : public OMRenderer
 {
@@ -118,17 +108,16 @@ class OMRendererVk : public OMRenderer
 
     ::vk::CommandPool tempCommandPool, tempCommandPoolTransfer;
 
-    std::vector<OMFrameSync> frameSyncs;
-    std::vector<common::OMRendererGpuEvent *> frameRenderSemaphores;
-    std::map<uint32_t, OMFrameSync> inflights;
+    std::vector<std::unique_ptr<OMRendererFrameContextVk>> frameContexts;
+    std::map<uint32_t, common::OMRendererGpuCpuBridge *> inflightImageFences;
 
     int framesInFlight = 3;
     int thisFrame = 0;
-    common::OMRendererGpuCpuBridge *currentFence = nullptr;
 
     bool needRebuild = false;
 
   private:
+    friend class OMRendererFrameContextVk;
     bool active = true;
     std::thread *scheThr = nullptr;
     void rebuildDefaults();

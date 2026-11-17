@@ -8,6 +8,7 @@ enum OMRendererObjectType
     Renderer,
     DataBuffer,
     Handler,
+    FrameContext,
     Pipeline,
     ResourceSet,
     RenderTarget,
