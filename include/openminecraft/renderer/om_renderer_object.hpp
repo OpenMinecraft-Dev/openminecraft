@@ -12,6 +12,7 @@ enum OMRendererObjectType
     ResourceSet,
     RenderTarget,
     Shader,
+    SyncPoint,
     Task,
     Texture,
     ValidationLayerVk,

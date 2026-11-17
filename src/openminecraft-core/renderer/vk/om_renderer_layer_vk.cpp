@@ -7,6 +7,7 @@
 #include "openminecraft/renderer/om_renderer_exception.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_buffer.hpp"
+#include "openminecraft/renderer/vk/om_renderer_layer_vk_sync_point.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_pipeline.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_rendertarget.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_task.hpp"
@@ -212,14 +213,15 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
 
         for (int i = 0; i < framesInFlight; i++)
         {
-            frameSyncs.push_back(
-                {{logicalDevice.createSemaphore(SemaphoreCreateInfo(), allocator)},
-                 logicalDevice.createFence(FenceCreateInfo(FenceCreateFlagBits::eSignaled), allocator)});
+            OMFrameSync sync{};
+            sync.pipelineSemaphores.push_back(createGpuEvent());
+            sync.inFlightFence = createGpuCpuBridge(true);
+            frameSyncs.push_back(sync);
         }
 
         for (int i = 0; i < swapchainManager->swapchainImageViews.size(); i++)
         {
-            frameRenderSemaphores.push_back(logicalDevice.createSemaphore(SemaphoreCreateInfo(), allocator));
+            frameRenderSemaphores.push_back(createGpuEvent());
         }
     }
     catch (SystemError &e)
@@ -332,22 +334,22 @@ void OMRendererVk::resetFrameSynchronization()
     {
         for (auto &sync : frameSyncs)
         {
-            for (auto &sem : sync.pipelineSemaphores)
+            for (auto *sem : sync.pipelineSemaphores)
             {
-                logicalDevice.destroySemaphore(sem, allocator);
+                delete sem;
             }
             sync.pipelineSemaphores.clear();
         }
 
-        for (auto &sem : frameRenderSemaphores)
+        for (auto *sem : frameRenderSemaphores)
         {
-            logicalDevice.destroySemaphore(sem, allocator);
+            delete sem;
         }
         frameRenderSemaphores.clear();
 
         for (size_t i = 0; i < swapchainManager->swapchainImageViews.size(); ++i)
         {
-            frameRenderSemaphores.push_back(logicalDevice.createSemaphore(SemaphoreCreateInfo(), allocator));
+            frameRenderSemaphores.push_back(createGpuEvent());
         }
 
         inflights.clear();
@@ -368,11 +370,11 @@ void OMRendererVk::updateSyncObjects()
             {
                 if (sync.pipelineSemaphores.size() < layeredTasks.size())
                 {
-                    sync.pipelineSemaphores.push_back(logicalDevice.createSemaphore(SemaphoreCreateInfo(), allocator));
+                    sync.pipelineSemaphores.push_back(createGpuEvent());
                 }
                 else
                 {
-                    logicalDevice.destroySemaphore(*sync.pipelineSemaphores.rbegin(), allocator);
+                    delete *sync.pipelineSemaphores.rbegin();
                     sync.pipelineSemaphores.pop_back();
                 }
             }
@@ -469,16 +471,12 @@ void OMRendererVk::render(OMTicker &t)
 
         t.push("vk_waitframe");
         auto &sync = frameSyncs[thisFrame];
-        auto result = logicalDevice.waitForFences(1, &sync.inFlightFence, true, std::numeric_limits<uint64_t>::max());
-        if (result != Result::eSuccess)
-        {
-            throw OMRendererException(VkErrorTranslate(SystemError(result), "openminecraft.renderer.vk.err.waitfence"));
-        }
+        sync.inFlightFence->waitCpu();
         t.pop();
 
         t.push("vk_acquireimage");
         auto [nxtRes, imageIndex] = logicalDevice.acquireNextImageKHR(
-            swapchainManager->swapchain, std::numeric_limits<uint64_t>::max(), sync.imageAvailable(), {});
+            swapchainManager->swapchain, std::numeric_limits<uint64_t>::max(), reinterpret_cast<OMRendererGpuEventVk *>(sync.imageAvailable())->semaphore(), {});
         if (nxtRes != Result::eSuccess && nxtRes != Result::eSuboptimalKHR)
         {
             if (nxtRes == Result::eErrorOutOfDateKHR || nxtRes == Result::eErrorSurfaceLostKHR)
@@ -498,31 +496,20 @@ void OMRendererVk::render(OMTicker &t)
         t.push("vk_inflight_sync");
         if (inflights.count(imageIndex) > 0)
         {
-            auto result = logicalDevice.waitForFences(1, &inflights[imageIndex].inFlightFence, true,
-                                                      std::numeric_limits<uint64_t>::max());
-            if (result != Result::eSuccess)
-            {
-                throw OMRendererException(
-                    VkErrorTranslate(SystemError(result), "openminecraft.renderer.vk.err.waitfence"));
-            }
+            inflights[imageIndex].inFlightFence->waitCpu();
         }
         inflights[imageIndex] = sync;
 
-        result = logicalDevice.resetFences(1, &sync.inFlightFence);
-        if (result != Result::eSuccess)
-        {
-            throw OMRendererException(
-                VkErrorTranslate(SystemError(result), "openminecraft.renderer.vk.err.resetfence"));
-        }
+        reinterpret_cast<OMRendererGpuCpuBridgeVk *>(sync.inFlightFence)->reset();
         t.pop();
 
         std::vector<CommandBuffer> cmdBuffers = {};
         for (int i = 0; i < layeredTasks.size(); ++i)
         {
             t.push(fmt::format("vk_task_layer{}", i));
-            auto &waitSep = sync.pipelineSemaphores[i];
-            auto &dstSep = i + 1 < sync.pipelineSemaphores.size() ? sync.pipelineSemaphores[i + 1]
-                                                                  : frameRenderSemaphores[imageIndex];
+            auto *waitSync = sync.pipelineSemaphores[i];
+            auto *dstSync = i + 1 < sync.pipelineSemaphores.size() ? sync.pipelineSemaphores[i + 1]
+                                                                   : frameRenderSemaphores[imageIndex];
 
             cmdBuffers.clear();
             for (auto tsk : layeredTasks[i])
@@ -542,16 +529,20 @@ void OMRendererVk::render(OMTicker &t)
             }
 
             const PipelineStageFlags msk = PipelineStageFlagBits::eColorAttachmentOutput;
+            Semaphore waitSep = reinterpret_cast<OMRendererGpuEventVk *>(waitSync)->semaphore();
+            Semaphore dstSep = reinterpret_cast<OMRendererGpuEventVk *>(dstSync)->semaphore();
             SubmitInfo submitInfo(1, &waitSep, &msk, cmdBuffers.size(), cmdBuffers.data(), 1, &dstSep);
 
-            queues.first.submit(submitInfo, i == layeredTasks.size() - 1 ? sync.inFlightFence : nullptr);
+            queues.first.submit(submitInfo,
+                                i == layeredTasks.size() - 1 ? reinterpret_cast<OMRendererGpuCpuBridgeVk *>(sync.inFlightFence)->fence() : nullptr);
             t.pop();
         }
 
         t.push("vk_present");
-        PresentInfoKHR presentInfo(1, &frameRenderSemaphores[imageIndex], 1, &swapchainManager->swapchain, &imageIndex);
+        Semaphore presentWait = reinterpret_cast<OMRendererGpuEventVk *>(frameRenderSemaphores[imageIndex])->semaphore();
+        PresentInfoKHR presentInfo(1, &presentWait, 1, &swapchainManager->swapchain, &imageIndex);
         t.pop();
-        result = queues.second.presentKHR(presentInfo);
+        auto result = queues.second.presentKHR(presentInfo);
         if (result == Result::eSuboptimalKHR || result == Result::eErrorOutOfDateKHR ||
             result == Result::eErrorSurfaceLostKHR)
         {
@@ -1079,15 +1070,15 @@ OMRendererVk::~OMRendererVk()
 
         for (auto sync : frameSyncs)
         {
-            for (auto s : sync.pipelineSemaphores)
+            for (auto *s : sync.pipelineSemaphores)
             {
-                logicalDevice.destroySemaphore(s, allocator);
+                delete s;
             }
-            logicalDevice.destroyFence(sync.inFlightFence, allocator);
+            delete sync.inFlightFence;
         }
-        for (auto sep : frameRenderSemaphores)
+        for (auto *sep : frameRenderSemaphores)
         {
-            logicalDevice.destroySemaphore(sep, allocator);
+            delete sep;
         }
 
         delete defaultDepthBuffer;
@@ -1235,6 +1226,16 @@ auto OMRendererVk::deviceInfos() -> std::string
     }
 
     return out;
+}
+
+auto OMRendererVk::createGpuEvent() -> common::OMRendererGpuEvent *
+{
+    return new OMRendererGpuEventVk(logicalDevice, allocator);
+}
+
+auto OMRendererVk::createGpuCpuBridge(bool signaled) -> common::OMRendererGpuCpuBridge *
+{
+    return new OMRendererGpuCpuBridgeVk(logicalDevice, allocator, signaled);
 }
 
 auto OMRendererVk::driver() -> std::string

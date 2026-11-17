@@ -19,7 +19,14 @@
 
 namespace openminecraft::renderer::common
 {
+
 class OMRendererHandler;
+}
+
+namespace openminecraft::renderer::common
+{
+class OMRendererGpuEvent;
+class OMRendererGpuCpuBridge;
 }
 
 namespace openminecraft::renderer
@@ -205,6 +212,8 @@ class OMRenderer
 
     virtual auto driver() -> std::string = 0;
     virtual auto deviceInfos() -> std::string = 0;
+    virtual auto createGpuEvent() -> common::OMRendererGpuEvent * = 0;
+    virtual auto createGpuCpuBridge(bool signaled) -> common::OMRendererGpuCpuBridge * = 0;
     virtual auto allocateBuffer(common::OMBufferUsage usage, uint64_t length) -> common::OMRendererBuffer * = 0;
     inline auto allocateTexture(uint64_t width, uint64_t height, uint64_t mipmap, common::OMTextureType type,
                                 common::OMTextureArrangement arrangement) -> common::OMRendererTexture *

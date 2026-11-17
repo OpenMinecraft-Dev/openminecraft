@@ -8,6 +8,7 @@
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/vk/om_renderer_layer_vk_validation.hpp"
+#include "openminecraft/renderer/vk/om_renderer_layer_vk_sync_point.hpp"
 #include "openminecraft/util/om_util_result.hpp"
 #include "openminecraft/util/om_util_ticker.hpp"
 #include "vulkan/vulkan_handles.hpp"
@@ -41,10 +42,10 @@ void vkInternalFree(void *, size_t size, VkInternalAllocationType t, VkSystemAll
 
 struct OMFrameSync
 {
-    std::vector<::vk::Semaphore> pipelineSemaphores;
-    ::vk::Fence inFlightFence;
+    std::vector<common::OMRendererGpuEvent *> pipelineSemaphores;
+    common::OMRendererGpuCpuBridge *inFlightFence = nullptr;
 
-    inline auto imageAvailable() -> ::vk::Semaphore
+    inline auto imageAvailable() -> common::OMRendererGpuEvent *
     {
         return pipelineSemaphores[0];
     }
@@ -67,6 +68,8 @@ class OMRendererVk : public OMRenderer
 
     auto driver() -> std::string override;
     auto deviceInfos() -> std::string override;
+    auto createGpuEvent() -> common::OMRendererGpuEvent * override;
+    auto createGpuCpuBridge(bool signaled) -> common::OMRendererGpuCpuBridge * override;
     auto allocateBuffer(common::OMBufferUsage usage, uint64_t length) -> common::OMRendererBuffer * override;
     auto allocateTexture(uint64_t width, uint64_t height, uint64_t layers, uint64_t mipmap, common::OMTextureType type,
                          common::OMTextureArrangement arr) -> common::OMRendererTexture * override;
@@ -116,12 +119,12 @@ class OMRendererVk : public OMRenderer
     ::vk::CommandPool tempCommandPool, tempCommandPoolTransfer;
 
     std::vector<OMFrameSync> frameSyncs;
-    std::vector<::vk::Semaphore> frameRenderSemaphores;
+    std::vector<common::OMRendererGpuEvent *> frameRenderSemaphores;
     std::map<uint32_t, OMFrameSync> inflights;
 
     int framesInFlight = 3;
     int thisFrame = 0;
-    ::vk::Fence currentFence = {};
+    common::OMRendererGpuCpuBridge *currentFence = nullptr;
 
     bool needRebuild = false;
 

@@ -5,6 +5,7 @@
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_buffer.hpp"
+#include "openminecraft/renderer/opengl/om_renderer_layer_opengl_sync_point.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_pipeline.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_rendertarget.hpp"
 #include "openminecraft/renderer/opengl/om_renderer_layer_opengl_task.hpp"
@@ -212,6 +213,16 @@ OMRendererOpenGL::~OMRendererOpenGL()
 
     delete defaultTarget;
     SDL_GL_DestroyContext(reinterpret_cast<SDL_GLContext>(glContext));
+}
+
+auto OMRendererOpenGL::createGpuEvent() -> common::OMRendererGpuEvent *
+{
+    return new OMRendererGpuEventOpenGL();
+}
+
+auto OMRendererOpenGL::createGpuCpuBridge(bool) -> common::OMRendererGpuCpuBridge *
+{
+    return new OMRendererGpuCpuBridgeOpenGL();
 }
 
 auto OMRendererOpenGL::driver() -> std::string
