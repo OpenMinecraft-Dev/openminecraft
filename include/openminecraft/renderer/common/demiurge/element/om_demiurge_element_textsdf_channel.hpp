@@ -26,7 +26,7 @@ class OMDemiurgeTextSdfChannel : public OMDemiurgeQuadChannel<OMDemiurgeElementT
         if (glyphBuffer)
         {
             renderer->unregisterBuffer(glyphBuffer.getTag());
-            glyphBuffer = wrap::OMBufferRef();
+            glyphBuffer = openminecraft::renderer::common::OMRendererBufferRef();
         }
         OMDemiurgeQuadChannel::destroy();
     }
@@ -35,7 +35,7 @@ class OMDemiurgeTextSdfChannel : public OMDemiurgeQuadChannel<OMDemiurgeElementT
 
   private:
     geom::OMFontSet *fontSet;
-    wrap::OMBufferRef glyphBuffer;
+    openminecraft::renderer::common::OMRendererBufferRef glyphBuffer;
     std::string glyphTag;
     std::string baseGlyphTag;
     uint64_t glyphGeneration = 0;

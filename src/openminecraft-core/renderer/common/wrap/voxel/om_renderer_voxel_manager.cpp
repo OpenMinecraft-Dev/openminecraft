@@ -95,9 +95,9 @@ OMVoxelManager::OMVoxelManager(
     this->compiler.paletteProvider = this->paletteProvider;
     this->modelFetcher = modelFetcher;
     this->colorManager = colorman;
-    this->sunTex = OMTextureRef(renderer, sunTag);
-    this->moonTex = OMTextureRef(renderer, moonTag);
-    this->cloudTex = OMTextureRef(renderer, cloudTag);
+    this->sunTex = OMRendererTextureRef(renderer, sunTag);
+    this->moonTex = OMRendererTextureRef(renderer, moonTag);
+    this->cloudTex = OMRendererTextureRef(renderer, cloudTag);
     this->cloudStats = cloudStats;
 
     delete compiler.handler;
@@ -553,43 +553,43 @@ OMVoxelManager::OMVoxelManager(
     voxelFluidLayer = new OMVoxelLayer<OMVoxelFluid>(renderer, "voxel.fluid");
     voxelTranslucentFluidLayer = new OMVoxelLayer<OMVoxelFluid>(renderer, "voxel.translucent.fluid");
 
-    chunkOffsetBuffer = OMBufferRef(renderer, "voxel.chunkOffset");
+    chunkOffsetBuffer = OMRendererBufferRef(renderer, "voxel.chunkOffset");
     renderer->registerBuffer(chunkOffsetBuffer.getTag(), UniformTexel, sizeof(glm::vec4));
     chunkOffsetBuffer->format = basics::Vec4f;
 
-    voxelIndexBuffer = OMBufferRef(renderer, "voxel.index");
+    voxelIndexBuffer = OMRendererBufferRef(renderer, "voxel.index");
     renderer->registerBuffer(voxelIndexBuffer.getTag(), VertexIndex, 6 * sizeof(uint32_t));
     {
         const std::array<uint32_t, 6> idx = {0, 1, 2, 2, 3, 0};
         voxelIndexBuffer->updateData(const_cast<uint32_t *>(idx.data()));
     }
-    debugOffsetBuffer = OMBufferRef(renderer, "voxel.debugOffset");
+    debugOffsetBuffer = OMRendererBufferRef(renderer, "voxel.debugOffset");
     renderer->registerBuffer(debugOffsetBuffer.getTag(), VertexData, 12 * 2 * 3 * sizeof(float));
-    skydisc = OMBufferRef(renderer, "voxel.skydisc");
+    skydisc = OMRendererBufferRef(renderer, "voxel.skydisc");
     renderer->registerBuffer(skydisc.getTag(), Uniform, sizeof(OMVoxelSkyDisc));
-    fogdata = OMBufferRef(renderer, "voxel.fog");
+    fogdata = OMRendererBufferRef(renderer, "voxel.fog");
     renderer->registerBuffer(fogdata.getTag(), Uniform, sizeof(float) * 5);
-    cloudFogdata = OMBufferRef(renderer, "voxel.cloud.fog");
+    cloudFogdata = OMRendererBufferRef(renderer, "voxel.cloud.fog");
     renderer->registerBuffer(cloudFogdata.getTag(), Uniform, sizeof(float) * 5);
-    sunrise = OMBufferRef(renderer, "voxel.sunrise");
+    sunrise = OMRendererBufferRef(renderer, "voxel.sunrise");
     renderer->registerBuffer(sunrise.getTag(), Uniform, sizeof(OMVoxelSunrise));
-    moonData = OMBufferRef(renderer, "voxel.moon");
+    moonData = OMRendererBufferRef(renderer, "voxel.moon");
     renderer->registerBuffer(moonData.getTag(), Uniform, sizeof(OMVoxelMoon));
-    cloudData = OMBufferRef(renderer, "voxel.cloud");
+    cloudData = OMRendererBufferRef(renderer, "voxel.cloud");
     renderer->registerBuffer(cloudData.getTag(), Uniform, sizeof(OMVoxelCloud));
 
     {
         auto p = buildVoxelCloud();
-        cloudBuffer = OMBufferRef(renderer, "voxel.cloudMesh");
+        cloudBuffer = OMRendererBufferRef(renderer, "voxel.cloudMesh");
         renderer->registerBuffer(cloudBuffer.getTag(), InstanceData, sizeof(uint32_t) * p.size());
         cloudBuffer->updateData(p.data());
     }
 
-    lightmapData = OMBufferRef(renderer, "voxel.lightmapData");
+    lightmapData = OMRendererBufferRef(renderer, "voxel.lightmapData");
     renderer->registerBuffer(lightmapData.getTag(), Uniform, sizeof(OMVoxelLightMap));
 
-    textureAtlas = OMTextureRef(renderer, texTag);
-    textureAtlasSecondary = OMTextureRef(renderer, texSecTag);
+    textureAtlas = OMRendererTextureRef(renderer, texTag);
+    textureAtlasSecondary = OMRendererTextureRef(renderer, texSecTag);
 
     std::mt19937 gen(1029);
     std::uniform_real_distribution<> distrib(0.0f, 1.0f);
@@ -622,11 +622,11 @@ OMVoxelManager::OMVoxelManager(
             starData.emplace_back(starSize);
         }
     }
-    starBuffer = OMBufferRef(renderer, "voxel.star");
+    starBuffer = OMRendererBufferRef(renderer, "voxel.star");
     renderer->registerBuffer(starBuffer.getTag(), InstanceData, starData.size() * sizeof(float));
     starBuffer->updateData(starData.data());
 
-    starBaseData = OMBufferRef(renderer, "voxel.starBase");
+    starBaseData = OMRendererBufferRef(renderer, "voxel.starBase");
     renderer->registerBuffer(starBaseData.getTag(), Uniform, sizeof(float) * 2);
 
     resources(pipeline)->bindInput(1, textureAtlas);
@@ -1555,7 +1555,7 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
         {
             renderer->unregisterBuffer(chunkOffsetBuffer.getTag());
             static uint64_t chunkOffsetGeneration = 1;
-            chunkOffsetBuffer = OMBufferRef(renderer, "voxel.chunkOffset.g" + std::to_string(chunkOffsetGeneration++));
+            chunkOffsetBuffer = OMRendererBufferRef(renderer, "voxel.chunkOffset.g" + std::to_string(chunkOffsetGeneration++));
             renderer->registerBuffer(chunkOffsetBuffer.getTag(), UniformTexel,
                                      static_cast<uint64_t>(chunkManager->numChunks()) * sizeof(glm::vec4) * 2);
             chunkOffsetBuffer->format = basics::Vec4f;

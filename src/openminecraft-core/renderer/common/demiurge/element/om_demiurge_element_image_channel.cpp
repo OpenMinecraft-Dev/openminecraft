@@ -8,8 +8,8 @@ namespace openminecraft::renderer::common::demiurge::element
 {
 void OMDemiurgeImageChannel::init(const std::string &uniformTag, const std::string &targetTag)
 {
-    uniform = wrap::OMBufferRef(renderer, uniformTag);
-    target = wrap::OMRenderTargetRef(renderer, targetTag);
+    uniform = openminecraft::renderer::common::OMRendererBufferRef(renderer, uniformTag);
+    target = openminecraft::renderer::common::OMRendererRenderTargetRef(renderer, targetTag);
 
     format.setInstance()
         ->appendPart("inRectPos", basics::Vec4f)

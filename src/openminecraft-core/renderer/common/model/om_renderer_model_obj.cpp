@@ -70,12 +70,12 @@ OMRendererModelObj::OMRendererModelObj(OMRenderer *renderer, std::istream *src)
 
     static std::atomic<uint64_t> modelCounter = 0;
     const std::string prefix = "model.obj." + std::to_string(++modelCounter);
-    vertexData = wrap::OMBufferRef(renderer, prefix + ".vb");
+    vertexData = openminecraft::renderer::common::OMRendererBufferRef(renderer, prefix + ".vb");
     renderer->registerBuffer(vertexData.getTag(), VertexData, siz);
     vertexData->updateData(vertices.data());
 
     siz = indices.size() * sizeof(uint32_t);
-    vertexIndex = wrap::OMBufferRef(renderer, prefix + ".ib");
+    vertexIndex = openminecraft::renderer::common::OMRendererBufferRef(renderer, prefix + ".ib");
     renderer->registerBuffer(vertexIndex.getTag(), VertexIndex, siz);
     vertexIndex->updateData(indices.data());
 

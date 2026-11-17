@@ -338,11 +338,11 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
 
     format.nextGroup()->decideStruct();
 
-    uniformBuffer = wrap::OMBufferRef(renderer, "world.uniform");
+    uniformBuffer = openminecraft::renderer::common::OMRendererBufferRef(renderer, "world.uniform");
     renderer->registerBuffer(uniformBuffer.getTag(), Uniform, sizeof(glm::mat4));
     auto model = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     uniformBuffer->updateData(&model);
-    cameraBuffer = wrap::OMBufferRef(renderer, "world.camera");
+    cameraBuffer = openminecraft::renderer::common::OMRendererBufferRef(renderer, "world.camera");
     renderer->registerBuffer(cameraBuffer.getTag(), Uniform, sizeof(glm::mat4) + sizeof(glm::vec4));
 
     outputFrg = renderer->shaderManager.preprocess("core/bilt.frag.glsl", Fragment, GLSLSource, format);
@@ -351,7 +351,7 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
     tempTarget = new wrap::OMRendererTempTarget(renderer, "world.temp");
     tempTarget->construct(renderer->getExtent());
 
-    sunTex = wrap::OMTextureRef(renderer, "world.sun");
+    sunTex = openminecraft::renderer::common::OMRendererTextureRef(renderer, "world.sun");
     renderer->registerTexture(sunTex.getTag(), 32, 32, 0, Dim2, R8G8B8A8Srgb);
     specs::png::OMPngFile f;
     f.parseBase(vfs::fsfetch("/external/assets/minecraft/textures/environment/celestial/sun.png"));
@@ -360,7 +360,7 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
     sunTex->minFilter = Nearest;
     sunTex->setupSampler();
 
-    moonTex = wrap::OMTextureRef(renderer, "world.moon");
+    moonTex = openminecraft::renderer::common::OMRendererTextureRef(renderer, "world.moon");
     renderer->registerTexture(moonTex.getTag(), 32, 32, 8, 0, Dim2Array, R8G8B8A8Srgb);
     int i = 0;
     for (auto p : {"new_moon", "waxing_crescent", "first_quarter", "waxing_gibbous", "full_moon", "waning_gibbous",
@@ -376,7 +376,7 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
     moonTex->minFilter = Nearest;
     moonTex->setupSampler();
 
-    cloudTex = wrap::OMTextureRef(renderer, "world.cloud");
+    cloudTex = openminecraft::renderer::common::OMRendererTextureRef(renderer, "world.cloud");
     renderer->registerTexture(cloudTex.getTag(), 256, 256, 0, Dim2, R8G8B8A8Srgb);
     specs::png::OMPngFile f2;
     f2.parseBase(vfs::fsfetch("/external/assets/minecraft/textures/environment/clouds.png"));

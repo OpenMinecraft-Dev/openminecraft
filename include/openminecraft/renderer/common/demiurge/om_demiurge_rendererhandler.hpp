@@ -17,7 +17,7 @@
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
-#include "openminecraft/renderer/common/wrap/om_renderer_object_ref.hpp"
+#include "openminecraft/renderer/common/om_renderer_object_ref.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_temptarget.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include <memory>
@@ -56,7 +56,7 @@ class OMDemiurgeRendererHandler : public OMRendererHandler
     std::shared_ptr<OMDemiurgeNode> node;
 
     wrap::OMRendererTempTarget *middleTarget;
-    wrap::OMBufferRef uniformBuffer;
+    openminecraft::renderer::common::OMRendererBufferRef uniformBuffer;
     OMRenderer *renderer;
 
     element::OMDemiurgeRectChannel rect;

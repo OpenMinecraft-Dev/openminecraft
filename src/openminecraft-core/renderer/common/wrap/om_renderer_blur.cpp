@@ -21,9 +21,9 @@ OMRendererBlurHandler::OMRendererBlurHandler(OMRenderer *renderer, int passes) :
     blurTemp2->construct(renderer->getExtent());
 
     const std::string blurTagPrefix = "blur." + std::to_string(nextObjectTagId());
-    blurArgs = OMBufferRef(renderer, blurTagPrefix + ".args");
+    blurArgs = OMRendererBufferRef(renderer, blurTagPrefix + ".args");
     renderer->registerBuffer(blurArgs.getTag(), Uniform, sizeof(OMRendererBlurArg));
-    blurArgs2 = OMBufferRef(renderer, blurTagPrefix + ".args2");
+    blurArgs2 = OMRendererBufferRef(renderer, blurTagPrefix + ".args2");
     renderer->registerBuffer(blurArgs2.getTag(), Uniform, sizeof(OMRendererBlurArg));
 
     biltPipeline = renderer->createPipeline()

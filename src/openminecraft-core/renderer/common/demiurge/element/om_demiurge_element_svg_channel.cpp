@@ -24,7 +24,7 @@ auto OMDemiurgeSvgChannel::storeGlyph(std::string s, glm::vec2 siz) -> int
     {
         renderer->unregisterBuffer(glyphBuffer.getTag());
         glyphTag = baseGlyphTag + ".g" + std::to_string(++glyphGeneration);
-        glyphBuffer = wrap::OMBufferRef(renderer, glyphTag);
+        glyphBuffer = openminecraft::renderer::common::OMRendererBufferRef(renderer, glyphTag);
         renderer->registerBuffer(glyphTag, UniformTexel, 8 * glyphData.size() * sizeof(float));
         resources->bindInput(1, glyphBuffer);
         glyphBuffer->updateDataPart(glyphData.data(), 0, glyphData.size() * sizeof(float));
@@ -41,8 +41,8 @@ auto OMDemiurgeSvgChannel::storeGlyph(std::string s, glm::vec2 siz) -> int
 }
 void OMDemiurgeSvgChannel::init(const std::string &uniformTag, const std::string &targetTag)
 {
-    const auto uniform = wrap::OMBufferRef(renderer, uniformTag);
-    const auto target = wrap::OMRenderTargetRef(renderer, targetTag);
+    const auto uniform = openminecraft::renderer::common::OMRendererBufferRef(renderer, uniformTag);
+    const auto target = openminecraft::renderer::common::OMRendererRenderTargetRef(renderer, targetTag);
 
     format.setInstance()
         ->appendPart("inSvgPos", basics::Vec4f)
@@ -63,7 +63,7 @@ void OMDemiurgeSvgChannel::init(const std::string &uniformTag, const std::string
     if (!glyphBuffer)
     {
         glyphTag = baseGlyphTag;
-        glyphBuffer = wrap::OMBufferRef(renderer, glyphTag);
+        glyphBuffer = openminecraft::renderer::common::OMRendererBufferRef(renderer, glyphTag);
         renderer->registerBuffer(glyphTag, UniformTexel, 1024 * sizeof(float));
     }
 

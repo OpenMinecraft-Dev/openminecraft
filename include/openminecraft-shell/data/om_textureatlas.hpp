@@ -6,7 +6,7 @@
 #include "openminecraft-shell/data/om_identifier.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
-#include "openminecraft/renderer/common/wrap/om_renderer_object_ref.hpp"
+#include "openminecraft/renderer/common/om_renderer_object_ref.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/specs/png/om_png.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
@@ -152,7 +152,7 @@ class OMTextureAtlas
 
     void build()
     {
-        texture = openminecraft::renderer::common::wrap::OMTextureRef(renderer, "atlas.main");
+        texture = openminecraft::renderer::common::OMRendererTextureRef(renderer, "atlas.main");
         renderer->registerTexture(texture.getTag(), 16, 16, tid, 4, openminecraft::renderer::common::Dim2Array,
                                   openminecraft::renderer::common::R8G8B8A8Srgb);
         for (auto &p : subtex)
@@ -181,7 +181,7 @@ class OMTextureAtlas
         texture->minFilter = openminecraft::renderer::common::Nearest;
         texture->setupSampler();
 
-        textureSecondary = openminecraft::renderer::common::wrap::OMTextureRef(renderer, "atlas.secondary");
+        textureSecondary = openminecraft::renderer::common::OMRendererTextureRef(renderer, "atlas.secondary");
         renderer->registerTexture(textureSecondary.getTag(), 32, 32, wtid, 4,
                                   openminecraft::renderer::common::Dim2Array,
                                   openminecraft::renderer::common::R8G8B8A8Srgb);
@@ -349,8 +349,8 @@ class OMTextureAtlas
     openminecraft::renderer::OMRenderer *renderer;
 
   public:
-    openminecraft::renderer::common::wrap::OMTextureRef texture;
-    openminecraft::renderer::common::wrap::OMTextureRef textureSecondary;
+    openminecraft::renderer::common::OMRendererTextureRef texture;
+    openminecraft::renderer::common::OMRendererTextureRef textureSecondary;
     std::unordered_map<OMIdentifier, int> subtex;
     std::unordered_map<OMIdentifier, std::shared_ptr<specs::png::OMPngFile>> subtexFiles;
     std::unordered_map<OMIdentifier, OMTextureAnimation> subtexAnimData;

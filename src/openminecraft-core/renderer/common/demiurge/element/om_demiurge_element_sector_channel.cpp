@@ -5,8 +5,8 @@ namespace openminecraft::renderer::common::demiurge::element
 {
 void OMDemiurgeSectorChannel::init(const std::string &uniformTag, const std::string &targetTag)
 {
-    const auto uniformBuffer = wrap::OMBufferRef(renderer, uniformTag);
-    const auto target = wrap::OMRenderTargetRef(renderer, targetTag);
+    const auto uniformBuffer = openminecraft::renderer::common::OMRendererBufferRef(renderer, uniformTag);
+    const auto target = openminecraft::renderer::common::OMRendererRenderTargetRef(renderer, targetTag);
 
     format.setInstance()
         ->appendPart("inSectorPos", basics::Vec4f)

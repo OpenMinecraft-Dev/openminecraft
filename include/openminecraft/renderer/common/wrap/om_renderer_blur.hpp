@@ -8,7 +8,7 @@
 #include "openminecraft/renderer/common/om_renderer_resource_set.hpp"
 #include "openminecraft/renderer/common/om_renderer_task.hpp"
 #include "openminecraft/renderer/common/om_renderer_texture.hpp"
-#include "openminecraft/renderer/common/wrap/om_renderer_object_ref.hpp"
+#include "openminecraft/renderer/common/om_renderer_object_ref.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_temptarget.hpp"
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 namespace openminecraft::renderer::common::wrap
@@ -47,7 +47,7 @@ class OMRendererBlurHandler : public OMRendererHandler
     OMRendererResourceSet *biltResources = nullptr, *blurp1Resources = nullptr;
     OMRendererResourceSet *blurp2Resources = nullptr, *composeResources = nullptr;
     OMRendererTempTarget *blurTemp, *blurTemp2;
-    OMBufferRef blurArgs, blurArgs2;
+    OMRendererBufferRef blurArgs, blurArgs2;
 
     basics::OMVertexFormat format;
 

@@ -32,7 +32,7 @@ OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer, std::
 {
     node = n;
 
-    uniformBuffer = wrap::OMBufferRef(renderer, "demiurge.uniform." + std::to_string(wrap::nextObjectTagId()));
+    uniformBuffer = openminecraft::renderer::common::OMRendererBufferRef(renderer, "demiurge.uniform." + std::to_string(openminecraft::renderer::common::nextObjectTagId()));
     renderer->registerBuffer(uniformBuffer.getTag(), Uniform, sizeof(float) * 2);
 
     auto ext = renderer->getExtent();

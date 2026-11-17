@@ -2,7 +2,7 @@
 #define OM_RENDERER_VOXEL_MANAGER_HPP
 
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
-#include "openminecraft/renderer/common/wrap/om_renderer_object_ref.hpp"
+#include "openminecraft/renderer/common/om_renderer_object_ref.hpp"
 #include "openminecraft/renderer/common/wrap/om_renderer_temptarget.hpp"
 #include "openminecraft/renderer/common/wrap/voxel/om_renderer_voxel_compiler_pool.hpp"
 #include "openminecraft/renderer/common/wrap/voxel/om_renderer_voxel_objects.hpp"
@@ -45,33 +45,33 @@ class OMVoxelManager
     OMRendererPipeline *skyDiscPipeline;
     OMRendererPipeline *lightmapPipeline;
     OMRendererPipeline *skyPipeline;
-    OMBufferRef chunkOffsetBuffer, debugOffsetBuffer;
+    OMRendererBufferRef chunkOffsetBuffer, debugOffsetBuffer;
     // Shared index buffer for voxel quads (0,1,2, 2,3,0): 4 vertices per face
-    OMBufferRef voxelIndexBuffer;
-    OMBufferRef skydisc;
-    OMBufferRef fogdata, cloudFogdata;
-    OMBufferRef lightmapData;
-    OMBufferRef moonData;
-    OMBufferRef cloudData;
-    OMTextureRef cloudTex;
-    OMTextureRef textureAtlas;
-    OMTextureRef textureAtlasSecondary;
+    OMRendererBufferRef voxelIndexBuffer;
+    OMRendererBufferRef skydisc;
+    OMRendererBufferRef fogdata, cloudFogdata;
+    OMRendererBufferRef lightmapData;
+    OMRendererBufferRef moonData;
+    OMRendererBufferRef cloudData;
+    OMRendererTextureRef cloudTex;
+    OMRendererTextureRef textureAtlas;
+    OMRendererTextureRef textureAtlasSecondary;
     OMRendererTempTarget *lightmap;
     OMVoxelColorManager *colorManager;
 
-    OMBufferRef sunrise;
+    OMRendererBufferRef sunrise;
     OMRendererPipeline *sunrisePipeline;
     OMRendererPipeline *sunPipeline, *moonPipeline;
 
-    OMTextureRef sunTex, moonTex;
-    OMBufferRef starBuffer;
-    OMBufferRef starBaseData;
+    OMRendererTextureRef sunTex, moonTex;
+    OMRendererBufferRef starBuffer;
+    OMRendererBufferRef starBaseData;
     OMRendererPipeline *starPipeline;
 
     OMRendererPipeline *cloudPipeline, *cloudComposePipeline;
     std::unordered_map<OMRendererPipeline *, OMRendererResourceSet *> pipelineResources;
     std::vector<bool> cloudStats;
-    OMBufferRef cloudBuffer;
+    OMRendererBufferRef cloudBuffer;
 
   private:
     int samples = 4;

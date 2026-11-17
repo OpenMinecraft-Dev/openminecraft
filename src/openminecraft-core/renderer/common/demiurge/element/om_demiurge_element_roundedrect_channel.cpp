@@ -8,8 +8,8 @@ namespace openminecraft::renderer::common::demiurge::element
 {
 void OMDemiurgeRoundedRectChannel::init(const std::string &uniformTag, const std::string &targetTag)
 {
-    const auto uniformBuffer = wrap::OMBufferRef(renderer, uniformTag);
-    const auto target = wrap::OMRenderTargetRef(renderer, targetTag);
+    const auto uniformBuffer = openminecraft::renderer::common::OMRendererBufferRef(renderer, uniformTag);
+    const auto target = openminecraft::renderer::common::OMRendererRenderTargetRef(renderer, targetTag);
 
     format.setInstance()
         ->appendPart("inRectPos", basics::Vec4f)

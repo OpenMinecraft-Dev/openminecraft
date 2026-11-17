@@ -34,7 +34,7 @@ class OMDemiurgeShaderSceneChannel : public OMDemiurgeQuadChannel<OMDemiurgeElem
         if (timeBuffer)
         {
             renderer->unregisterBuffer(timeBuffer.getTag());
-            timeBuffer = wrap::OMBufferRef();
+            timeBuffer = openminecraft::renderer::common::OMRendererBufferRef();
         }
 
         for (auto p : resourceSets)
@@ -108,9 +108,9 @@ class OMDemiurgeShaderSceneChannel : public OMDemiurgeQuadChannel<OMDemiurgeElem
         return full;
     }
 
-    wrap::OMBufferRef uniform;
-    wrap::OMRenderTargetRef target;
-    wrap::OMBufferRef timeBuffer;
+    openminecraft::renderer::common::OMRendererBufferRef uniform;
+    openminecraft::renderer::common::OMRendererRenderTargetRef target;
+    openminecraft::renderer::common::OMRendererBufferRef timeBuffer;
     std::shared_ptr<OMShader> vtxShader;
 
     std::chrono::steady_clock::time_point startedAt = std::chrono::steady_clock::now();

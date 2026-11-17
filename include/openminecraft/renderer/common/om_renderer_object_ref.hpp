@@ -1,5 +1,5 @@
-#ifndef OM_RENDERER_OBJECT_REF_HPP
-#define OM_RENDERER_OBJECT_REF_HPP
+#ifndef OM_RENDERER_COMMON_OBJECT_REF_HPP
+#define OM_RENDERER_COMMON_OBJECT_REF_HPP
 
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include <atomic>
@@ -7,7 +7,7 @@
 #include <string>
 #include <utility>
 
-namespace openminecraft::renderer::common::wrap
+namespace openminecraft::renderer::common
 {
 // Globally unique object tag counter: a static in a template class is per-instantiation, so it lives in a non-template function
 inline auto nextObjectTagId() -> uint64_t
@@ -17,11 +17,11 @@ inline auto nextObjectTagId() -> uint64_t
 }
 
 // Lightweight reference: stores only the registry string tag; the object itself is owned/destroyed by OMRenderer.
-class OMBufferRef
+class OMRendererBufferRef
 {
   public:
-    OMBufferRef() = default;
-    OMBufferRef(OMRenderer *renderer, std::string tag) : renderer(renderer), tag(std::move(tag))
+    OMRendererBufferRef() = default;
+    OMRendererBufferRef(OMRenderer *renderer, std::string tag) : renderer(renderer), tag(std::move(tag))
     {
     }
 
@@ -56,11 +56,11 @@ class OMBufferRef
     std::string tag;
 };
 
-class OMTextureRef
+class OMRendererTextureRef
 {
   public:
-    OMTextureRef() = default;
-    OMTextureRef(OMRenderer *renderer, std::string tag) : renderer(renderer), tag(std::move(tag))
+    OMRendererTextureRef() = default;
+    OMRendererTextureRef(OMRenderer *renderer, std::string tag) : renderer(renderer), tag(std::move(tag))
     {
     }
 
@@ -95,11 +95,11 @@ class OMTextureRef
     std::string tag;
 };
 
-class OMRenderTargetRef
+class OMRendererRenderTargetRef
 {
   public:
-    OMRenderTargetRef() = default;
-    OMRenderTargetRef(OMRenderer *renderer, std::string tag) : renderer(renderer), tag(std::move(tag))
+    OMRendererRenderTargetRef() = default;
+    OMRendererRenderTargetRef(OMRenderer *renderer, std::string tag) : renderer(renderer), tag(std::move(tag))
     {
     }
 
@@ -133,6 +133,6 @@ class OMRenderTargetRef
     OMRenderer *renderer = nullptr;
     std::string tag;
 };
-} // namespace openminecraft::renderer::common::wrap
+} // namespace openminecraft::renderer::common
 
 #endif

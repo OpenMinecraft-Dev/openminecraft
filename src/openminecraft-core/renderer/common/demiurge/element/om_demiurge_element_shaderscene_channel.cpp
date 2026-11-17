@@ -10,8 +10,8 @@ namespace openminecraft::renderer::common::demiurge::element
 {
 void OMDemiurgeShaderSceneChannel::init(const std::string &uniformTag, const std::string &targetTag)
 {
-    uniform = wrap::OMBufferRef(renderer, uniformTag);
-    target = wrap::OMRenderTargetRef(renderer, targetTag);
+    uniform = openminecraft::renderer::common::OMRendererBufferRef(renderer, uniformTag);
+    target = openminecraft::renderer::common::OMRendererRenderTargetRef(renderer, targetTag);
 
     format.setInstance()
         ->appendPart("inShaderScenePos", basics::Vec4f)
@@ -24,7 +24,7 @@ void OMDemiurgeShaderSceneChannel::init(const std::string &uniformTag, const std
 
     resetInstanceBuffer(8);
 
-    timeBuffer = wrap::OMBufferRef(renderer, instanceTag + ".time");
+    timeBuffer = openminecraft::renderer::common::OMRendererBufferRef(renderer, instanceTag + ".time");
     renderer->registerBuffer(timeBuffer.getTag(), Uniform, sizeof(float));
     timeBuffer->updateData(std::array<float, 1>{0.0f}.data());
 
@@ -54,7 +54,7 @@ auto OMDemiurgeShaderSceneChannel::submitTask(OMRendererTask *task, uint32_t lay
     if (instanceBuffer->length < this->bufferSize())
     {
         const std::string newTag = instanceTag + ".g" + std::to_string(++instanceGeneration);
-        auto newBuffer = wrap::OMBufferRef(renderer, newTag);
+        auto newBuffer = openminecraft::renderer::common::OMRendererBufferRef(renderer, newTag);
         renderer->registerBuffer(newTag, InstanceData, this->bufferSize());
 
         if (instanceBuffer->length > 0)

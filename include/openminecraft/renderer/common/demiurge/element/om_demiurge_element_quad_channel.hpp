@@ -6,7 +6,7 @@
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
 #include "openminecraft/renderer/common/om_renderer_resource_set.hpp"
-#include "openminecraft/renderer/common/wrap/om_renderer_object_ref.hpp"
+#include "openminecraft/renderer/common/om_renderer_object_ref.hpp"
 #include <functional>
 #include <iostream>
 #include <utility>
@@ -18,7 +18,7 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
     OMDemiurgeQuadChannel(OMRenderer *renderer, std::function<void()> recreate)
         : renderer(renderer), recreation(std::move(recreate))
     {
-        instanceTag = "demiurge.quad." + std::to_string(wrap::nextObjectTagId());
+        instanceTag = "demiurge.quad." + std::to_string(openminecraft::renderer::common::nextObjectTagId());
     }
     ~OMDemiurgeQuadChannel() = default;
 
@@ -27,7 +27,7 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
         if (instanceBuffer)
         {
             renderer->unregisterBuffer(instanceBuffer.getTag());
-            instanceBuffer = wrap::OMBufferRef();
+            instanceBuffer = openminecraft::renderer::common::OMRendererBufferRef();
         }
         delete resources;
         resources = nullptr;
@@ -36,7 +36,7 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
 
     auto init(const std::string &uniformTag, const std::string &targetTag) -> void override
     {
-        initPipeline(wrap::OMBufferRef(renderer, uniformTag), wrap::OMRenderTargetRef(renderer, targetTag), true);
+        initPipeline(openminecraft::renderer::common::OMRendererBufferRef(renderer, uniformTag), openminecraft::renderer::common::OMRendererRenderTargetRef(renderer, targetTag), true);
     }
 
     auto submitTask(OMRendererTask *task, uint32_t layer) -> void override
@@ -44,7 +44,7 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
         if (instanceBuffer->length < this->bufferSize())
         {
             const std::string newTag = instanceTag + ".g" + std::to_string(++instanceGeneration);
-            auto ninstanceBuffer = wrap::OMBufferRef(renderer, newTag);
+            auto ninstanceBuffer = openminecraft::renderer::common::OMRendererBufferRef(renderer, newTag);
             renderer->registerBuffer(newTag, InstanceData, this->bufferSize());
             instanceBuffer->copyTo(ninstanceBuffer);
 
@@ -160,7 +160,7 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
         }
 
         const std::string tag = instanceTag + ".g" + std::to_string(++instanceGeneration);
-        instanceBuffer = wrap::OMBufferRef(renderer, tag);
+        instanceBuffer = openminecraft::renderer::common::OMRendererBufferRef(renderer, tag);
         renderer->registerBuffer(tag, InstanceData, size);
     }
 
@@ -189,7 +189,7 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
     std::function<void()> recreation;
     basics::OMVertexFormat format;
 
-    wrap::OMBufferRef instanceBuffer;
+    openminecraft::renderer::common::OMRendererBufferRef instanceBuffer;
     std::string instanceTag;
     uint64_t instanceGeneration = 0;
 

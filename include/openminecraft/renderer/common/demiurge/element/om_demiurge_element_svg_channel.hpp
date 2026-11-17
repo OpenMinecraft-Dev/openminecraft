@@ -28,7 +28,7 @@ class OMDemiurgeSvgChannel : public OMDemiurgeQuadChannel<OMDemiurgeElementSvg>
         if (glyphBuffer)
         {
             renderer->unregisterBuffer(glyphBuffer.getTag());
-            glyphBuffer = wrap::OMBufferRef();
+            glyphBuffer = openminecraft::renderer::common::OMRendererBufferRef();
         }
         OMDemiurgeQuadChannel::destroy();
     }
@@ -36,7 +36,7 @@ class OMDemiurgeSvgChannel : public OMDemiurgeQuadChannel<OMDemiurgeElementSvg>
     auto storeGlyph(std::string, glm::vec2 size) -> int;
 
   private:
-    wrap::OMBufferRef glyphBuffer;
+    openminecraft::renderer::common::OMRendererBufferRef glyphBuffer;
     std::string glyphTag;
     std::string baseGlyphTag;
     uint64_t glyphGeneration = 0;
