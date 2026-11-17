@@ -3,6 +3,9 @@
 
 #include "openminecraft/renderer/common/om_renderer_frame_context.hpp"
 #include "openminecraft/renderer/common/om_renderer_sync_point.hpp"
+#ifdef OM_VULKAN_DYNAMIC
+#define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
+#endif
 #include "vulkan/vulkan.hpp"
 #include <vector>
 

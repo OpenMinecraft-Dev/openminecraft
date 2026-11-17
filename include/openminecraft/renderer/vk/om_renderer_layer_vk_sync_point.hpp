@@ -2,6 +2,9 @@
 #define OM_RENDERER_LAYER_VK_SYNC_POINT_HPP
 
 #include "openminecraft/renderer/common/om_renderer_sync_point.hpp"
+#ifdef OM_VULKAN_DYNAMIC
+#define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
+#endif
 #include "vulkan/vulkan.hpp"
 
 namespace openminecraft::renderer::vk
