@@ -198,6 +198,7 @@ OMRendererVk::OMRendererVk(AppInfo info, std::function<int(std::vector<std::stri
     }
 
     memProps = physicalDevice.getMemoryProperties();
+    resetImageRenderSemaphores();
 
     try
     {
@@ -330,6 +331,7 @@ void OMRendererVk::resetFrameSynchronization()
         lifeCycle->setFrameTag(0, 0);
         frameContexts.clear();
         inflightImageFences.clear();
+        resetImageRenderSemaphores();
 
         for (int i = 0; i < framesInFlight; i++)
         {
@@ -339,6 +341,25 @@ void OMRendererVk::resetFrameSynchronization()
     catch (SystemError &e)
     {
         throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.defaults"));
+    }
+}
+
+void OMRendererVk::resetImageRenderSemaphores()
+{
+    for (auto *sem : imageRenderFinished)
+    {
+        delete sem;
+    }
+    imageRenderFinished.clear();
+
+    if (!swapchainManager)
+    {
+        return;
+    }
+
+    for (size_t i = 0; i < swapchainManager->swapchainImageViews.size(); ++i)
+    {
+        imageRenderFinished.push_back(createGpuEvent());
     }
 }
 
@@ -1012,6 +1033,11 @@ OMRendererVk::~OMRendererVk()
 
         frameContexts.clear();
         inflightImageFences.clear();
+        for (auto *sem : imageRenderFinished)
+        {
+            delete sem;
+        }
+        imageRenderFinished.clear();
 
         delete defaultDepthBuffer;
         for (auto &fb : defaultFramebuffers)

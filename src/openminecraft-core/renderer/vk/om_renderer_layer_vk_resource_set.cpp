@@ -74,6 +74,10 @@ void OMRendererResourceSetVk::bindInput(int index, OMRendererBuffer *buffer)
 
     try
     {
+        // Updating a descriptor set that is referenced by a pending command buffer is illegal; buffer rebinds
+        // happen on reallocation (glyph atlas / chunk offset buffer), so drain the device first.
+        vkRenderer->logicalDevice.waitIdle();
+
         if (buffer->usage == UniformTexel)
         {
             auto bv = vkRenderer->logicalDevice.createBufferView(
@@ -123,6 +127,8 @@ void OMRendererResourceSetVk::bindInput(int index, OMRendererTexture *texture)
 
     try
     {
+        vkRenderer->logicalDevice.waitIdle();
+
         auto imageInfo = DescriptorImageInfo(reinterpret_cast<OMRendererTextureVk *>(texture)->sampler,
                                              reinterpret_cast<OMRendererTextureVk *>(texture)->imageView,
                                              ImageLayout::eShaderReadOnlyOptimal);

@@ -15,7 +15,6 @@ OMRendererFrameContextVk::OMRendererFrameContextVk(OMRendererVk *renderer, uint3
 {
     pipelineSemaphores.push_back(reinterpret_cast<OMRendererGpuEventVk *>(renderer->createGpuEvent()));
     syncFence = renderer->createGpuCpuBridge(true);
-    renderFinished = renderer->createGpuEvent();
 }
 
 OMRendererFrameContextVk::~OMRendererFrameContextVk()
@@ -27,8 +26,6 @@ OMRendererFrameContextVk::~OMRendererFrameContextVk()
     pipelineSemaphores.clear();
     delete syncFence;
     syncFence = nullptr;
-    delete renderFinished;
-    renderFinished = nullptr;
 }
 
 auto OMRendererFrameContextVk::imageAvailable() -> common::OMRendererGpuEvent *
@@ -109,7 +106,7 @@ void OMRendererFrameContextVk::submit(const std::vector<CommandBuffer> &commands
     }
 
     auto *waitSync = pipelineSemaphores[layer];
-    auto *dstSync = lastLayer ? renderFinished : pipelineSemaphores[layer + 1];
+    auto *dstSync = lastLayer ? renderer->imageRenderFinished[currentImage] : pipelineSemaphores[layer + 1];
     const PipelineStageFlags stages = PipelineStageFlagBits::eColorAttachmentOutput;
     Semaphore waitSemaphore = reinterpret_cast<OMRendererGpuEventVk *>(waitSync)->semaphore();
     Semaphore signalSemaphore = reinterpret_cast<OMRendererGpuEventVk *>(dstSync)->semaphore();
@@ -122,7 +119,7 @@ void OMRendererFrameContextVk::submit(const std::vector<CommandBuffer> &commands
 
 auto OMRendererFrameContextVk::present() -> bool
 {
-    auto semaphore = reinterpret_cast<OMRendererGpuEventVk *>(renderFinished)->semaphore();
+    auto semaphore = reinterpret_cast<OMRendererGpuEventVk *>(renderer->imageRenderFinished[currentImage])->semaphore();
     PresentInfoKHR info(1, &semaphore, 1, &renderer->swapchainManager->swapchain, &currentImage);
     auto result = renderer->queues.second.presentKHR(info);
 

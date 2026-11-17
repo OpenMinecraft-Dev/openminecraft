@@ -69,7 +69,6 @@ class OMRendererFrameContextVk : public common::OMRendererFrameContext
 
     std::vector<common::OMRendererGpuEvent *> pipelineSemaphores;
     common::OMRendererGpuCpuBridge *syncFence = nullptr;
-    common::OMRendererGpuEvent *renderFinished = nullptr;
 };
 } // namespace openminecraft::renderer::vk
 

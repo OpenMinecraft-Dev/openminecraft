@@ -111,6 +111,9 @@ class OMRendererVk : public OMRenderer
 
     std::vector<std::unique_ptr<OMRendererFrameContextVk>> frameContexts;
     std::map<uint32_t, common::OMRendererGpuCpuBridge *> inflightImageFences;
+    // One render-finished semaphore per swapchain image: re-signaling is only safe once the same image has been
+    // re-acquired, i.e. its previous present completed.
+    std::vector<common::OMRendererGpuEvent *> imageRenderFinished;
 
     int framesInFlight = 3;
     int thisFrame = 0;
@@ -124,6 +127,7 @@ class OMRendererVk : public OMRenderer
     void rebuildDefaults();
     void updateSyncObjects();
     void resetFrameSynchronization();
+    void resetImageRenderSemaphores();
 
     std::shared_ptr<log::OMLogger> logger;
     ::vk::PhysicalDeviceMemoryProperties memProps;
