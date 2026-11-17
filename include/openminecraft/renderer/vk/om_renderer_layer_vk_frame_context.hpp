@@ -40,6 +40,18 @@ class OMRendererFrameContextVk : public common::OMRendererFrameContext
         return currentImage;
     }
 
+    auto nextFrameSerial() const -> uint64_t
+    {
+        return frameSerial + 1;
+    }
+
+    auto currentFrameSerial() const -> uint64_t
+    {
+        return frameSerial;
+    }
+
+    auto isFrameComplete(uint64_t serial) -> bool;
+
     auto inFlightFence() const -> common::OMRendererGpuCpuBridge *
     {
         return syncFence;
@@ -53,6 +65,7 @@ class OMRendererFrameContextVk : public common::OMRendererFrameContext
     OMRendererVk *renderer;
     uint32_t frameIndex;
     uint32_t currentImage = 0;
+    uint64_t frameSerial = 0;
 
     std::vector<common::OMRendererGpuEvent *> pipelineSemaphores;
     common::OMRendererGpuCpuBridge *syncFence = nullptr;

@@ -4,6 +4,7 @@
 #include "common/om_renderer_texture.hpp"
 #include "openminecraft/renderer/common/om_renderer_buffer.hpp"
 #include "openminecraft/renderer/common/om_renderer_pipeline.hpp"
+#include "openminecraft/renderer/common/om_renderer_lifecycle.hpp"
 #include "openminecraft/renderer/common/om_renderer_rendertarget.hpp"
 #include "openminecraft/renderer/common/om_renderer_shadercompiler.hpp"
 #include "openminecraft/renderer/common/om_renderer_shadermanager.hpp"
@@ -12,6 +13,7 @@
 #include "openminecraft/util/om_util_version.hpp"
 #include <functional>
 #include <glm/glm.hpp>
+#include <memory>
 #include <mutex>
 #include <stdexcept>
 #include <string>
@@ -91,7 +93,7 @@ class OMRenderer
             return;
         }
 
-        delete it->second;
+        lifeCycle->retireBuffer(it->second);
         bufferRegistry.erase(it);
     }
 
@@ -142,7 +144,7 @@ class OMRenderer
             return;
         }
 
-        delete it->second;
+        lifeCycle->retireTexture(it->second);
         textureRegistry.erase(it);
     }
 
@@ -208,12 +210,25 @@ class OMRenderer
             delete p.second;
         }
         renderTargetRegistry.clear();
+
+        if (lifeCycle)
+        {
+            lifeCycle->clear();
+        }
     }
 
     virtual auto driver() -> std::string = 0;
     virtual auto deviceInfos() -> std::string = 0;
     virtual auto createGpuEvent() -> common::OMRendererGpuEvent * = 0;
     virtual auto createGpuCpuBridge(bool signaled) -> common::OMRendererGpuCpuBridge * = 0;
+    virtual auto isFrameComplete(uint32_t frameIndex, uint64_t frameSerial) -> bool
+    {
+        return true;
+    }
+    auto lifecycle() -> common::OMRendererLifeCycle *
+    {
+        return lifeCycle.get();
+    }
     virtual auto allocateBuffer(common::OMBufferUsage usage, uint64_t length) -> common::OMRendererBuffer * = 0;
     inline auto allocateTexture(uint64_t width, uint64_t height, uint64_t mipmap, common::OMTextureType type,
                                 common::OMTextureArrangement arrangement) -> common::OMRendererTexture *
@@ -342,6 +357,7 @@ class OMRenderer
     }
 
   protected:
+    std::unique_ptr<common::OMRendererLifeCycle> lifeCycle;
     void *window;
     std::mutex scheduleMutex = {};
     std::unordered_map<std::string, common::OMRendererTask *> tasks;

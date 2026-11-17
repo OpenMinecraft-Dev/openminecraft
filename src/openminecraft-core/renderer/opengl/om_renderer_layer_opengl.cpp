@@ -209,6 +209,9 @@ OMRendererOpenGL::~OMRendererOpenGL()
     tasks.clear();
     handlers.clear();
 
+    // Release retired resources while the GL context is still current.
+    lifeCycle->clear();
+
     // Destroy all registered buffers / textures / render targets (must happen before the context is destroyed)
     clearRegistry();
 
@@ -328,6 +331,13 @@ void OMRendererOpenGL::render(util::OMTicker &t)
         needResize = false;
         t.pop();
     }
+    t.push("gl_lifecycle");
+    lifeCycle->collect([this](uint32_t frameIndex, uint64_t frameSerial) {
+        return isFrameComplete(frameIndex, frameSerial);
+    });
+    lifeCycle->setFrameTag(0, 0);
+    t.pop();
+
     t.push("gl_pretasks");
     runSchedules();
     for (auto h : handlers)

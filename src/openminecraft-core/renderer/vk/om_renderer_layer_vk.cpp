@@ -324,6 +324,10 @@ void OMRendererVk::resetFrameSynchronization()
 {
     try
     {
+        // Swapchain rebuild waits for the device first; all retired resources
+        // are safe to release and old frame serials are no longer meaningful.
+        lifeCycle->clear();
+        lifeCycle->setFrameTag(0, 0);
         frameContexts.clear();
         inflightImageFences.clear();
 
@@ -429,6 +433,15 @@ void OMRendererVk::render(OMTicker &t)
     }
     try
     {
+        auto *frame = frameContexts[thisFrame].get();
+
+        t.push("vk_lifecycle");
+        lifeCycle->collect([this](uint32_t frameIndex, uint64_t frameSerial) {
+            return isFrameComplete(frameIndex, frameSerial);
+        });
+        lifeCycle->setFrameTag(thisFrame, frame->nextFrameSerial());
+        t.pop();
+
         t.push("vk_pretasks");
         for (auto r : handlers)
         {
@@ -437,13 +450,15 @@ void OMRendererVk::render(OMTicker &t)
         t.pop();
 
         t.push("vk_frame_begin");
-        auto *frame = frameContexts[thisFrame].get();
         if (!frame->beginFrame())
         {
             lastError = Result::eErrorOutOfDateKHR;
             t.pop();
             goto rebuild;
         }
+        // beforeFrame may have retired resources; they belong to this newly
+        // begun frame rather than a future one.
+        lifeCycle->setFrameTag(thisFrame, frame->currentFrameSerial());
         t.pop();
 
         std::vector<CommandBuffer> cmdBuffers = {};
@@ -1016,6 +1031,11 @@ OMRendererVk::~OMRendererVk()
         delete defaultTarget;
         handlers.clear();
 
+        // Handlers/resource sets no longer reference retired resources. Release
+        // them while the Vulkan device is still alive; never let the LifeCycle
+        // destructor run after logicalDevice/instance destruction.
+        lifeCycle->clear();
+
         // Destroy all registered buffers / textures / render targets (must happen before the device is destroyed)
         clearRegistry();
 
@@ -1153,6 +1173,15 @@ auto OMRendererVk::createGpuEvent() -> common::OMRendererGpuEvent *
 auto OMRendererVk::createGpuCpuBridge(bool signaled) -> common::OMRendererGpuCpuBridge *
 {
     return new OMRendererGpuCpuBridgeVk(logicalDevice, allocator, signaled);
+}
+
+auto OMRendererVk::isFrameComplete(uint32_t frameIndex, uint64_t frameSerial) -> bool
+{
+    if (frameIndex >= frameContexts.size())
+    {
+        return true;
+    }
+    return frameContexts[frameIndex]->isFrameComplete(frameSerial);
 }
 
 auto OMRendererVk::driver() -> std::string

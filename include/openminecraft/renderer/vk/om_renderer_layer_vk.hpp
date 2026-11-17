@@ -60,6 +60,7 @@ class OMRendererVk : public OMRenderer
     auto deviceInfos() -> std::string override;
     auto createGpuEvent() -> common::OMRendererGpuEvent * override;
     auto createGpuCpuBridge(bool signaled) -> common::OMRendererGpuCpuBridge * override;
+    auto isFrameComplete(uint32_t frameIndex, uint64_t frameSerial) -> bool override;
     auto allocateBuffer(common::OMBufferUsage usage, uint64_t length) -> common::OMRendererBuffer * override;
     auto allocateTexture(uint64_t width, uint64_t height, uint64_t layers, uint64_t mipmap, common::OMTextureType type,
                          common::OMTextureArrangement arr) -> common::OMRendererTexture * override;

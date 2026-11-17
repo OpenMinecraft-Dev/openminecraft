@@ -117,7 +117,8 @@ void OMApplication::mainLoop(OMBackend backend)
         bool inGame = false;
         bool mainScreen = true;
         buswrap.append(event::Custom, [&](event::OMEvent &e) {
-            logger->debug("Received event {:x}", e.custom.flag);
+            if (e.custom.flag != EventChunkLoadStatus)
+                logger->debug("Received event {:x}", e.custom.flag);
             switch (e.custom.flag)
             {
             case EventMainScreenOpen:

@@ -75,12 +75,30 @@ auto OMRendererFrameContextVk::beginFrame() -> bool
 
         renderer->inflightImageFences[image] = syncFence;
         reinterpret_cast<OMRendererGpuCpuBridgeVk *>(syncFence)->reset();
+        ++frameSerial;
         return true;
     }
     catch (SystemError &e)
     {
         throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.nextimage"));
     }
+}
+
+auto OMRendererFrameContextVk::isFrameComplete(uint64_t serial) -> bool
+{
+    if (serial == 0)
+    {
+        return true;
+    }
+    if (serial < frameSerial)
+    {
+        return true;
+    }
+    if (serial > frameSerial)
+    {
+        return false;
+    }
+    return syncFence != nullptr && syncFence->isSignaled();
 }
 
 void OMRendererFrameContextVk::submit(const std::vector<CommandBuffer> &commands, uint32_t layer, bool lastLayer)
