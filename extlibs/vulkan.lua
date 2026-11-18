@@ -274,7 +274,7 @@ package("spirv-tools")
 
     on_install(function (package)
         package:addenv("PATH", "bin")
-        local configs = {"-DSPIRV_SKIP_TESTS=ON", "-DSPIRV_WERROR=OFF"}
+        local configs = {"-DSPIRV_SKIP_TESTS=ON", "-DSPIRV_WERROR=OFF", "-DSPIRV_TOOLS_BUILD_SHARED=OFF"}
         -- walkaround for potential conflict with parallel build & debug pdb generation
         if package:debug() then
             table.insert(configs, "-DCMAKE_COMPILE_PDB_OUTPUT_DIRECTORY=''")
