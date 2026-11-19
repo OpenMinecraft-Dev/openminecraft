@@ -1,0 +1,25 @@
+import "basics/vertexgen.gsl"
+
+#[location(0), transfer] vec2 biltTexCoord;
+#[vposition, out] vec4 vertexPos;
+#[location(0), out] vec4 outColor;
+
+#[binding(0)] sampler2D inTexture;
+
+#[stage(fragment)]
+void fragMain() {
+    outColor = inTexture.sample(biltTexCoord);
+}
+
+#[stage(vertex)]
+void vertMain()
+{
+    vertexPos = vec4(vertexgen_quad_ndc(), 0.0, 1.0);
+    #[when(target(vulkan))]
+    vertexPos.y = -vertexPos.y;
+    // vec2 newxy = mat2(0, 1, -1, 0) * vertexPos.xy;
+    // vertexPos.xy = newxy;
+    #[end]
+
+    biltTexCoord = vertexgen_quad_normal();
+}
