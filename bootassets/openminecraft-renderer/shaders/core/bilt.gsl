@@ -1,4 +1,4 @@
-import "basics/vertexgen.gsl"
+#[import(basics/vertexgen.gsl)]
 
 #[location(0), transfer] vec2 biltTexCoord;
 #[vposition, out] vec4 vertexPos;

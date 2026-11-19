@@ -1,5 +1,5 @@
-import "basics/structs/camera.gsl"
-import "basics/structs/lighting.gsl"
+#[import(basics/structs/camera.gsl)]
+#[import(basics/structs/lighting.gsl)]
 
 struct ObjectInfo {
     mat4 model;
@@ -22,7 +22,7 @@ void vertMain(ObjectVertex v)
 {
     vertexPos = camera.viewProj * ubo.model * vec4(v.inPosition, 1.0);
     objTexCoord = v.inTexCoord;
-    objNormal = normalize(mat3(ubo.model) * v.normal);
+    objNormal = normalize(mat3(ubo.model) * v.inNormal);
 }
 
 #[stage(fragment)]
