@@ -1,7 +1,7 @@
 #include "openminecraft-shell/data/block/om_block.hpp"
 #include "openminecraft-shell/data/block/om_block_registry.hpp"
 #include "openminecraft-shell/data/om_identifier.hpp"
-#include "openminecraft/io/json/om_io_ast_builder_json.hpp"
+#include "openminecraft/compiler/json/om_compiler_ast_builder_json.hpp"
 #include "openminecraft/specs/zlib/om_zlib_inflaterstream.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include <memory>
@@ -25,7 +25,7 @@ static void registerBlock(OMIdentifier ident, std::shared_ptr<OMBlock> blk)
 
 void registerBlocks()
 {
-    io::json::OMJsonAstBuilder bld(std::make_shared<io::json::OMJsonTokenIter>(
+    compiler::json::OMJsonAstBuilder bld(std::make_shared<compiler::json::OMJsonTokenIter>(
         std::make_shared<specs::zlib::OMZlibInflaterStream>(vfs::fsfetch("/bootassets/minecraft/blocks.json.zlib"))));
     auto document = bld.build();
 

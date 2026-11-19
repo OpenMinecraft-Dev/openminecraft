@@ -1,6 +1,6 @@
 target("openminecraft-geom")
 set_kind("static")
 add_packages("fmt", "boost", "harfbuzz", "glm")
-add_deps("openminecraft-io", "openminecraft-log")
+add_deps("openminecraft-compiler", "openminecraft-log")
 add_files("**.cpp")
 add_includedirs(path.join(os.projectdir(), "include"))

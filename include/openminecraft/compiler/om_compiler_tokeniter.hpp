@@ -1,13 +1,13 @@
-#ifndef OM_IO_TOKENITER_HPP
-#define OM_IO_TOKENITER_HPP
+#ifndef OM_COMPILER_TOKENITER_HPP
+#define OM_COMPILER_TOKENITER_HPP
 
-#include "openminecraft/io/om_io_parser.hpp"
+#include "openminecraft/compiler/om_compiler_parser.hpp"
 #include <memory>
 #include <utility>
 
-namespace openminecraft::io
+namespace openminecraft::compiler
 {
-constexpr const char allocatorId[] = "io_parser";
+constexpr const char allocatorId[] = "compiler_parser";
 
 template <typename T> class OMTokenIter : public OMParser
 {
@@ -20,6 +20,6 @@ template <typename T> class OMTokenIter : public OMParser
     virtual auto next() -> std::shared_ptr<T> = 0;
     virtual auto end() -> bool = 0;
 };
-} // namespace openminecraft::io
+} // namespace openminecraft::compiler
 
 #endif

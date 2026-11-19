@@ -5,7 +5,7 @@
 #include "openminecraft-shell/data/om_identifier.hpp"
 #include "openminecraft-shell/data/om_textureatlas.hpp"
 #include "openminecraft/binary/om_bin_hash.hpp"
-#include "openminecraft/io/json/om_io_ast_json.hpp"
+#include "openminecraft/compiler/json/om_compiler_ast_json.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/common/wrap/voxel/om_renderer_voxel_objects.hpp"
 #include "openminecraft-shell/data/block/om_block.hpp"
@@ -94,10 +94,10 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::voxel::
     OMModelPrecompiler(std::string root, OMTextureAtlas *);
     ~OMModelPrecompiler() = default;
 
-    auto precompile(OMIdentifier, bool = true) -> std::shared_ptr<openminecraft::io::json::OMJsonNode>;
-    auto wrapFace(std::shared_ptr<openminecraft::io::json::OMJsonNode>, OMModelCullSide, glm::vec3 from, glm::vec3 to)
+    auto precompile(OMIdentifier, bool = true) -> std::shared_ptr<openminecraft::compiler::json::OMJsonNode>;
+    auto wrapFace(std::shared_ptr<openminecraft::compiler::json::OMJsonNode>, OMModelCullSide, glm::vec3 from, glm::vec3 to)
         -> OMModelFace;
-    auto wrapPart(std::shared_ptr<openminecraft::io::json::OMJsonNode>) -> OMModelPart;
+    auto wrapPart(std::shared_ptr<openminecraft::compiler::json::OMJsonNode>) -> OMModelPart;
 
     auto composeModel(std::vector<int>, bool = true, bool = false, bool = false) -> int;
     auto composeFluidModel(OMIdentifier ident, block::OMBlockFluidType fluidType, bool translucent, bool falling,

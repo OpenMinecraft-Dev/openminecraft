@@ -7,9 +7,9 @@
 ## 子模块
 
 - openminecraft-core/binary (字符串哈希，字节序处理)
+- openminecraft-core/compiler (JSON 解析器, gsl 编译器 (未完成))
 - openminecraft-core/geom (字体整形封装，回退方案)
 - openminecraft-core/i18n (国际化工具)
-- openminecraft-core/io (JSON 解析器)
 - openminecraft-core/log (日志系统)
 - openminecraft-core/mem (内存追踪与分配器)
 - openminecraft-core/network (网络传输封装，开发中)

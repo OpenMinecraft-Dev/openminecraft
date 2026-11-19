@@ -1,6 +1,6 @@
-#include "openminecraft/io/om_io_parser.hpp"
+#include "openminecraft/compiler/om_compiler_parser.hpp"
 
-namespace openminecraft::io
+namespace openminecraft::compiler
 {
 OMParser::OMParser(std::shared_ptr<std::istream> stream) : source(stream.get()), sourceOwner(std::move(stream))
 {
@@ -10,4 +10,4 @@ auto OMParser::check() -> bool
 {
     return source->good();
 }
-} // namespace openminecraft::io
+} // namespace openminecraft::compiler

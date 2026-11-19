@@ -10,7 +10,7 @@
 #include "openminecraft/renderer/om_renderer_layer.hpp"
 #include "openminecraft/specs/png/om_png.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
-#include "openminecraft/io/json/om_io_ast_builder_json.hpp"
+#include "openminecraft/compiler/json/om_compiler_ast_builder_json.hpp"
 #include <array>
 #include <memory>
 #include <unordered_map>
@@ -69,7 +69,7 @@ class OMTextureAtlas
             auto metadata = vfs::fsfetch(fmt::format("{}/{}/textures/{}.png.mcmeta", root, i.namesp, i.path));
             if (metadata)
             {
-                io::json::OMJsonAstBuilder bld(std::make_shared<io::json::OMJsonTokenIter>(metadata));
+                compiler::json::OMJsonAstBuilder bld(std::make_shared<compiler::json::OMJsonTokenIter>(metadata));
                 auto c = bld.build();
                 if (c->getMap().count("animation"))
                 {
@@ -120,7 +120,7 @@ class OMTextureAtlas
             auto metadata = vfs::fsfetch(fmt::format("{}/{}/textures/{}.png.mcmeta", root, i.namesp, i.path));
             if (metadata)
             {
-                io::json::OMJsonAstBuilder bld(std::make_shared<io::json::OMJsonTokenIter>(metadata));
+                compiler::json::OMJsonAstBuilder bld(std::make_shared<compiler::json::OMJsonTokenIter>(metadata));
                 auto c = bld.build();
                 if (c->getMap().count("animation"))
                 {

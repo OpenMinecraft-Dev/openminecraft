@@ -1,11 +1,11 @@
-#ifndef OM_IO_PARSER_HPP
-#define OM_IO_PARSER_HPP
+#ifndef OM_COMPILER_PARSER_HPP
+#define OM_COMPILER_PARSER_HPP
 
 #include <iostream>
 #include <memory>
 #include <utility>
 
-namespace openminecraft::io
+namespace openminecraft::compiler
 {
 class OMParser
 {
@@ -25,6 +25,6 @@ class OMParser
     std::istream *source;
     std::shared_ptr<std::istream> sourceOwner;
 };
-} // namespace openminecraft::io
+} // namespace openminecraft::compiler
 
 #endif

@@ -1,13 +1,13 @@
-#include "openminecraft/io/json/om_io_tokeniter_json.hpp"
-#include "openminecraft/io/json/om_io_token_json.hpp"
-#include "openminecraft/io/om_io_tokeniter_exception.hpp"
+#include "openminecraft/compiler/json/om_compiler_tokeniter_json.hpp"
+#include "openminecraft/compiler/json/om_compiler_token_json.hpp"
+#include "openminecraft/compiler/om_compiler_tokeniter_exception.hpp"
 #include <array>
 #include <fmt/format.h>
 #include <iostream>
 #include <memory>
 #include <cstring>
 
-namespace openminecraft::io::json
+namespace openminecraft::compiler::json
 {
 auto OMJsonTokenIter::next() -> std::shared_ptr<OMJsonToken>
 {
@@ -129,4 +129,4 @@ auto OMJsonTokenIter::end() -> bool
 {
     return !this->check();
 }
-} // namespace openminecraft::io::json
+} // namespace openminecraft::compiler::json

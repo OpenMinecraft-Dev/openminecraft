@@ -1,12 +1,12 @@
-#ifndef OM_IO_AST_BUILDER_JSON_HPP
-#define OM_IO_AST_BUILDER_JSON_HPP
+#ifndef OM_COMPILER_AST_BUILDER_JSON_HPP
+#define OM_COMPILER_AST_BUILDER_JSON_HPP
 
-#include "openminecraft/io/json/om_io_ast_json.hpp"
-#include "openminecraft/io/json/om_io_tokeniter_json.hpp"
+#include "openminecraft/compiler/json/om_compiler_ast_json.hpp"
+#include "openminecraft/compiler/json/om_compiler_tokeniter_json.hpp"
 #include <memory>
 #include <string>
 #include <utility>
-namespace openminecraft::io::json
+namespace openminecraft::compiler::json
 {
 struct OMJsonAstContext
 {
@@ -32,6 +32,6 @@ class OMJsonAstBuilder
   private:
     std::shared_ptr<OMJsonTokenIter> iter;
 };
-} // namespace openminecraft::io::json
+} // namespace openminecraft::compiler::json
 
 #endif

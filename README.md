@@ -7,9 +7,9 @@ New engine/client project
 ## Submodules
 
 - openminecraft-core/binary (string hash, endians)
+- openminecraft-core/compiler (json parser, gsl compiler (WIP))
 - openminecraft-core/geom (font shaping wrapper, fallbacks)
 - openminecraft-core/i18n (internationalization utils)
-- openminecraft-core/io (json parser)
 - openminecraft-core/log (Logging system)
 - openminecraft-core/mem (memory tracker & allocator)
 - openminecraft-core/network (network transfer wrappers, WIP)

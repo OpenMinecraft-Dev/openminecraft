@@ -1,10 +1,10 @@
-#ifndef OM_IO_TOKENITER_EXCEPTION_HPP
-#define OM_IO_TOKENITER_EXCEPTION_HPP
+#ifndef OM_COMPILER_TOKENITER_EXCEPTION_HPP
+#define OM_COMPILER_TOKENITER_EXCEPTION_HPP
 
 #include <string>
 #include <utility>
 
-namespace openminecraft::io
+namespace openminecraft::compiler
 {
 class OMTokenIterException : public std::exception
 {
@@ -23,6 +23,6 @@ class OMTokenIterException : public std::exception
   private:
     std::string msg;
 };
-} // namespace openminecraft::io
+} // namespace openminecraft::compiler
 
 #endif

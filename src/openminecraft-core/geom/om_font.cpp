@@ -3,7 +3,7 @@
 #include "glm/ext/vector_float4.hpp"
 #include "harfbuzz/hb.h"
 #include "openminecraft/geom/om_font_outline.hpp"
-#include "openminecraft/io/om_io_utils.hpp"
+#include "openminecraft/compiler/om_compiler_utils.hpp"
 
 #include <iostream>
 #include <vector>
@@ -12,7 +12,7 @@ namespace openminecraft::geom
 {
 OMFont::OMFont(std::istream &istr) : logger("OMFont", this)
 {
-    auto temp = io::readOnce(&istr);
+    auto temp = compiler::readOnce(&istr);
 
     auto blob = hb_blob_create(reinterpret_cast<const char *>(temp.data()), temp.size(), HB_MEMORY_MODE_DUPLICATE,
                                nullptr, nullptr);

@@ -1,7 +1,7 @@
 includes("log/xmake.lua")
 includes("vm/xmake.lua")
 includes("mem/xmake.lua")
-includes("io/xmake.lua")
+includes("compiler/xmake.lua")
 includes("vfs/xmake.lua")
 includes("util/xmake.lua")
 includes("i18n/xmake.lua")
@@ -17,7 +17,7 @@ add_deps(
 	"openminecraft-log",
 	"openminecraft-vm",
 	"openminecraft-mem",
-	"openminecraft-io",
+	"openminecraft-compiler",
 	"openminecraft-vfs",
 	"openminecraft-util",
 	"openminecraft-i18n",

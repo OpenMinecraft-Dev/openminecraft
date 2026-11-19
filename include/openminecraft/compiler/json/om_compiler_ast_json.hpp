@@ -1,5 +1,5 @@
-#ifndef OM_IO_AST_JSON_HPP
-#define OM_IO_AST_JSON_HPP
+#ifndef OM_COMPILER_AST_JSON_HPP
+#define OM_COMPILER_AST_JSON_HPP
 
 #include <cstdint>
 #include <memory>
@@ -9,7 +9,7 @@
 #include <utility>
 #include <vector>
 
-namespace openminecraft::io::json
+namespace openminecraft::compiler::json
 {
 enum OMJsonNodeType
 {
@@ -321,6 +321,6 @@ class OMJsonNodeNull : public OMJsonNode
         throw std::logic_error("this is a json null!");
     }
 };
-} // namespace openminecraft::io::json
+} // namespace openminecraft::compiler::json
 
 #endif

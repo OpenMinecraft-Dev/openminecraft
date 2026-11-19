@@ -10,13 +10,13 @@
 #include "openminecraft-shell/data/block/om_block_registry.hpp"
 #include "openminecraft-shell/data/block/om_blockstate_registry.hpp"
 #include "openminecraft-shell/data/om_identifier.hpp"
-#include "openminecraft/io/json/om_io_ast_builder_json.hpp"
-#include "openminecraft/io/json/om_io_ast_json.hpp"
+#include "openminecraft/compiler/json/om_compiler_ast_builder_json.hpp"
+#include "openminecraft/compiler/json/om_compiler_ast_json.hpp"
 #include "openminecraft/renderer/common/wrap/voxel/om_renderer_voxel_objects.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 
 using namespace openminecraft;
-using namespace openminecraft::io;
+using namespace openminecraft::compiler;
 using namespace openminecraft::renderer::common::wrap::voxel;
 
 namespace openminecraft::shell::data
@@ -433,7 +433,7 @@ auto OMModelPrecompiler::loadModelPartWithArgs(OMIdentifier i, int xrot, int yro
         for (auto &p : pre->getArray())
         {
             auto &faces = p->getMap()["faces"]->getMap();
-            auto fetchface = [&](std::string f) -> std::shared_ptr<openminecraft::io::json::OMJsonNode> {
+            auto fetchface = [&](std::string f) -> std::shared_ptr<openminecraft::compiler::json::OMJsonNode> {
                 auto face = faces.find(f);
                 if (face != faces.end())
                 {
@@ -444,7 +444,7 @@ auto OMModelPrecompiler::loadModelPartWithArgs(OMIdentifier i, int xrot, int yro
                     return nullptr;
                 }
             };
-            auto putface = [&](std::string f, std::shared_ptr<openminecraft::io::json::OMJsonNode> a) {
+            auto putface = [&](std::string f, std::shared_ptr<openminecraft::compiler::json::OMJsonNode> a) {
                 if (!a)
                 {
                     if (faces.count(f))
@@ -631,7 +631,7 @@ static auto isNotInteger(std::shared_ptr<json::OMJsonNode> n) -> bool
 }
 
 auto OMModelPrecompiler::precompile(OMIdentifier name, bool subsitute)
-    -> std::shared_ptr<openminecraft::io::json::OMJsonNode>
+    -> std::shared_ptr<openminecraft::compiler::json::OMJsonNode>
 {
     auto modelStream = vfs::fsfetch(fmt::format("{}/{}/models/{}.json", root, name.namesp, name.path));
     json::OMJsonAstBuilder bld(std::make_shared<json::OMJsonTokenIter>(modelStream));
@@ -650,7 +650,7 @@ auto OMModelPrecompiler::precompile(OMIdentifier name, bool subsitute)
 
         for (auto &texture : tex)
         {
-            if (texture.second->type() == openminecraft::io::json::Object)
+            if (texture.second->type() == openminecraft::compiler::json::Object)
             {
                 texture.second = texture.second->getMap()["sprite"];
             }
@@ -724,7 +724,7 @@ auto OMModelPrecompiler::precompile(OMIdentifier name, bool subsitute)
     return document;
 }
 
-auto OMModelPrecompiler::wrapPart(std::shared_ptr<openminecraft::io::json::OMJsonNode> part) -> OMModelPart
+auto OMModelPrecompiler::wrapPart(std::shared_ptr<openminecraft::compiler::json::OMJsonNode> part) -> OMModelPart
 {
     auto faces = part->getMap()["faces"]->getMap();
     auto from = part->getMap()["from"]->getArray();
@@ -763,7 +763,7 @@ auto OMModelPrecompiler::wrapPart(std::shared_ptr<openminecraft::io::json::OMJso
             roAngleExt};
 }
 
-auto OMModelPrecompiler::wrapFace(std::shared_ptr<openminecraft::io::json::OMJsonNode> face, OMModelCullSide c,
+auto OMModelPrecompiler::wrapFace(std::shared_ptr<openminecraft::compiler::json::OMJsonNode> face, OMModelCullSide c,
                                   glm::vec3 from, glm::vec3 to) -> OMModelFace
 {
     auto uv = face->getMap().count("uv") ? face->getMap()["uv"] : nullptr;

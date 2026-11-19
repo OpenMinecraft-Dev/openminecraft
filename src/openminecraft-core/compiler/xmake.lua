@@ -1,4 +1,4 @@
-target("openminecraft-io")
+target("openminecraft-compiler")
 set_kind("static")
 add_files("**.cpp")
 add_packages("fmt")

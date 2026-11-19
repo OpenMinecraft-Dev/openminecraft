@@ -1,12 +1,12 @@
-#include "openminecraft/io/json/om_io_ast_builder_json.hpp"
-#include "openminecraft/io/json/om_io_ast_json.hpp"
-#include "openminecraft/io/json/om_io_token_json.hpp"
+#include "openminecraft/compiler/json/om_compiler_ast_builder_json.hpp"
+#include "openminecraft/compiler/json/om_compiler_ast_json.hpp"
+#include "openminecraft/compiler/json/om_compiler_token_json.hpp"
 #include <fmt/format.h>
 #include <stack>
 #include <stdexcept>
 #include <string>
 
-namespace openminecraft::io::json
+namespace openminecraft::compiler::json
 {
 auto OMJsonAstBuilder::build() -> std::shared_ptr<OMJsonNode>
 {
@@ -190,4 +190,4 @@ auto OMJsonAstBuilder::build() -> std::shared_ptr<OMJsonNode>
 
     return root;
 }
-} // namespace openminecraft::io::json
+} // namespace openminecraft::compiler::json

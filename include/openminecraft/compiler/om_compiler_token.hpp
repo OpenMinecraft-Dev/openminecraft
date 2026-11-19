@@ -1,11 +1,11 @@
-#ifndef OM_IO_TOKEN_HPP
-#define OM_IO_TOKEN_HPP
+#ifndef OM_COMPILER_TOKEN_HPP
+#define OM_COMPILER_TOKEN_HPP
 
 #include <string>
 #include <type_traits>
 #include <utility>
 
-namespace openminecraft::io
+namespace openminecraft::compiler
 {
 template <typename T> class OMToken
 {
@@ -18,6 +18,6 @@ template <typename T> class OMToken
     const T type;
     const std::string content;
 };
-} // namespace openminecraft::io
+} // namespace openminecraft::compiler
 
 #endif

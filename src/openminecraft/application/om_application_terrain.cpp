@@ -2,8 +2,8 @@
 
 #include "openminecraft-shell/data/block/om_block_registry.hpp"
 #include "openminecraft-shell/data/block/om_blockstate_registry.hpp"
-#include "openminecraft/io/json/om_io_ast_builder_json.hpp"
-#include "openminecraft/io/json/om_io_tokeniter_json.hpp"
+#include "openminecraft/compiler/json/om_compiler_ast_builder_json.hpp"
+#include "openminecraft/compiler/json/om_compiler_tokeniter_json.hpp"
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -220,7 +220,7 @@ static void preloadChunks(world::OMChunkManager<16> &manager, std::function<void
             return;
         }
 
-        io::json::OMJsonAstBuilder bld(std::make_shared<io::json::OMJsonTokenIter>(in));
+        compiler::json::OMJsonAstBuilder bld(std::make_shared<compiler::json::OMJsonTokenIter>(in));
         auto doc = bld.build();
 
         if (doc->getMap().count("tempIdToBlock"))

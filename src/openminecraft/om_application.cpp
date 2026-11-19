@@ -132,8 +132,8 @@ auto OMApplication::entry() -> int
         }
         else if (args[1] == "json")
         {
-            io::json::OMJsonAstBuilder bld(
-                std::make_shared<io::json::OMJsonTokenIter>(std::make_shared<std::ifstream>(args[2])));
+            compiler::json::OMJsonAstBuilder bld(
+                std::make_shared<compiler::json::OMJsonTokenIter>(std::make_shared<std::ifstream>(args[2])));
             auto document = bld.build();
             logger->debug("doc at {}", (void *)document.get());
             goto end;
@@ -153,8 +153,8 @@ auto OMApplication::entry() -> int
         }
         else if (args[1] == "blk")
         {
-            io::json::OMJsonAstBuilder bld(
-                std::make_shared<io::json::OMJsonTokenIter>(std::make_shared<specs::zlib::OMZlibInflaterStream>(
+            compiler::json::OMJsonAstBuilder bld(
+                std::make_shared<compiler::json::OMJsonTokenIter>(std::make_shared<specs::zlib::OMZlibInflaterStream>(
                     vfs::fsfetch("/bootassets/minecraft/blocks.json.zlib"))));
             auto document = bld.build();
 

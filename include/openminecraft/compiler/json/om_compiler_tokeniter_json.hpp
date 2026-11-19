@@ -1,10 +1,10 @@
-#ifndef OM_IO_TOKENITER_JSON_HPP
-#define OM_IO_TOKENITER_JSON_HPP
+#ifndef OM_COMPILER_TOKENITER_JSON_HPP
+#define OM_COMPILER_TOKENITER_JSON_HPP
 
-#include "openminecraft/io/json/om_io_token_json.hpp"
-#include "openminecraft/io/om_io_tokeniter.hpp"
+#include "openminecraft/compiler/json/om_compiler_token_json.hpp"
+#include "openminecraft/compiler/om_compiler_tokeniter.hpp"
 #include <memory>
-namespace openminecraft::io::json
+namespace openminecraft::compiler::json
 {
 class OMJsonTokenIter : public OMTokenIter<OMJsonToken>
 {
@@ -17,6 +17,6 @@ class OMJsonTokenIter : public OMTokenIter<OMJsonToken>
     auto next() -> std::shared_ptr<OMJsonToken> override;
     auto end() -> bool override;
 };
-} // namespace openminecraft::io::json
+} // namespace openminecraft::compiler::json
 
 #endif

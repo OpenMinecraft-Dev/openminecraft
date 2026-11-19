@@ -1,0 +1,4 @@
+struct Camera {
+    mat4 viewProj;
+    vec4 nearFar;
+};

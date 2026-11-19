@@ -1,8 +1,8 @@
-#ifndef OM_IO_TOKEN_JSON_HPP
-#define OM_IO_TOKEN_JSON_HPP
+#ifndef OM_COMPILER_TOKEN_JSON_HPP
+#define OM_COMPILER_TOKEN_JSON_HPP
 
-#include "openminecraft/io/om_io_token.hpp"
-namespace openminecraft::io::json
+#include "openminecraft/compiler/om_compiler_token.hpp"
+namespace openminecraft::compiler::json
 {
 enum OMJsonTokenType
 {
@@ -24,6 +24,6 @@ class OMJsonToken : public OMToken<OMJsonTokenType>
     {
     }
 };
-} // namespace openminecraft::io::json
+} // namespace openminecraft::compiler::json
 
 #endif

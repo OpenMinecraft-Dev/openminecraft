@@ -3,18 +3,18 @@
 #include "openminecraft-shell/data/block/om_block_registry.hpp"
 #include "openminecraft-shell/data/block/om_blockstate.hpp"
 #include "openminecraft-shell/data/om_identifier.hpp"
-#include "openminecraft/io/json/om_io_ast_json.hpp"
+#include "openminecraft/compiler/json/om_compiler_ast_json.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
-#include "openminecraft/io/json/om_io_ast_builder_json.hpp"
+#include "openminecraft/compiler/json/om_compiler_ast_builder_json.hpp"
 #include <iostream>
 #include <memory>
 #include <vector>
 
-using namespace openminecraft::io;
+using namespace openminecraft::compiler;
 
 namespace openminecraft::shell::data::block
 {
-auto OMBlockStateResolver::identFrom(std::shared_ptr<io::json::OMJsonNode> node) -> OMBlockModelIdentifier
+auto OMBlockStateResolver::identFrom(std::shared_ptr<compiler::json::OMJsonNode> node) -> OMBlockModelIdentifier
 {
     OMIdentifier ident(node->getMap()["model"]->getString());
     int xrot = node->getMap().count("x") ? node->getMap()["x"]->getNumber() : 0;
@@ -23,7 +23,7 @@ auto OMBlockStateResolver::identFrom(std::shared_ptr<io::json::OMJsonNode> node)
     bool uvlock = node->getMap().count("uvlock") ? node->getMap()["uvlock"]->getBoolean() : false;
     return {ident, xrot, yrot, zrot, uvlock};
 }
-void OMBlockStateResolver::resolveModel(OMIdentifier id, std::shared_ptr<io::json::OMJsonNode> node)
+void OMBlockStateResolver::resolveModel(OMIdentifier id, std::shared_ptr<compiler::json::OMJsonNode> node)
 {
     auto i = identFrom(node);
     if (requiredModels[id].count(i))
@@ -51,7 +51,7 @@ void OMBlockStateResolver::resolve(OMIdentifier ident)
     {
         for (auto &l : document->getMap()["variants"]->getMap())
         {
-            if (l.second->type() == openminecraft::io::json::Object)
+            if (l.second->type() == openminecraft::compiler::json::Object)
             {
                 resolveModel(ident, l.second);
             }
@@ -69,7 +69,7 @@ void OMBlockStateResolver::resolve(OMIdentifier ident)
         for (auto &l : document->getMap()["multipart"]->getArray())
         {
             auto &apply = l->getMap()["apply"];
-            if (apply->type() == openminecraft::io::json::Object)
+            if (apply->type() == openminecraft::compiler::json::Object)
             {
                 resolveModel(ident, apply);
             }
@@ -134,15 +134,15 @@ static auto caseCheck(OMBlockState &bs, std::shared_ptr<json::OMJsonNode> node) 
                 return false;
 
             std::string target;
-            if (st.second->type() == openminecraft::io::json::String)
+            if (st.second->type() == openminecraft::compiler::json::String)
             {
                 target = st.second->getString();
             }
-            else if (st.second->type() == openminecraft::io::json::Primitive)
+            else if (st.second->type() == openminecraft::compiler::json::Primitive)
             {
                 target = st.second->getBoolean() ? "true" : "false";
             }
-            else if (st.second->type() == openminecraft::io::json::Number)
+            else if (st.second->type() == openminecraft::compiler::json::Number)
             {
                 target = st.second->getNumber();
             }
@@ -208,7 +208,7 @@ void OMBlockStateResolver::buildModel(OMIdentifier ident, OMBlockState state)
                 }
             }
             {
-                if (var.second->type() == openminecraft::io::json::Object)
+                if (var.second->type() == openminecraft::compiler::json::Object)
                 {
                     auto i = compiler.composeModel(
                         {requiredModels[ident][identFrom(var.second)]}, blk->soild, blk->translucent,
@@ -243,7 +243,7 @@ void OMBlockStateResolver::buildModel(OMIdentifier ident, OMBlockState state)
             }
 
             auto &apply = l->getMap()["apply"];
-            if (apply->type() == openminecraft::io::json::Object)
+            if (apply->type() == openminecraft::compiler::json::Object)
             {
                 ids.emplace_back(requiredModels[ident][identFrom(apply)]);
             }

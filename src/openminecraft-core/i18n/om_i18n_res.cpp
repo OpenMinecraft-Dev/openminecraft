@@ -1,8 +1,8 @@
 #include "openminecraft/i18n/om_i18n_res.hpp"
 #include "openminecraft/i18n/om_i18n_locale.hpp"
-#include "openminecraft/io/json/om_io_ast_builder_json.hpp"
-#include "openminecraft/io/json/om_io_tokeniter_json.hpp"
-#include "openminecraft/io/om_io_tokeniter_exception.hpp"
+#include "openminecraft/compiler/json/om_compiler_ast_builder_json.hpp"
+#include "openminecraft/compiler/json/om_compiler_tokeniter_json.hpp"
+#include "openminecraft/compiler/om_compiler_tokeniter_exception.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
 #include <SDL3/SDL_locale.h>
@@ -10,7 +10,7 @@
 #include <iterator>
 #include <unordered_map>
 
-using namespace openminecraft::io;
+using namespace openminecraft::compiler;
 
 namespace openminecraft::i18n::res
 {

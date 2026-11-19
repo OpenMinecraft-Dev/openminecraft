@@ -64,7 +64,7 @@ src/openminecraft/<submodule>/...           shell implementation
   | Directory | File prefix |
   | --- | --- |
   | `binary/` | `om_bin_` |
-  | `io/` | `om_io_` |
+  | `compiler/` | `om_compiler_` |
   | `log/`, `mem/`, `network/`, `renderer/`, `util/`, `vfs/`, `world/`, `i18n/` | `om_<module>_` |
   | `specs/` | named after the format: `om_png`, `om_zip`, `om_nbt`, `om_jfif`, `om_zlib`, `om_classfile` |
   | `geom/` | named after the component: `om_font`, `om_fontset`, `om_svg_structure` |

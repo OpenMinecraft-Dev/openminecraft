@@ -62,7 +62,7 @@ src/openminecraft/<子模块>/...             shell 层实现
   | 目录 | 文件前缀 |
   | --- | --- |
   | `binary/` | `om_bin_` |
-  | `io/` | `om_io_` |
+  | `compiler/` | `om_compiler_` |
   | `log/`、`mem/`、`network/`、`renderer/`、`util/`、`vfs/`、`world/`、`i18n/` | `om_<模块>_` |
   | `specs/` | 按格式命名：`om_png`、`om_zip`、`om_nbt`、`om_jfif`、`om_zlib`、`om_classfile` |
   | `geom/` | 按组件命名：`om_font`、`om_fontset`、`om_svg_structure` |

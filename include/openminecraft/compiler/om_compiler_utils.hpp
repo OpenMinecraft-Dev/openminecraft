@@ -1,10 +1,10 @@
-#ifndef OM_IO_UTILS_HPP
-#define OM_IO_UTILS_HPP
+#ifndef OM_COMPILER_UTILS_HPP
+#define OM_COMPILER_UTILS_HPP
 #include <cstdint>
 #include <iostream>
 #include <vector>
 
-namespace openminecraft::io
+namespace openminecraft::compiler
 {
 static auto readOnce(std::istream *f) -> std::vector<uint8_t>
 {
@@ -22,6 +22,6 @@ static auto readOnce(std::istream *f) -> std::vector<uint8_t>
         return {std::istreambuf_iterator<char>(*f), std::istreambuf_iterator<char>()};
     }
 }
-} // namespace openminecraft::io
+} // namespace openminecraft::compiler
 
 #endif

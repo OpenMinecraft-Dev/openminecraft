@@ -1,5 +1,5 @@
 #include "openminecraft/renderer/common/om_renderer_shadermanager.hpp"
-#include "openminecraft/io/om_io_utils.hpp"
+#include "openminecraft/compiler/om_compiler_utils.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
 #include "openminecraft/renderer/common/om_renderer_shader.hpp"
 #include "openminecraft/vfs/om_vfs_base.hpp"
@@ -67,7 +67,7 @@ auto OMRendererShaderManager::preprocess(std::string name, OMShaderType type, OM
     }
 
     auto file = vfs::fsfetch(root + "/" + name);
-    auto raw = io::readOnce(file.get());
+    auto raw = compiler::readOnce(file.get());
 
     std::string str(raw.begin(), raw.end());
 
@@ -108,7 +108,7 @@ auto OMRendererShaderManager::preprocess(std::string name, OMShaderType type, OM
         for (auto rit = repl.rbegin(); rit != repl.rend(); ++rit)
         {
             auto file = vfs::fsfetch(root + "/" + rit->filename);
-            auto raw = io::readOnce(file.get());
+            auto raw = compiler::readOnce(file.get());
 
             std::string strsub(raw.begin(), raw.end());
             str.replace(rit->pos, rit->length, strsub);
