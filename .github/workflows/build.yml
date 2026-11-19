@@ -103,10 +103,6 @@ jobs:
             plat: freebsd
             arch: ppc64
             loaderarch: ppc64
-          - os: ubuntu-latest
-            plat: openbsd
-            arch: x86_64
-            loaderarch: amd64
 
     name: Build ${{ matrix.plat }}-${{ matrix.loaderarch }}
     runs-on: ${{ matrix.os }}
