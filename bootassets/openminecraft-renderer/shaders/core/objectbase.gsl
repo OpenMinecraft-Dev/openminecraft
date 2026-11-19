@@ -1,5 +1,5 @@
-#[import(basics/structs/camera.gsl)]
-#[import(basics/structs/lighting.gsl)]
+#include "basics/structs/camera.gsl"
+#include "basics/structs/lighting.gsl"
 
 struct ObjectInfo {
     mat4 model;
@@ -35,4 +35,8 @@ void fragMain()
     vec3 result = (lighting.ambientColor + diffuse) * texColor.rgb;
 
     outColor = vec4(result, texColor.a);
+
+    #if GSL_BACKEND_VULKAN
+    #error "not supported!"
+    #endif
 }
