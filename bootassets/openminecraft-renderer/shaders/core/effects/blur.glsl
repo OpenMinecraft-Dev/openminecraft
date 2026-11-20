@@ -59,7 +59,7 @@ void main()
             weight = 1.0 - (float(abs(x)) / float(radius));
             break;
         case 3:
-            weight = 1.0 - smoothstep(0.0, 1.0, abs(x) / radius);
+            weight = 1.0 - smoothstep(0.0, 1.0, float(abs(x) / radius));
             break;
         case 4:
             weight = 1.0 / (1.0 + (x * x / sigma / sigma));

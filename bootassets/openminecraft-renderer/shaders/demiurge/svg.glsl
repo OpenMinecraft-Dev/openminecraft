@@ -59,7 +59,7 @@ void main()
     int outlineCount = int(texelFetchF(SvgData, (idx)));
     idx++;
 
-    float minDist = 1e308;
+    float minDist = 1e10;
     int winding = 0;
     bool evenodd = false;
     for (int i = 0; i < outlineCount; i++)
