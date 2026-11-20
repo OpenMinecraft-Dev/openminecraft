@@ -34,7 +34,7 @@ OMWindow::OMWindow(OMVersionRequirement requirement, OMWindowConfig config, std:
     switch (config.backend)
     {
     case Vulkan: {
-        renderer = new vk::OMRendererVk(a, [](std::vector<std::string>) -> int { return 0; }, window, shaderPath);
+        renderer = new vk::OMRendererVk(a, [](std::vector<std::string> dev) -> int { return dev.size() - 1; }, window, shaderPath);
         renderer->compiler.install(std::make_shared<renderer::common::OMRendererShaderCompilerBackendShaderc>());
         break;
     }

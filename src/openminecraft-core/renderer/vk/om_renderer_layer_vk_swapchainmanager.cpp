@@ -62,13 +62,13 @@ auto OMSwapchainManager::choosePresentMode(const OMSwapchainCap &cap) -> Present
 {
     for (auto pm : cap.presentModes)
     {
-        if (pm == PresentModeKHR::eImmediate || pm == PresentModeKHR::eMailbox)
+        if (pm == PresentModeKHR::eImmediate)
         {
             return pm;
         }
     }
 
-    return PresentModeKHR::eFifo;
+    return PresentModeKHR::eImmediate;
 }
 
 void OMSwapchainManager::reinit()

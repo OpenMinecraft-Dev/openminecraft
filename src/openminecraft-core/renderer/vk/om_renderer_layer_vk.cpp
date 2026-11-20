@@ -719,7 +719,14 @@ auto OMRendererVk::deviceSelection(std::function<int(std::vector<std::string>)> 
         std::vector<std::string> d;
         logger->info(translate("openminecraft.renderer.vk.devcount", phyDev.size()));
         int id = 0;
-        auto ids = dev(d);
+        
+	for (auto pdev : phyDev)
+	{
+	    auto n = pdev.getProperties().deviceName;
+	    d.emplace_back(n.data());
+	}
+	
+	auto ids = dev(d);
         PhysicalDevice devtarget;
         for (auto pdev : phyDev)
         {
@@ -729,7 +736,6 @@ auto OMRendererVk::deviceSelection(std::function<int(std::vector<std::string>)> 
             {
                 devtarget = pdev;
             }
-            d.emplace_back(n.data());
             id++;
         }
 
