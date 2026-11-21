@@ -1,4 +1,5 @@
 #include "openminecraft/compiler/om_compiler_utils.hpp"
+#include <optional>
 #define NOMINMAX
 #include <SDL3/SDL_error.h>
 
@@ -58,6 +59,8 @@
 #include <boost/wave.hpp>
 #include <boost/wave/cpplexer/cpp_lex_token.hpp>
 #include <boost/wave/cpplexer/cpp_lex_iterator.hpp>
+
+#include "openminecraft/compiler/gsl/om_compiler_tokeniter_gsl.hpp"
 
 using namespace openminecraft;
 using namespace openminecraft::renderer::common;
@@ -219,32 +222,26 @@ auto OMApplication::entry() -> int
         }
         else if (args[1] == "prep")
         {
-            std::ifstream iff(args[2]);
-
-            std::string input((std::istreambuf_iterator<char>(iff)), std::istreambuf_iterator<char>());
-
-            using token_type = boost::wave::cpplexer::lex_token<>;
-            using lex_iterator_type = boost::wave::cpplexer::lex_iterator<token_type>;
-
-            using context_type = boost::wave::context<std::string::iterator, lex_iterator_type, memory_input_policy,
-                                                      MyPreprocessingHooks>;
-
-            context_type ctx(input.begin(), input.end(), args[2].c_str(), MyPreprocessingHooks());
-
-            ctx.add_macro_definition("GSL_BACKEND_VULKAN", true);
-            ctx.set_language(boost::wave::enable_emit_line_directives(ctx.get_language(), false));
-            ctx.set_language(boost::wave::enable_va_opt(ctx.get_language(), false));
-            ctx.set_language(boost::wave::enable_long_long(ctx.get_language(), false));
-
             try
             {
-                context_type::iterator_type first = ctx.begin();
-                context_type::iterator_type last = ctx.end();
+                auto iff = std::make_shared<std::ifstream>(args[2]);
 
-                while (first != last)
+                auto itt = std::make_shared<compiler::gsl::OMGslTokenIter>(
+                    iff,
+                    [](std::string name) -> std::optional<std::string> {
+                        auto f = vfs::fsfetch("/bootassets/openminecraft-renderer/shaders/" + name);
+                        if (f == nullptr)
+                        {
+                            return std::nullopt;
+                        }
+                        std::string input((std::istreambuf_iterator<char>(*f)), std::istreambuf_iterator<char>());
+                        return input;
+                    },
+                    args[2]);
+
+                while (!itt->end())
                 {
-                    std::cout << (*first).get_value();
-                    ++first;
+                    std::cout << itt->next()->content;
                 }
             }
             catch (boost::wave::cpp_exception const &e)

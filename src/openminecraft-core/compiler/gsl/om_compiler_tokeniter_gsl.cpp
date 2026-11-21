@@ -10,13 +10,13 @@ void storeCache(std::string path, std::string content)
 {
     fileCache[path] = content;
 }
-auto loadCache(std::string path) -> std::string
+auto loadCache(std::string path) -> std::string &
 {
     return fileCache[path];
 }
 auto OMGslTokenIter::next() -> std::shared_ptr<OMGslToken>
 {
-    auto res = std::make_shared<OMGslToken>(ConstantLiteral, (*current).get_value().c_str());
+    auto res = std::make_shared<OMGslToken>(ConstantLiteral, current->get_value().c_str());
     ++current;
     return res;
 }
