@@ -5,19 +5,19 @@ struct ObjectInfo {
     mat4 model;
 };
 
-#[vertex_struct] struct ObjectVertex;
+[[vertex_struct]] struct ObjectVertex;
 
-#[location(0), transfer] vec2 objTexCoord;
-#[location(1), transfer] vec3 objNormal;
-#[vposition, out] vec4 vertexPos;
-#[location(0), out] vec4 outColor;
+[[location(0), transfer]] vec2 objTexCoord;
+[[location(1), transfer]] vec3 objNormal;
+[[vposition, out]] vec4 vertexPos;
+[[location(0), out]] vec4 outColor;
 
-#[binding(0)] ObjectInfo ubo;
-#[binding(1)] Camera camera;
-#[binding(2)] Lighting lighting;
-#[binding(3)] sampler2DArray inTexture;
+[[binding(0)]] ObjectInfo ubo;
+[[binding(1)]] Camera camera;
+[[binding(2)]] Lighting lighting;
+[[binding(3)]] sampler2DArray inTexture;
 
-#[stage(vertex)]
+[[stage(vertex)]]
 void vertMain(ObjectVertex v)
 {
     vertexPos = camera.viewProj * ubo.model * vec4(v.inPosition, 1.0);
@@ -25,7 +25,7 @@ void vertMain(ObjectVertex v)
     objNormal = normalize(mat3(ubo.model) * v.inNormal);
 }
 
-#[stage(fragment)]
+[[stage(fragment)]]
 void fragMain()
 {
     float diff = max(dot(normalize(objNormal), lighting.lightDirection), 0.0);
@@ -36,7 +36,7 @@ void fragMain()
 
     outColor = vec4(result, texColor.a);
 
-    #if GSL_BACKEND_VULKAN
+    #if 0 && GSL_BACKEND_VULKAN
     #error "not supported!"
     #endif
 }

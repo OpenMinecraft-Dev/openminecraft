@@ -55,6 +55,10 @@
 
 #include "openminecraft-shell/om_application.hpp"
 
+#include <boost/wave.hpp>
+#include <boost/wave/cpplexer/cpp_lex_token.hpp>
+#include <boost/wave/cpplexer/cpp_lex_iterator.hpp>
+
 using namespace openminecraft;
 using namespace openminecraft::renderer::common;
 using namespace openminecraft::renderer;
@@ -163,6 +167,48 @@ auto OMApplication::entry() -> int
                 logger->debug(p.first);
             }
 
+            goto end;
+        }
+        else if (args[1] == "prep")
+        {
+            std::ifstream iff(args[2]);
+
+            std::string input((std::istreambuf_iterator<char>(iff)), std::istreambuf_iterator<char>());
+
+            using token_type = boost::wave::cpplexer::lex_token<>;
+            using lex_iterator_type = boost::wave::cpplexer::lex_iterator<token_type>;
+
+            using context_type = boost::wave::context<std::string::iterator, lex_iterator_type>;
+
+            context_type ctx(input.begin(), input.end(), "input.cpp");
+
+            // 4. （可选）配置 include 路径、预定义宏等
+            // ctx.add_include_path("...");
+            // ctx.add_macro_definition(...);
+
+            ctx.add_include_path("bootassets/openminecraft-renderer/shaders");
+            ctx.add_macro_definition("GSL_BACKEND_VULKAN", true);
+
+            try
+            {
+                context_type::iterator_type first = ctx.begin();
+                context_type::iterator_type last = ctx.end();
+
+                while (first != last)
+                {
+                    std::cout << (*first).get_value();
+                    ++first;
+                }
+            }
+            catch (boost::wave::cpp_exception const &e)
+            {
+                // 核心诊断信息
+                std::cerr << "Wave Error: " << e.description() << std::endl;
+                std::cerr << "  File: " << e.file_name() << std::endl;
+                std::cerr << "  Line: " << e.line_no() << ", Column: " << e.column_no() << std::endl;
+                std::cerr << "  Error code: " << e.get_errorcode() << std::endl;
+                std::cerr << "  Severity: " << e.get_severity() << std::endl;
+            }
             goto end;
         }
         bk = args[1] == "gl" ? OpenGL : Vulkan;
