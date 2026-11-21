@@ -1,5 +1,5 @@
 target("openminecraft-compiler")
 set_kind("static")
 add_files("**.cpp")
-add_packages("fmt")
+add_packages("fmt", "boost")
 add_includedirs(path.join(os.projectdir(), "include"))

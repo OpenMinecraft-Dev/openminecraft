@@ -51,7 +51,6 @@
 #include <boost/stacktrace.hpp>
 #include <fmt/format.h>
 #include <vector>
-#include <cmath>
 #include <iomanip>
 
 #include "openminecraft-shell/om_application.hpp"
@@ -86,14 +85,14 @@ struct MyPreprocessingHooks : boost::wave::context_policies::default_preprocessi
 };
 
 std::vector<std::string> storage;
-struct memory_input_policy
+class memory_input_policy
 {
+  public:
     template <typename IterContext> class inner
     {
       public:
         template <typename Position>
-        static void init_iterators(IterContext &iter_ctx, Position const &act_pos,
-                                   boost::wave::language_support language)
+        void init_iterators(IterContext &iter_ctx, Position const &act_pos, boost::wave::language_support language)
         {
             using iterator_type = typename IterContext::iterator_type;
 
@@ -233,6 +232,9 @@ auto OMApplication::entry() -> int
             context_type ctx(input.begin(), input.end(), args[2].c_str(), MyPreprocessingHooks());
 
             ctx.add_macro_definition("GSL_BACKEND_VULKAN", true);
+            ctx.set_language(boost::wave::enable_emit_line_directives(ctx.get_language(), false));
+            ctx.set_language(boost::wave::enable_va_opt(ctx.get_language(), false));
+            ctx.set_language(boost::wave::enable_long_long(ctx.get_language(), false));
 
             try
             {
