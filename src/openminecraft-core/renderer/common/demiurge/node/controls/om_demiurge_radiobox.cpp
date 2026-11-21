@@ -93,7 +93,7 @@ void OMDemiurgeRadioBox::update()
 
     dotNode->style("scale", glm::vec2(dotScale))
         ->style("color", (int)f4ToRgba(glm::vec4(glm::mix(glm::vec3(dot), glm::vec3(0.55f), disabledValue * 0.75f),
-                                                  dot.a * amount * (1.0f - disabledValue * 0.85f))));
+                                                 dot.a * amount * (1.0f - disabledValue * 0.85f))));
 
     if (textNode != nullptr)
     {

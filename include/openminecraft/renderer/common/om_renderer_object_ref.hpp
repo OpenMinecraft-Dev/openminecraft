@@ -9,7 +9,8 @@
 
 namespace openminecraft::renderer::common
 {
-// Globally unique object tag counter: a static in a template class is per-instantiation, so it lives in a non-template function
+// Globally unique object tag counter: a static in a template class is per-instantiation, so it lives in a non-template
+// function
 inline auto nextObjectTagId() -> uint64_t
 {
     static std::atomic<uint64_t> counter = 0;

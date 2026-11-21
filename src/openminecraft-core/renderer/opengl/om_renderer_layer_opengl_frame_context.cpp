@@ -3,8 +3,7 @@
 
 namespace openminecraft::renderer::opengl
 {
-void OMRendererFrameContextOpenGL::executeTasks(
-    const std::vector<std::vector<common::OMRendererTask *>> &tasks)
+void OMRendererFrameContextOpenGL::executeTasks(const std::vector<std::vector<common::OMRendererTask *>> &tasks)
 {
     for (const auto &layer : tasks)
     {

@@ -141,8 +141,8 @@ static auto testPrefixArrays() -> void
     CHECK(u8.size() == 4 && u8[0] == 1 && u8[1] == 2 && u8[2] == 255 && u8[3] == 0);
 
     auto ids = p.readPrefixArray<openminecraft::util::OMUuid>();
-    CHECK(ids.size() == 2 && ids[0].lowBits() == 0x0102030405060708LL &&
-          ids[0].highBits() == 0x1112131415161718LL && ids[1].lowBits() == 0LL && ids[1].highBits() == 0LL);
+    CHECK(ids.size() == 2 && ids[0].lowBits() == 0x0102030405060708LL && ids[0].highBits() == 0x1112131415161718LL &&
+          ids[1].lowBits() == 0LL && ids[1].highBits() == 0LL);
 }
 
 static auto testEmptyArray() -> void
@@ -527,24 +527,24 @@ static auto testUpdateAdvancementsCodec() -> void
     using openminecraft::shell::network::OMProtocolUpdateAdvancements;
 
     OMNetworkPacket p;
-    p.write<bool>(true);                    // reset
-    p.write(OMVarInt(1));                   // added count
+    p.write<bool>(true);                     // reset
+    p.write(OMVarInt(1));                    // added count
     p.write(OMUtf8String("minecraft:test")); // id
-    p.write<bool>(false);                   // parent absent
-    p.write<bool>(false);                   // display absent
-    p.write(OMVarInt(1));                   // requirement groups
-    p.write(OMVarInt(1));                   // group size
-    p.write(OMUtf8String("crit"));          // criterion
-    p.write<bool>(true);                    // sends telemetry
-    p.write<int64_t>(0);                    // unknown tail
-    p.write(OMVarInt(0));                   // removed
-    p.write(OMVarInt(1));                   // progress count
+    p.write<bool>(false);                    // parent absent
+    p.write<bool>(false);                    // display absent
+    p.write(OMVarInt(1));                    // requirement groups
+    p.write(OMVarInt(1));                    // group size
+    p.write(OMUtf8String("crit"));           // criterion
+    p.write<bool>(true);                     // sends telemetry
+    p.write<int64_t>(0);                     // unknown tail
+    p.write(OMVarInt(0));                    // removed
+    p.write(OMVarInt(1));                    // progress count
     p.write(OMUtf8String("minecraft:test")); // progress id
-    p.write(OMVarInt(1));                   // criteria
-    p.write(OMUtf8String("crit"));          // criterion id
-    p.write<bool>(true);                    // achieved
-    p.write<int64_t>(1700000000000LL);      // date
-    p.write<bool>(true);                    // show advancements
+    p.write(OMVarInt(1));                    // criteria
+    p.write(OMUtf8String("crit"));           // criterion id
+    p.write<bool>(true);                     // achieved
+    p.write<int64_t>(1700000000000LL);       // date
+    p.write<bool>(true);                     // show advancements
     p.reset();
 
     auto parsed = p.read<OMProtocolUpdateAdvancements>();
@@ -773,9 +773,9 @@ static auto testEntityPositionCodecs() -> void
     // movement: a Short on the wire, in 1/4096 of a block
     OMProtocolUpdateEntityPosition position;
     position.entityId = 19130;
-    position.deltaX = 0.062255859375;  // 255 / 4096
-    position.deltaY = -0.1875;         // -768 / 4096
-    position.deltaZ = 5.8125;          // 23808 / 4096
+    position.deltaX = 0.062255859375; // 255 / 4096
+    position.deltaY = -0.1875;        // -768 / 4096
+    position.deltaZ = 5.8125;         // 23808 / 4096
     position.onGround = true;
 
     OMNetworkPacket p;
@@ -793,7 +793,7 @@ static auto testEntityPositionCodecs() -> void
     rotated.deltaY = 0.05810546875;
     rotated.deltaZ = 0.0;
     rotated.yaw = OMAngle(272.39948);
-    rotated.pitch = OMAngle(97.03125);  // exactly 69 units
+    rotated.pitch = OMAngle(97.03125); // exactly 69 units
     rotated.onGround = true;
 
     OMNetworkPacket q;
@@ -803,7 +803,7 @@ static auto testEntityPositionCodecs() -> void
     auto b = q.read<OMProtocolUpdateEntityPositionRotation>();
     CHECK(b.entityId == 19158);
     CHECK(b.deltaX == rotated.deltaX && b.deltaY == rotated.deltaY && b.deltaZ == 0.0);
-    CHECK(b.yaw.raw() == 194);   // round(272.39948 / 1.40625) & 0xFF
+    CHECK(b.yaw.raw() == 194); // round(272.39948 / 1.40625) & 0xFF
     CHECK(b.pitch.raw() == 69);
     CHECK(b.onGround);
 }
@@ -852,17 +852,18 @@ static auto testSpawnEntityCodec() -> void
 {
     using openminecraft::shell::network::OMProtocolSpawnEntity;
 
-    // built byte by byte from a captured packet: entityId, uuid, type, x/y/z, velocity(LpVec3), pitch, yaw, headYaw, data
+    // built byte by byte from a captured packet: entityId, uuid, type, x/y/z, velocity(LpVec3), pitch, yaw, headYaw,
+    // data
     OMNetworkPacket p;
     p.write(OMVarInt(20630));
     p.write(openminecraft::util::OMUuid(0x972665c8ccd6d99bULL, 0x7dd3f4d416f940a4ULL));
     p.write(OMVarInt(72));
     p.write<double>(-506.5).write<double>(13.0).write<double>(-222.8);
     p.write<uint8_t>(0xf9).write<uint8_t>(0xff).write<int32_t>(0x7FFEED19); // velocity LpVec3
-    p.write<uint8_t>(0x00);                                                // pitch = 0
-    p.write<uint8_t>(0x69);                                                // yaw
-    p.write<uint8_t>(0x00);                                                // head yaw = 0
-    p.write(OMVarInt(0));                                                  // data
+    p.write<uint8_t>(0x00);                                                 // pitch = 0
+    p.write<uint8_t>(0x69);                                                 // yaw
+    p.write<uint8_t>(0x00);                                                 // head yaw = 0
+    p.write(OMVarInt(0));                                                   // data
     p.reset();
 
     auto parsed = p.read<OMProtocolSpawnEntity>();
@@ -883,17 +884,17 @@ static auto testUpdateLightCodec() -> void
     OMNetworkPacket p;
     p.write(OMVarInt(-32)).write(OMVarInt(-14));
     p.write(OMVarInt(2));
-    p.write<uint8_t>(0x00).write<uint8_t>(0x03);   // bit 8, 9
-    p.write(OMVarInt(0));                           // block mask
-    p.write(OMVarInt(0));                           // empty sky mask
-    p.write(OMVarInt(0));                           // empty block mask
-    p.write(OMVarInt(2));                           // two sky arrays
+    p.write<uint8_t>(0x00).write<uint8_t>(0x03); // bit 8, 9
+    p.write(OMVarInt(0));                        // block mask
+    p.write(OMVarInt(0));                        // empty sky mask
+    p.write(OMVarInt(0));                        // empty block mask
+    p.write(OMVarInt(2));                        // two sky arrays
     for (int i = 0; i < 2; ++i)
     {
         p.write(OMVarInt(2048));
         p.writeFixedArray(std::vector<uint8_t>(2048, static_cast<uint8_t>(i + 1)));
     }
-    p.write(OMVarInt(0));                           // zero block arrays
+    p.write(OMVarInt(0)); // zero block arrays
     p.reset();
 
     auto parsed = p.read<OMProtocolUpdateLight>();
@@ -1044,8 +1045,8 @@ static auto makeMapping(std::initializer_list<std::pair<int32_t, const char *>> 
 
 static auto testDataComponents() -> void
 {
-    using openminecraft::shell::network::OMDataComponentMapping;
     using openminecraft::shell::network::OMDataComponentHandler;
+    using openminecraft::shell::network::OMDataComponentMapping;
     using openminecraft::shell::network::OMProtocolDataComponent;
 
     // damage (id 3): VarInt payload
@@ -1109,8 +1110,8 @@ static auto testDataComponents() -> void
 
         OMNetworkPacket p;
         p.write(OMVarInt(13)).write(OMVarInt(2));
-        p.write(OMVarInt(5)).write(OMVarInt(3));  // sharpness 3
-        p.write(OMVarInt(7)).write(OMVarInt(2));  // unbreaking 2
+        p.write(OMVarInt(5)).write(OMVarInt(3)); // sharpness 3
+        p.write(OMVarInt(7)).write(OMVarInt(2)); // unbreaking 2
         p.setUserContext(&mapping);
         p.reset();
 
@@ -1126,10 +1127,10 @@ static auto testDataComponents() -> void
 
         OMNetworkPacket p;
         p.write(OMVarInt(16)).write(OMVarInt(1));
-        p.write(OMVarInt(2));                                      // attribute id
-        p.write<std::string>("minecraft:base_attack_damage");      // modifier id
-        p.write<double>(7.5);                                      // value
-        p.write(OMVarInt(0)).write(OMVarInt(1));                   // operation, slot
+        p.write(OMVarInt(2));                                 // attribute id
+        p.write<std::string>("minecraft:base_attack_damage"); // modifier id
+        p.write<double>(7.5);                                 // value
+        p.write(OMVarInt(0)).write(OMVarInt(1));              // operation, slot
         p.setUserContext(&mapping);
         p.reset();
 
@@ -1161,13 +1162,13 @@ static auto testDataComponents() -> void
         auto mapping = makeMapping({{28, "minecraft:tool"}});
 
         OMNetworkPacket p;
-        p.write(OMVarInt(28)).write(OMVarInt(1));   // one rule
+        p.write(OMVarInt(28)).write(OMVarInt(1));                   // one rule
         p.write(OMVarInt(3)).write(OMVarInt(1)).write(OMVarInt(9)); // id set: 1 inline id (9)
-        p.write<bool>(true).write<float>(8.0f);      // optional speed
-        p.write<bool>(false);                        // no correct-drop override
-        p.write<float>(2.0f);                        // default mining speed
-        p.write(OMVarInt(1));                        // damage per block
-        p.write<bool>(true);                         // can destroy in creative
+        p.write<bool>(true).write<float>(8.0f);                     // optional speed
+        p.write<bool>(false);                                       // no correct-drop override
+        p.write<float>(2.0f);                                       // default mining speed
+        p.write(OMVarInt(1));                                       // damage per block
+        p.write<bool>(true);                                        // can destroy in creative
         p.setUserContext(&mapping);
         p.reset();
 
@@ -1188,7 +1189,7 @@ static auto testDataComponents() -> void
 
         auto component = p.read<OMProtocolDataComponent>();
         CHECK(component.truncated);
-        CHECK(!component.head.empty());   // raw head captured for later analysis
+        CHECK(!component.head.empty()); // raw head captured for later analysis
     }
 }
 
@@ -1203,14 +1204,14 @@ static auto testMoreDataComponents() -> void
 
         OMNetworkPacket p;
         p.write(OMVarInt(53));
-        p.write<bool>(true).write(OMVarInt(3));          // potion id
-        p.write<bool>(true).write<int32_t>(0xFF0000);    // custom color
-        p.write(OMVarInt(1));                            // one effect
-        p.write(OMVarInt(7));                            // type id
-        p.write(OMVarInt(1)).write(OMVarInt(200));       // amplifier, duration
+        p.write<bool>(true).write(OMVarInt(3));                   // potion id
+        p.write<bool>(true).write<int32_t>(0xFF0000);             // custom color
+        p.write(OMVarInt(1));                                     // one effect
+        p.write(OMVarInt(7));                                     // type id
+        p.write(OMVarInt(1)).write(OMVarInt(200));                // amplifier, duration
         p.write<bool>(true).write<bool>(true).write<bool>(false); // ambient, particles, icon
-        p.write<bool>(false);                            // no hidden effect
-        p.write<bool>(false);                            // no custom name
+        p.write<bool>(false);                                     // no hidden effect
+        p.write<bool>(false);                                     // no custom name
         p.setUserContext(&mapping);
         p.reset();
 
@@ -1226,10 +1227,10 @@ static auto testMoreDataComponents() -> void
 
         OMNetworkPacket p;
         p.write(OMVarInt(70));
-        p.write(OMVarInt(2));                            // shape = star
-        p.write(OMVarInt(1)).write<int32_t>(0x112233);   // colors
-        p.write(OMVarInt(1)).write<int32_t>(0x445566);   // fade colors
-        p.write<bool>(true).write<bool>(false);          // trail, twinkle
+        p.write(OMVarInt(2));                          // shape = star
+        p.write(OMVarInt(1)).write<int32_t>(0x112233); // colors
+        p.write(OMVarInt(1)).write<int32_t>(0x445566); // fade colors
+        p.write<bool>(true).write<bool>(false);        // trail, twinkle
         p.setUserContext(&mapping);
         p.reset();
 
@@ -1245,10 +1246,10 @@ static auto testMoreDataComponents() -> void
         auto mapping = makeMapping({{71, "minecraft:fireworks"}});
 
         OMNetworkPacket p;
-        p.write(OMVarInt(71)).write(OMVarInt(2));        // flight
-        p.write(OMVarInt(1));                            // one explosion
-        p.write(OMVarInt(0));                            // shape
-        p.write(OMVarInt(0)).write(OMVarInt(0));         // no colors
+        p.write(OMVarInt(71)).write(OMVarInt(2)); // flight
+        p.write(OMVarInt(1));                     // one explosion
+        p.write(OMVarInt(0));                     // shape
+        p.write(OMVarInt(0)).write(OMVarInt(0));  // no colors
         p.write<bool>(false).write<bool>(false);
         p.setUserContext(&mapping);
         p.reset();
@@ -1264,8 +1265,8 @@ static auto testMoreDataComponents() -> void
 
         OMNetworkPacket p;
         p.write(OMVarInt(58));
-        p.write(OMVarInt(2));                            // material: registry id 1
-        p.write(OMVarInt(3));                            // pattern: registry id 2
+        p.write(OMVarInt(2)); // material: registry id 1
+        p.write(OMVarInt(3)); // pattern: registry id 2
         p.setUserContext(&mapping);
         p.reset();
 
@@ -1281,12 +1282,12 @@ static auto testMoreDataComponents() -> void
 
         OMNetworkPacket p;
         p.write(OMVarInt(24));
-        p.write<float>(1.6f);                            // consume seconds
-        p.write(OMVarInt(1));                            // animation = eat
-        p.write(OMVarInt(1));                            // sound: registry id 0
-        p.write<bool>(true);                             // has particles
-        p.write(OMVarInt(1));                            // one effect
-        p.write(OMVarInt(2));                            // clear_all_effects
+        p.write<float>(1.6f); // consume seconds
+        p.write(OMVarInt(1)); // animation = eat
+        p.write(OMVarInt(1)); // sound: registry id 0
+        p.write<bool>(true);  // has particles
+        p.write(OMVarInt(1)); // one effect
+        p.write(OMVarInt(2)); // clear_all_effects
         p.setUserContext(&mapping);
         p.reset();
 
@@ -1302,13 +1303,13 @@ static auto testMoreDataComponents() -> void
 
         OMNetworkPacket p;
         p.write(OMVarInt(14));
-        p.write(OMVarInt(1));                            // one predicate
-        p.write<bool>(true);                             // blocks present
-        p.write(OMVarInt(2)).write(OMVarInt(5));         // id set: one inline id (5)
-        p.write<bool>(false);                            // no properties
-        p.write<bool>(false);                            // no nbt
-        p.write(OMVarInt(0));                            // no exact matchers
-        p.write(OMVarInt(0));                            // no partial predicates
+        p.write(OMVarInt(1));                    // one predicate
+        p.write<bool>(true);                     // blocks present
+        p.write(OMVarInt(2)).write(OMVarInt(5)); // id set: one inline id (5)
+        p.write<bool>(false);                    // no properties
+        p.write<bool>(false);                    // no nbt
+        p.write(OMVarInt(0));                    // no exact matchers
+        p.write(OMVarInt(0));                    // no partial predicates
         p.setUserContext(&mapping);
         p.reset();
 
@@ -1342,7 +1343,7 @@ static auto testNewComponents() -> void
 
         OMNetworkPacket p;
         p.write(OMVarInt(87));
-        p.write(OMVarInt(2)).write(OMVarInt(4));   // one inline entity id
+        p.write(OMVarInt(2)).write(OMVarInt(4)); // one inline entity id
         p.write<float>(2.5f);
         p.setUserContext(&mapping);
         p.reset();
@@ -1403,9 +1404,9 @@ static auto testNewComponents() -> void
 
         OMNetworkPacket p;
         p.write(OMVarInt(79)).write(OMVarInt(1));
-        p.write(OMVarInt(5));                                // entity type
+        p.write(OMVarInt(5));                                                             // entity type
         p.write<uint8_t>(0x08).write(OMVarInt(0)).write(OMVarInt(1)).write<uint8_t>('b'); // tiny NBT string
-        p.write(OMVarInt(20)).write(OMVarInt(10));           // ticks, min ticks
+        p.write(OMVarInt(20)).write(OMVarInt(10));                                        // ticks, min ticks
         p.setUserContext(&mapping);
         p.reset();
 
@@ -1427,9 +1428,9 @@ static auto testNewComponents() -> void
             p.write<uint8_t>(0x08).write(OMVarInt(0)).write(OMVarInt(1)).write<uint8_t>('x'); // one-char line
         }
 
-        p.write<bool>(false);      // no filtered lines
-        p.write(OMVarInt(3));      // dye color
-        p.write<bool>(true);       // glowing
+        p.write<bool>(false); // no filtered lines
+        p.write(OMVarInt(3)); // dye color
+        p.write<bool>(true);  // glowing
         p.setUserContext(&mapping);
         p.reset();
 
@@ -1445,16 +1446,16 @@ static auto testNewComponents() -> void
 
         OMNetworkPacket p;
         p.write(OMVarInt(32));
-        p.write(OMVarInt(4));            // slot = head
-        p.write(OMVarInt(1));            // equip sound: registry id 0
-        p.write<bool>(false);            // no model
-        p.write<bool>(false);            // no camera overlay
-        p.write<bool>(false);            // no allowed entities
-        p.write<bool>(true);             // dispensable
-        p.write<bool>(false);            // swappable
-        p.write<bool>(true);             // damage on hurt
-        p.write<bool>(false);            // can be sheared
-        p.write(OMVarInt(2));            // shearing sound: registry id 1
+        p.write(OMVarInt(4)); // slot = head
+        p.write(OMVarInt(1)); // equip sound: registry id 0
+        p.write<bool>(false); // no model
+        p.write<bool>(false); // no camera overlay
+        p.write<bool>(false); // no allowed entities
+        p.write<bool>(true);  // dispensable
+        p.write<bool>(false); // swappable
+        p.write<bool>(true);  // damage on hurt
+        p.write<bool>(false); // can be sheared
+        p.write(OMVarInt(2)); // shearing sound: registry id 1
         p.setUserContext(&mapping);
         p.reset();
 
@@ -1522,16 +1523,15 @@ static auto testResolvableComponents() -> void
 
         OMNetworkPacket p;
         p.write(OMVarInt(85));
-        p.write<bool>(false).write(OMVarInt(200));                 // burn time constant
-        p.write<bool>(true).write<std::string>("minecraft:fuel");  // speed multiplier reference
+        p.write<bool>(false).write(OMVarInt(200));                // burn time constant
+        p.write<bool>(true).write<std::string>("minecraft:fuel"); // speed multiplier reference
         p.setUserContext(&mapping);
         p.reset();
 
         auto component = p.read<OMProtocolDataComponent>();
         CHECK(component.type == OMDataComponentHandler::CookingFuel);
         CHECK(!component.cookingBurnTime.isReference && component.cookingBurnTime.value == 200);
-        CHECK(component.cookingSpeedMultiplier.isReference &&
-              component.cookingSpeedMultiplier.key == "minecraft:fuel");
+        CHECK(component.cookingSpeedMultiplier.isReference && component.cookingSpeedMultiplier.key == "minecraft:fuel");
     }
 
     // brewing_fuel (86): resolvable int uses + resolvable float speed
@@ -1540,8 +1540,8 @@ static auto testResolvableComponents() -> void
 
         OMNetworkPacket p;
         p.write(OMVarInt(86));
-        p.write<bool>(true).write<std::string>("minecraft:uses");  // uses reference
-        p.write<bool>(false).write<float>(1.5f);                   // speed constant
+        p.write<bool>(true).write<std::string>("minecraft:uses"); // uses reference
+        p.write<bool>(false).write<float>(1.5f);                  // speed constant
         p.setUserContext(&mapping);
         p.reset();
 

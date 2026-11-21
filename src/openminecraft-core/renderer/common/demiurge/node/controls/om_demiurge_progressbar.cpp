@@ -63,8 +63,7 @@ void OMDemiurgeProgressBar::update()
     };
 
     const float errorValue = std::clamp(errorAmount.get(), 0.0f, 1.0f);
-    const glm::vec4 effectiveBarColor =
-        glm::mix(barColor.get(), errorColor.get(), errorValue);
+    const glm::vec4 effectiveBarColor = glm::mix(barColor.get(), errorColor.get(), errorValue);
 
     trackNode->style("color", (int)f4ToRgba(applyDisabled(trackColor.get())))->style("radius", radius);
     barNode->style("color", (int)f4ToRgba(applyDisabled(effectiveBarColor)))->style("radius", radius);

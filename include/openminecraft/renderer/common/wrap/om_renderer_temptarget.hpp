@@ -16,8 +16,8 @@ class OMRendererTempTarget
 {
   public:
     OMRendererTempTarget(OMRenderer *renderer, std::string tagPrefix)
-        : renderer(renderer),
-          prefix(std::move(tagPrefix) + "." + std::to_string(++instanceCounter)), targetTag(prefix + ".target")
+        : renderer(renderer), prefix(std::move(tagPrefix) + "." + std::to_string(++instanceCounter)),
+          targetTag(prefix + ".target")
     {
     }
 
@@ -124,8 +124,7 @@ class OMRendererTempTarget
         }
         else
         {
-            auto *color =
-                renderer->registerTexture(colorTag, ext.x, ext.y, samples, 0, Dim2Multisample, colorFormat);
+            auto *color = renderer->registerTexture(colorTag, ext.x, ext.y, samples, 0, Dim2Multisample, colorFormat);
             color->addressModeU = ClampToEdge;
             color->addressModeV = ClampToEdge;
             color->setupSampler();
@@ -145,8 +144,8 @@ class OMRendererTempTarget
         for (size_t i = 0; i < additionalTexFormats.size(); ++i)
         {
             const std::string tag = prefix + suffix + ".add" + std::to_string(i);
-            auto *tex = renderer->registerTexture(tag, ext.x, ext.y, samples, 0,
-                                                  samples <= 1 ? Dim2 : Dim2Multisample, additionalTexFormats[i]);
+            auto *tex = renderer->registerTexture(tag, ext.x, ext.y, samples, 0, samples <= 1 ? Dim2 : Dim2Multisample,
+                                                  additionalTexFormats[i]);
             tex->setupSampler();
             additionalTags.push_back(tag);
         }
@@ -201,7 +200,8 @@ class OMRendererTempTarget
     std::string depthTag;
     std::vector<std::string> additionalTags;
     uint64_t serial = 0;
-    // The same prefix may be instantiated multiple times (e.g. several demiurge handlers); append an instance id to keep tags unique
+    // The same prefix may be instantiated multiple times (e.g. several demiurge handlers); append an instance id to
+    // keep tags unique
     static inline std::atomic<uint64_t> instanceCounter = 0;
     bool externalDepth = false;
     bool clearDepth = true;

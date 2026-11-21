@@ -6,8 +6,7 @@ using namespace openminecraft::renderer::common::animation;
 
 namespace openminecraft::renderer::common::demiurge::node::controls
 {
-OMDemiurgeMultilineLabel::OMDemiurgeMultilineLabel(geom::OMFontSet *fontset)
-    : OMDemiurgeTextSdfMultilineNode(fontset)
+OMDemiurgeMultilineLabel::OMDemiurgeMultilineLabel(geom::OMFontSet *fontset) : OMDemiurgeTextSdfMultilineNode(fontset)
 {
 }
 

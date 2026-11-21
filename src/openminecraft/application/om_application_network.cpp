@@ -122,7 +122,6 @@ static void storeChunkToFile(const network::OMProtocolChunkDataAndLight &chunk)
     }
 }
 
-
 // Asynchronous chunk writing: the network thread only enqueues, avoiding synchronous writes (~400KB/chunk, ~3ms)
 // that would delay the chunk_batch_received ACK and get throttled by the server.
 class OMChunkWriter
@@ -1119,13 +1118,13 @@ void OMApplication::networkSetup(std::string host, std::string port)
             constexpr float fixedDesired = 12.0f;
             desiredChunksPerTick = std::clamp(fixedDesired, 1.0f, 32.0f);
 
-            logger->debug("chunk batch: {} chunks, elapsed {:.1f}ms, desired {:.1f}/tick", numOfChunks,
-                          chunkBatchStartTp.time_since_epoch().count() == 0
-                              ? 0.0
-                              : std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() -
-                                                                          chunkBatchStartTp)
-                                    .count(),
-                          desiredChunksPerTick);
+            logger->debug(
+                "chunk batch: {} chunks, elapsed {:.1f}ms, desired {:.1f}/tick", numOfChunks,
+                chunkBatchStartTp.time_since_epoch().count() == 0
+                    ? 0.0
+                    : std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - chunkBatchStartTp)
+                          .count(),
+                desiredChunksPerTick);
 
             transformer->sendPlayChunkBatchReceived(desiredChunksPerTick);
         }

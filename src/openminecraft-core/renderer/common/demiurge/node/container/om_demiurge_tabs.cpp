@@ -94,10 +94,8 @@ auto OMDemiurgeTabPane::addPage(const std::string &title, const std::shared_ptr<
                  {"padding", OMDemiurgeEdgeInsets{0.0f, 0.0f, 10.0f, 10.0f}}});
 
     auto label = std::make_shared<controls::OMDemiurgeLabel>(fontset);
-    label->style({{"text", title},
-                  {"textHeight", 14},
-                  {"color", (int)0x8cffffff},
-                  {"alignSelf", OMDemiurgeAlign::Center}});
+    label->style(
+        {{"text", title}, {"textHeight", 14}, {"color", (int)0x8cffffff}, {"alignSelf", OMDemiurgeAlign::Center}});
     root->mountDirect(label);
 
     tabBar->mountDirect(root);
@@ -441,8 +439,7 @@ void OMDemiurgeTabPane::update()
     };
 
     const uint32_t activeColor = static_cast<uint32_t>(stylesStorage.get<int>("activeTextColor", (int)0xffffffff));
-    const uint32_t inactiveColor =
-        static_cast<uint32_t>(stylesStorage.get<int>("inactiveTextColor", (int)0xffffff8c));
+    const uint32_t inactiveColor = static_cast<uint32_t>(stylesStorage.get<int>("inactiveTextColor", (int)0xffffff8c));
     const uint32_t indicatorColor = static_cast<uint32_t>(stylesStorage.get<int>("indicatorColor", (int)0x00d4ffff));
 
     const float indicatorSide = indicatorThickness + 4.0f;
@@ -451,18 +448,16 @@ void OMDemiurgeTabPane::update()
     {
         auto &tab = tabs[i];
         const bool active = i == activeIndex;
-        const auto padding =
-            horizontal ? OMDemiurgeEdgeInsets{0.0f, 0.0f, 10.0f, 10.0f}
-                       : (tabPosition == OMDemiurgeTabPosition::Left
-                              ? OMDemiurgeEdgeInsets{0.0f, 0.0f, 2.0f, indicatorSide}
-                              : OMDemiurgeEdgeInsets{0.0f, 0.0f, indicatorSide, 2.0f});
+        const auto padding = horizontal ? OMDemiurgeEdgeInsets{0.0f, 0.0f, 10.0f, 10.0f}
+                                        : (tabPosition == OMDemiurgeTabPosition::Left
+                                               ? OMDemiurgeEdgeInsets{0.0f, 0.0f, 2.0f, indicatorSide}
+                                               : OMDemiurgeEdgeInsets{0.0f, 0.0f, indicatorSide, 2.0f});
 
         tab.root->style("padding", padding)
             ->style("flexGrow", 0.0f)
             ->style("width", horizontal ? OMDemiurgeSize::pixels(tabWidth) : OMDemiurgeSize::fill())
             ->style("height", horizontal ? OMDemiurgeSize::fill() : OMDemiurgeSize::pixels(tabThicknessStyle));
-        tab.label->style("textHeight", textHeight)
-            ->style("color", (int)dim(active ? activeColor : inactiveColor));
+        tab.label->style("textHeight", textHeight)->style("color", (int)dim(active ? activeColor : inactiveColor));
     }
 
     // Single sliding indicator.

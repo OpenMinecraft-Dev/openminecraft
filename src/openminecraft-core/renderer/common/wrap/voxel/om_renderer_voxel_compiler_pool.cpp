@@ -257,8 +257,9 @@ OMVoxelCompilerPool::OMVoxelCompilerPool(world::OMChunkManager<16> &manager, OMV
                     // The slot may have been reused by chunkManager; the cache is valid only when coordinates match
                     const world::OMChunkIndex origin = {cnk->chunkx, cnk->chunky, cnk->chunkz};
 
-                    // Multiple compile threads access cached/cachedOrigin and cached data concurrently and must share the writers' lock,
-                    // otherwise reads during unordered_map rehash touch freed nodes and corrupt the heap.
+                    // Multiple compile threads access cached/cachedOrigin and cached data concurrently and must share
+                    // the writers' lock, otherwise reads during unordered_map rehash touch freed nodes and corrupt the
+                    // heap.
                     bool cacheHit = false;
                     {
                         std::lock_guard<std::mutex> g(bufferMutex);

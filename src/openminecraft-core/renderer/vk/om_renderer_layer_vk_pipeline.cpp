@@ -32,7 +32,7 @@ OMRendererPipelineVk::~OMRendererPipelineVk()
     {
         if (available)
         {
-                    renderer->logicalDevice.destroyDescriptorSetLayout(descriptorSetLayout, renderer->allocator);
+            renderer->logicalDevice.destroyDescriptorSetLayout(descriptorSetLayout, renderer->allocator);
             renderer->logicalDevice.destroyPipeline(pipeline, renderer->allocator);
             renderer->logicalDevice.destroyPipelineLayout(pipelineLayout, renderer->allocator);
         }
@@ -466,10 +466,9 @@ void OMRendererPipelineVk::build()
     auto viewportState = PipelineViewportStateCreateInfo({}, 1, nullptr, 1, nullptr);
 
     std::vector<PipelineColorBlendAttachmentState> attc = {};
-    const ColorComponentFlags colorMask =
-        colorWrite ? (ColorComponentFlagBits::eA | ColorComponentFlagBits::eR | ColorComponentFlagBits::eG |
-                      ColorComponentFlagBits::eB)
-                   : ColorComponentFlags{};
+    const ColorComponentFlags colorMask = colorWrite ? (ColorComponentFlagBits::eA | ColorComponentFlagBits::eR |
+                                                        ColorComponentFlagBits::eG | ColorComponentFlagBits::eB)
+                                                     : ColorComponentFlags{};
     for (const auto &bs : blendState)
     {
         attc.emplace_back(enableBlend, convert(bs.srcColor), convert(bs.dstColor), convert(blendOperatorColor),

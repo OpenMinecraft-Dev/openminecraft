@@ -63,9 +63,9 @@ void OMRendererTaskVk::setScissor(float x, float y, float width, float height)
         // stored bottom-up, so convert to the framebuffer's own y axis.
         const float flipY = ext.y - y - clampH;
 
-        commandBuffer.setScissor(0, {Rect2D(Offset2D(static_cast<int32_t>(std::max(0.0f, x)),
-                                                     static_cast<int32_t>(std::max(0.0f, flipY))),
-                                             Extent2D(static_cast<uint32_t>(clampW), static_cast<uint32_t>(clampH)))});
+        commandBuffer.setScissor(
+            0, {Rect2D(Offset2D(static_cast<int32_t>(std::max(0.0f, x)), static_cast<int32_t>(std::max(0.0f, flipY))),
+                       Extent2D(static_cast<uint32_t>(clampW), static_cast<uint32_t>(clampH)))});
     }
     catch (SystemError &e)
     {
@@ -85,7 +85,6 @@ void OMRendererTaskVk::bindPipeline(common::OMRendererPipeline *pipeline)
     {
         throw OMRendererException(VkErrorTranslate(e, "openminecraft.renderer.vk.err.task"));
     }
-
 }
 
 void OMRendererTaskVk::bindResourceSet(common::OMRendererResourceSet *resources)

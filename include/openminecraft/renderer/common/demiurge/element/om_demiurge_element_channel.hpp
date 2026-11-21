@@ -81,9 +81,8 @@ template <typename T> class OMDemiurgeChannel : public OMDemiurgeAbstractChannel
 
         if (current.has_value() == rect.has_value())
         {
-            if (!current.has_value() ||
-                (current->x == rect->x && current->y == rect->y && current->width == rect->width &&
-                 current->height == rect->height))
+            if (!current.has_value() || (current->x == rect->x && current->y == rect->y &&
+                                         current->width == rect->width && current->height == rect->height))
             {
                 return false;
             }
@@ -219,7 +218,6 @@ template <typename T> class OMDemiurgeChannel : public OMDemiurgeAbstractChannel
             }
 
             bufferCapacity = next;
-
         }
 
         return sizeof(T) * bufferCapacity;

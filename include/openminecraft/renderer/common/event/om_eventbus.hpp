@@ -14,140 +14,139 @@
 
 namespace openminecraft::renderer::common::event
 {
-    template <typename T, typename S> class OMEventBus
+template <typename T, typename S> class OMEventBus
+{
+  public:
+    OMEventBus()
     {
-    public:
-        OMEventBus()
-        {
-            handlerThread = new std::thread([this]() -> void {
-                std::unique_lock<std::mutex> lock(queueMtx);
-                while (active)
-                {
-                    newEvents.wait(lock, [this]() -> bool {
-                        return !eventQueue.empty() || !active;
-                    });
-
-                    if (!active && eventQueue.empty())
-                    {
-                        break;
-                    }
-
-                    if (eventQueue.empty())
-                    {
-                        continue;
-                    }
-
-                    // Take events under the lock and run callbacks outside it, avoiding deadlock when callbacks re-enter handle()
-                    auto e = std::move(eventQueue.front());
-                    eventQueue.pop();
-                    lock.unlock();
-
-                    std::vector<std::function<void(S &)>> hs;
-                    {
-                        std::lock_guard<std::mutex> hlock(handlersMtx);
-                        auto it = handlers.find(e.first);
-                        if (it != handlers.end())
-                        {
-                            hs = it->second;
-                        }
-                    }
-
-                    for (auto &h : hs)
-                    {
-                        h(e.second);
-                    }
-
-                    lock.lock();
-                }
-            });
-
-            loopThread = new std::thread([this]() -> void {
-                while (active)
-                {
-                    std::vector<std::function<void()>> hs;
-                    {
-                        std::lock_guard<std::mutex> hlock(generalHandlersMtx);
-                        hs = generalHandlers;
-                    }
-
-                    for (auto &h : hs)
-                    {
-                        h();
-                    }
-
-                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                }
-            });
-        }
-
-        ~OMEventBus()
-        {
+        handlerThread = new std::thread([this]() -> void {
+            std::unique_lock<std::mutex> lock(queueMtx);
+            while (active)
             {
-                std::lock_guard<std::mutex> lock(queueMtx);
-                active = false;
-            }
-            newEvents.notify_all();
+                newEvents.wait(lock, [this]() -> bool { return !eventQueue.empty() || !active; });
 
-            if (handlerThread != nullptr)
-            {
-                if (handlerThread->joinable())
+                if (!active && eventQueue.empty())
                 {
-                    handlerThread->join();
+                    break;
                 }
-                delete handlerThread;
-                handlerThread = nullptr;
-            }
 
-            if (loopThread != nullptr)
-            {
-                if (loopThread->joinable())
+                if (eventQueue.empty())
                 {
-                    loopThread->join();
+                    continue;
                 }
-                delete loopThread;
-                loopThread = nullptr;
+
+                // Take events under the lock and run callbacks outside it, avoiding deadlock when callbacks re-enter
+                // handle()
+                auto e = std::move(eventQueue.front());
+                eventQueue.pop();
+                lock.unlock();
+
+                std::vector<std::function<void(S &)>> hs;
+                {
+                    std::lock_guard<std::mutex> hlock(handlersMtx);
+                    auto it = handlers.find(e.first);
+                    if (it != handlers.end())
+                    {
+                        hs = it->second;
+                    }
+                }
+
+                for (auto &h : hs)
+                {
+                    h(e.second);
+                }
+
+                lock.lock();
             }
-        }
+        });
 
-        OMEventBus(const OMEventBus &) = delete;
-        OMEventBus &operator=(const OMEventBus &) = delete;
-
-        inline void append(T t, std::function<void(S &)> h)
-        {
-            std::lock_guard<std::mutex> lock(handlersMtx);
-            handlers[t].emplace_back(std::move(h));
-        }
-
-        inline void appendGeneral(std::function<void()> h)
-        {
-            std::lock_guard<std::mutex> lock(generalHandlersMtx);
-            generalHandlers.emplace_back(std::move(h));
-        }
-
-        inline void handle(T t, S &s)
-        {
+        loopThread = new std::thread([this]() -> void {
+            while (active)
             {
-                std::lock_guard<std::mutex> lock(queueMtx);
-                eventQueue.push({std::move(t), s});
+                std::vector<std::function<void()>> hs;
+                {
+                    std::lock_guard<std::mutex> hlock(generalHandlersMtx);
+                    hs = generalHandlers;
+                }
+
+                for (auto &h : hs)
+                {
+                    h();
+                }
+
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
             }
-            newEvents.notify_one();
+        });
+    }
+
+    ~OMEventBus()
+    {
+        {
+            std::lock_guard<std::mutex> lock(queueMtx);
+            active = false;
+        }
+        newEvents.notify_all();
+
+        if (handlerThread != nullptr)
+        {
+            if (handlerThread->joinable())
+            {
+                handlerThread->join();
+            }
+            delete handlerThread;
+            handlerThread = nullptr;
         }
 
-    private:
-        std::unordered_map<T, std::vector<std::function<void(S &)>>> handlers;
-        std::vector<std::function<void()>> generalHandlers;
+        if (loopThread != nullptr)
+        {
+            if (loopThread->joinable())
+            {
+                loopThread->join();
+            }
+            delete loopThread;
+            loopThread = nullptr;
+        }
+    }
 
-        std::thread *handlerThread = nullptr;
-        std::thread *loopThread = nullptr;
-        std::atomic_bool active = true;
+    OMEventBus(const OMEventBus &) = delete;
+    OMEventBus &operator=(const OMEventBus &) = delete;
 
-        std::condition_variable newEvents;
-        std::mutex queueMtx;
-        std::mutex handlersMtx;
-        std::mutex generalHandlersMtx;
+    inline void append(T t, std::function<void(S &)> h)
+    {
+        std::lock_guard<std::mutex> lock(handlersMtx);
+        handlers[t].emplace_back(std::move(h));
+    }
 
-        std::queue<std::pair<T, S>> eventQueue;
-    };
+    inline void appendGeneral(std::function<void()> h)
+    {
+        std::lock_guard<std::mutex> lock(generalHandlersMtx);
+        generalHandlers.emplace_back(std::move(h));
+    }
+
+    inline void handle(T t, S &s)
+    {
+        {
+            std::lock_guard<std::mutex> lock(queueMtx);
+            eventQueue.push({std::move(t), s});
+        }
+        newEvents.notify_one();
+    }
+
+  private:
+    std::unordered_map<T, std::vector<std::function<void(S &)>>> handlers;
+    std::vector<std::function<void()>> generalHandlers;
+
+    std::thread *handlerThread = nullptr;
+    std::thread *loopThread = nullptr;
+    std::atomic_bool active = true;
+
+    std::condition_variable newEvents;
+    std::mutex queueMtx;
+    std::mutex handlersMtx;
+    std::mutex generalHandlersMtx;
+
+    std::queue<std::pair<T, S>> eventQueue;
+};
 
 } // namespace openminecraft::renderer::common::event
 

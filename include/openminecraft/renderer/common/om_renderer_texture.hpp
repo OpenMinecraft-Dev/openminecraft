@@ -14,7 +14,7 @@ namespace common
 {
 class OMRendererGpuCpuBridge;
 }
-}
+} // namespace openminecraft::renderer
 namespace openminecraft::renderer::common
 {
 enum OMTextureType : uint8_t

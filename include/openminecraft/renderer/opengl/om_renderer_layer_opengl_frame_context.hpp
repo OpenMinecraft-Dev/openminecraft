@@ -15,8 +15,7 @@ class OMRendererOpenGL;
 class OMRendererFrameContextOpenGL : public openminecraft::renderer::common::OMRendererFrameContext
 {
   public:
-    OMRendererFrameContextOpenGL(OMRendererOpenGL *renderer, uint32_t index)
-        : renderer(renderer), frameIndex(index)
+    OMRendererFrameContextOpenGL(OMRendererOpenGL *renderer, uint32_t index) : renderer(renderer), frameIndex(index)
     {
     }
 

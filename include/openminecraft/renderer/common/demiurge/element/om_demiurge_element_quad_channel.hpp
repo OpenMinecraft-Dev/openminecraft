@@ -36,7 +36,8 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
 
     auto init(const std::string &uniformTag, const std::string &targetTag) -> void override
     {
-        initPipeline(openminecraft::renderer::common::OMRendererBufferRef(renderer, uniformTag), openminecraft::renderer::common::OMRendererRenderTargetRef(renderer, targetTag), true);
+        initPipeline(openminecraft::renderer::common::OMRendererBufferRef(renderer, uniformTag),
+                     openminecraft::renderer::common::OMRendererRenderTargetRef(renderer, targetTag), true);
     }
 
     auto submitTask(OMRendererTask *task, uint32_t layer) -> void override
@@ -87,8 +88,7 @@ template <typename T> class OMDemiurgeQuadChannel : public OMDemiurgeChannel<T>
         {
             const uint32_t z = layerZOrder(this->objects[i].depth);
             auto clip = this->fetchClip(i);
-            const bool contiguous =
-                inDraw && i == last + 1 && z == currentZ && sameClip(clip, currentClip);
+            const bool contiguous = inDraw && i == last + 1 && z == currentZ && sameClip(clip, currentClip);
 
             if (inDraw && !contiguous)
             {

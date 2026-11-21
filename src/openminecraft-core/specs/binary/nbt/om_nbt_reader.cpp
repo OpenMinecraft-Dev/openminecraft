@@ -185,7 +185,8 @@ auto OMNbtReader::parse(bool haveName) -> std::shared_ptr<OMNbtTag>
             {
                 result = tag;
 
-                // INFO: when the root is not Compound/List (e.g. a String root for text components), reading it completes the whole NBT
+                // INFO: when the root is not Compound/List (e.g. a String root for text components), reading it
+                // completes the whole NBT
                 if (tag->type != List && tag->type != Compound)
                 {
                     break;

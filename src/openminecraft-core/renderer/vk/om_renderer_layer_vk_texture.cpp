@@ -209,7 +209,8 @@ OMRendererTextureVk::OMRendererTextureVk(uint64_t width, uint64_t height, uint64
         auto memprop = renderer->physicalDevice.getMemoryProperties();
         format = fromCommonUsage(arr);
         std::vector<uint32_t> fams;
-        if (renderer->queueFamilyIndex.first != renderer->transferQueueIndex) {
+        if (renderer->queueFamilyIndex.first != renderer->transferQueueIndex)
+        {
             fams.push_back(renderer->transferQueueIndex);
             fams.push_back(renderer->queueFamilyIndex.first);
         }
@@ -221,7 +222,8 @@ OMRendererTextureVk::OMRendererTextureVk(uint64_t width, uint64_t height, uint64
                                       ImageUsageFlagBits::eDepthStencilAttachment | ImageUsageFlagBits::eTransferSrc
                                 : ImageUsageFlagBits::eTransferDst | ImageUsageFlagBits::eSampled |
                                       ImageUsageFlagBits::eColorAttachment | ImageUsageFlagBits::eTransferSrc,
-                            fams.empty() ? SharingMode::eExclusive : SharingMode::eConcurrent, fams, ImageLayout::eUndefined),
+                            fams.empty() ? SharingMode::eExclusive : SharingMode::eConcurrent, fams,
+                            ImageLayout::eUndefined),
             renderer->allocator);
 
         auto req = renderer->logicalDevice.getImageMemoryRequirements(image);

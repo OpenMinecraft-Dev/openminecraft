@@ -70,7 +70,8 @@ auto OMDemiurgeTextSdfMultilineNode::syncLayout() -> void
                 while (true)
                 {
                     const size_t pos = value.find('\n', start);
-                    lines.push_back(set->shape(value.substr(start, pos == std::string::npos ? std::string::npos : pos - start)));
+                    lines.push_back(
+                        set->shape(value.substr(start, pos == std::string::npos ? std::string::npos : pos - start)));
                     if (pos == std::string::npos)
                     {
                         break;
@@ -92,8 +93,8 @@ auto OMDemiurgeTextSdfMultilineNode::syncLayout() -> void
                 do
                 {
                     const size_t newline = value.find('\n', paragraphStart);
-                    const std::string paragraph =
-                        value.substr(paragraphStart, newline == std::string::npos ? std::string::npos : newline - paragraphStart);
+                    const std::string paragraph = value.substr(
+                        paragraphStart, newline == std::string::npos ? std::string::npos : newline - paragraphStart);
                     paragraphStart = newline == std::string::npos ? std::string::npos : newline + 1;
 
                     if (paragraph.empty())
@@ -280,8 +281,7 @@ auto OMDemiurgeTextSdfMultilineNode::submit(OMDemiurgeRendererHandler *handler, 
         size_t index = 0;
         const float opacity = fetchOpacity();
         const glm::vec2 textScale = stylesStorage.get<glm::vec2>("scale", glm::vec2(1.0f));
-        const glm::vec2 textCenter(layoutBound.x + layoutBound.width * 0.5f,
-                                   layoutBound.y + layoutBound.height * 0.5f);
+        const glm::vec2 textCenter(layoutBound.x + layoutBound.width * 0.5f, layoutBound.y + layoutBound.height * 0.5f);
 
         for (size_t li = 0; li < lines.size(); ++li)
         {

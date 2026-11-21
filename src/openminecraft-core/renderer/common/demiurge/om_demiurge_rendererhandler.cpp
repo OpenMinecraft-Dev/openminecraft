@@ -26,13 +26,13 @@ namespace openminecraft::renderer::common::demiurge
 OMDemiurgeRendererHandler::OMDemiurgeRendererHandler(OMRenderer *renderer, std::shared_ptr<OMDemiurgeNode> n)
     : OMRendererHandler(renderer), renderer(renderer), rect(renderer, [&]() -> void { recordTask(); }),
       roundedRect(renderer, [&]() -> void { recordTask(); }), image(renderer, [&]() -> void { recordTask(); }),
-      sector(renderer, [&]() -> void { recordTask(); }),
-      svg(renderer, [&]() -> void { recordTask(); }), shaderScene(renderer, [&]() -> void { recordTask(); }),
-      logger("OMDemiurgeRendererHandler", this)
+      sector(renderer, [&]() -> void { recordTask(); }), svg(renderer, [&]() -> void { recordTask(); }),
+      shaderScene(renderer, [&]() -> void { recordTask(); }), logger("OMDemiurgeRendererHandler", this)
 {
     node = n;
 
-    uniformBuffer = openminecraft::renderer::common::OMRendererBufferRef(renderer, "demiurge.uniform." + std::to_string(openminecraft::renderer::common::nextObjectTagId()));
+    uniformBuffer = openminecraft::renderer::common::OMRendererBufferRef(
+        renderer, "demiurge.uniform." + std::to_string(openminecraft::renderer::common::nextObjectTagId()));
     renderer->registerBuffer(uniformBuffer.getTag(), Uniform, sizeof(float) * 2);
 
     auto ext = renderer->getExtent();
@@ -211,7 +211,6 @@ void OMDemiurgeRendererHandler::beforeFrame()
     {
         p.second->update();
     }
-
 }
 
 void OMDemiurgeRendererHandler::afterFrame()

@@ -65,8 +65,7 @@ void OMDemiurgeSwitch::update()
     const auto thumb = thumbColor.get();
     const glm::vec4 thumbFinal(glm::mix(glm::vec3(thumb), glm::vec3(0.55f), disabledValue * 0.75f), thumb.a);
 
-    trackNode->style("color", (int)f4ToRgba(track))
-        ->style("radius", glm::vec4(TrackHeight * 0.5f));
+    trackNode->style("color", (int)f4ToRgba(track))->style("radius", glm::vec4(TrackHeight * 0.5f));
 
     const float travel = TrackWidth - ThumbSize - 4.0f;
     const float thumbAmount = dragging ? dragValue : amount;

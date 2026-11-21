@@ -100,7 +100,8 @@ void OMDemiurgeSpinner::update()
 
         glm::vec3 rgb = glm::mix(glm::vec3(base), glm::vec3(0.55f), disabledValue * 0.75f);
 
-        dots[i]->style("offsetX", OMDemiurgeSize::pixels(x))
+        dots[i]
+            ->style("offsetX", OMDemiurgeSize::pixels(x))
             ->style("offsetY", OMDemiurgeSize::pixels(y))
             ->style("rotation", angle - 1.5707963f)
             ->style("color", (int)f4ToRgba(glm::vec4(rgb, base.a * alpha * (1.0f - disabledValue * 0.5f))));

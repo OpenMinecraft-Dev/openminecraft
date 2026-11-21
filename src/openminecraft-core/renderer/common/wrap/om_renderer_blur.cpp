@@ -103,7 +103,11 @@ OMRendererBlurHandler::~OMRendererBlurHandler()
 
 auto OMRendererBlurHandler::firstLayerTask(OMRendererTask *pre, std::string name) -> OMRendererTask *
 {
-    auto task = renderer->createTask(name)->target(blurTemp2->target())->pipeline(biltPipeline)->resourceSet(biltResources)->drawN(6);
+    auto task = renderer->createTask(name)
+                    ->target(blurTemp2->target())
+                    ->pipeline(biltPipeline)
+                    ->resourceSet(biltResources)
+                    ->drawN(6);
     for (int i = 0; i < passes; ++i)
     {
         task->target(blurTemp->target())

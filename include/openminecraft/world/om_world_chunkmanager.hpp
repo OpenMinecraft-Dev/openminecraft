@@ -162,7 +162,8 @@ template <int Cs> class OMChunkManager
         func(chunks);
     }
 
-    // Expose both the coordinate index map and the slot array (occlusion-culling BFS needs neighbor lookup by coordinate)
+    // Expose both the coordinate index map and the slot array (occlusion-culling BFS needs neighbor lookup by
+    // coordinate)
     template <typename Func> void withChunkMap(Func &&func)
     {
         std::shared_lock<std::shared_mutex> lock(chunkMutex);

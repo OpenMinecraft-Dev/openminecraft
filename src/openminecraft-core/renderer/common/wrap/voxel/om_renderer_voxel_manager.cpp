@@ -1555,7 +1555,8 @@ auto OMVoxelManager::update(basics::OMCamera &camera) -> void
         {
             renderer->unregisterBuffer(chunkOffsetBuffer.getTag());
             static uint64_t chunkOffsetGeneration = 1;
-            chunkOffsetBuffer = OMRendererBufferRef(renderer, "voxel.chunkOffset.g" + std::to_string(chunkOffsetGeneration++));
+            chunkOffsetBuffer =
+                OMRendererBufferRef(renderer, "voxel.chunkOffset.g" + std::to_string(chunkOffsetGeneration++));
             renderer->registerBuffer(chunkOffsetBuffer.getTag(), UniformTexel,
                                      static_cast<uint64_t>(chunkManager->numChunks()) * sizeof(glm::vec4) * 2);
             chunkOffsetBuffer->format = basics::Vec4f;
@@ -1710,43 +1711,55 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
         cloudTargetMS->constructWithDepth(cutoutTargetMS->depthTexTag(), renderer->getExtent(), samples);
         cloudTarget->construct(renderer->getExtent());
         resources(composePipeline)->bindInput(0, (samples == 1 ? cutoutTargetMS : cutoutTarget)->colorTexture());
-        resources(composePipeline)->bindInput(1, (samples == 1 ? translucentTargetMS : translucentTarget)->colorTexture());
-        resources(composePipeline)->bindInput(2, (samples == 1 ? translucentTargetMS : translucentTarget)->additionalTex(0));
+        resources(composePipeline)
+            ->bindInput(1, (samples == 1 ? translucentTargetMS : translucentTarget)->colorTexture());
+        resources(composePipeline)
+            ->bindInput(2, (samples == 1 ? translucentTargetMS : translucentTarget)->additionalTex(0));
         resources(cloudComposePipeline)->bindInput(0, (samples == 1 ? cloudTargetMS : cloudTarget)->colorTexture());
         resources(cloudComposePipeline)->bindInput(1, (samples == 1 ? cloudTargetMS : cloudTarget)->additionalTex(0));
     }
 
     auto tsk = task->target(lightmap->target())
                    ->beginDebugTag("environment")
-                   ->pipeline(lightmapPipeline)->resourceSet(resources(lightmapPipeline))
+                   ->pipeline(lightmapPipeline)
+                   ->resourceSet(resources(lightmapPipeline))
                    ->drawN(6)
                    ->clearColor({0.0f, 0.0f, 0.0f, 0.0f})
                    ->clearDepth(1.0f)
                    ->target(cutoutTargetMS->target())
-                   ->pipeline(skyPipeline)->resourceSet(resources(skyPipeline))
+                   ->pipeline(skyPipeline)
+                   ->resourceSet(resources(skyPipeline))
                    ->drawN(6)
-                   ->pipeline(skyDiscPipeline)->resourceSet(resources(skyDiscPipeline))
+                   ->pipeline(skyDiscPipeline)
+                   ->resourceSet(resources(skyDiscPipeline))
                    ->drawN(10)
-                   ->pipeline(sunrisePipeline)->resourceSet(resources(sunrisePipeline))
+                   ->pipeline(sunrisePipeline)
+                   ->resourceSet(resources(sunrisePipeline))
                    ->drawN(18)
-                   ->pipeline(sunPipeline)->resourceSet(resources(sunPipeline))
+                   ->pipeline(sunPipeline)
+                   ->resourceSet(resources(sunPipeline))
                    ->drawN(6)
-                   ->pipeline(moonPipeline)->resourceSet(resources(moonPipeline))
+                   ->pipeline(moonPipeline)
+                   ->resourceSet(resources(moonPipeline))
                    ->drawN(6)
-                   ->pipeline(starPipeline)->resourceSet(resources(starPipeline))
+                   ->pipeline(starPipeline)
+                   ->resourceSet(resources(starPipeline))
                    ->vertexBuffer({starBuffer})
                    ->drawInstanceN(6, starBuffer->length / sizeof(float) / 5)
                    ->endDebugTag()
                    ->beginDebugTag("cutout/opaque chunks")
-                   ->pipeline(pipeline)->resourceSet(resources(pipeline))
+                   ->pipeline(pipeline)
+                   ->resourceSet(resources(pipeline))
                    ->vertexBuffer({voxelLayer->buf()->buffer()})
                    ->indexBuffer(voxelIndexBuffer)
                    ->drawIndexedInstanceN(6, voxelLayer->buf()->usedSize() / sizeof(OMVoxel))
-                   ->pipeline(complexPipeline)->resourceSet(resources(complexPipeline))
+                   ->pipeline(complexPipeline)
+                   ->resourceSet(resources(complexPipeline))
                    ->vertexBuffer({voxelComplexLayer->buf()->buffer()})
                    ->indexBuffer(voxelIndexBuffer)
                    ->drawIndexedInstanceN(6, voxelComplexLayer->buf()->usedSize() / sizeof(OMVoxelComplex))
-                   ->pipeline(fluidPipeline)->resourceSet(resources(fluidPipeline))
+                   ->pipeline(fluidPipeline)
+                   ->resourceSet(resources(fluidPipeline))
                    ->vertexBuffer({voxelFluidLayer->buf()->buffer()})
                    ->indexBuffer(voxelIndexBuffer)
                    ->drawIndexedInstanceN(6, voxelFluidLayer->buf()->usedSize() / sizeof(OMVoxelFluid))
@@ -1763,7 +1776,8 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
             ->clearColor(glm::vec4(0.0), 0)
             ->clearColor(glm::vec4(1.0), 1)
             ->target(cloudTargetMS->target())
-            ->pipeline(cloudPipeline)->resourceSet(resources(cloudPipeline))
+            ->pipeline(cloudPipeline)
+            ->resourceSet(resources(cloudPipeline))
             ->vertexBuffer({cloudBuffer})
             ->drawInstanceN(36, cloudBuffer->length / sizeof(uint32_t))
             ->endDebugTag();
@@ -1787,17 +1801,21 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
         ->clearColor(glm::vec4(0.0), 0)
         ->clearColor(glm::vec4(1.0), 1)
         ->target(translucentTargetMS->target())
-        ->pipeline(cloudComposePipeline)->resourceSet(resources(cloudComposePipeline))
+        ->pipeline(cloudComposePipeline)
+        ->resourceSet(resources(cloudComposePipeline))
         ->drawN(6)
-        ->pipeline(translucentPipeline)->resourceSet(resources(translucentPipeline))
+        ->pipeline(translucentPipeline)
+        ->resourceSet(resources(translucentPipeline))
         ->vertexBuffer({voxelTranslucentLayer->buf()->buffer()})
         ->indexBuffer(voxelIndexBuffer)
         ->drawIndexedInstanceN(6, voxelTranslucentLayer->buf()->usedSize() / sizeof(OMVoxel))
-        ->pipeline(translucentComplexPipeline)->resourceSet(resources(translucentComplexPipeline))
+        ->pipeline(translucentComplexPipeline)
+        ->resourceSet(resources(translucentComplexPipeline))
         ->vertexBuffer({voxelTranslucentComplexLayer->buf()->buffer()})
         ->indexBuffer(voxelIndexBuffer)
         ->drawIndexedInstanceN(6, voxelTranslucentComplexLayer->buf()->usedSize() / sizeof(OMVoxelComplex))
-        ->pipeline(translucentFluidPipeline)->resourceSet(resources(translucentFluidPipeline))
+        ->pipeline(translucentFluidPipeline)
+        ->resourceSet(resources(translucentFluidPipeline))
         ->vertexBuffer({voxelTranslucentFluidLayer->buf()->buffer()})
         ->indexBuffer(voxelIndexBuffer)
         ->drawIndexedInstanceN(6, voxelTranslucentFluidLayer->buf()->usedSize() / sizeof(OMVoxelFluid))
@@ -1809,9 +1827,11 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
     }
     return tsk->removeClearColor(1)
         ->target(resolveTarget->target())
-        ->pipeline(composePipeline)->resourceSet(resources(composePipeline))
+        ->pipeline(composePipeline)
+        ->resourceSet(resources(composePipeline))
         ->drawN(6)
-        ->pipeline(debugPipeline)->resourceSet(resources(debugPipeline))
+        ->pipeline(debugPipeline)
+        ->resourceSet(resources(debugPipeline))
         ->vertexBuffer({debugOffsetBuffer})
         ->drawN(2 * 12);
 }

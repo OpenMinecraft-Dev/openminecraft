@@ -41,8 +41,8 @@ class OMDemiurgeScrollPane : public OMDemiurgePane, public OMDemiurgeControl
 
     void update() override;
     auto processMouseDown(float x, float y, uint8_t button) -> OMDemiurgeEventResult override;
-    auto processNestedDrag(const std::shared_ptr<OMDemiurgeNode> &captured,
-                           const OMDemiurgeEvent &event) -> OMDemiurgeEventResult override;
+    auto processNestedDrag(const std::shared_ptr<OMDemiurgeNode> &captured, const OMDemiurgeEvent &event)
+        -> OMDemiurgeEventResult override;
     auto processMouseMove(float x, float y) -> OMDemiurgeEventResult override;
     auto processMouseUp(float x, float y, uint8_t button) -> OMDemiurgeEventResult override;
     auto processMouseScroll(float x, float y, float wx, float wy) -> OMDemiurgeEventResult override;
@@ -141,8 +141,5 @@ class OMDemiurgeScrollPane : public OMDemiurgePane, public OMDemiurgeControl
     void notifyScroll();
 };
 } // namespace openminecraft::renderer::common::demiurge::node::container
-
-
-
 
 #endif

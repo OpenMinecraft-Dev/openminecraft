@@ -79,8 +79,7 @@ template <typename It> class OMVoxelLayer
             ++processed;
 
             if ((processed & 31) == 0 &&
-                std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count() >
-                    budgetMs)
+                std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count() > budgetMs)
             {
                 break;
             }
@@ -118,7 +117,6 @@ template <typename It> class OMVoxelLayer
     {
         return voxelBuffer;
     }
-
 
     // Actual live data size (used to judge fragmentation)
     auto liveBytesCount() const -> uint64_t

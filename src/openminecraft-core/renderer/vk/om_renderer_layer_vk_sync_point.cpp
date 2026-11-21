@@ -26,8 +26,8 @@ OMRendererGpuEventVk::~OMRendererGpuEventVk()
 OMRendererGpuCpuBridgeVk::OMRendererGpuCpuBridgeVk(Device device, AllocationCallbacks allocator, bool signaled)
     : device(device), allocator(allocator)
 {
-    handle = device.createFence(FenceCreateInfo(signaled ? FenceCreateFlagBits::eSignaled : FenceCreateFlags{}),
-                                allocator);
+    handle =
+        device.createFence(FenceCreateInfo(signaled ? FenceCreateFlagBits::eSignaled : FenceCreateFlags{}), allocator);
 }
 
 OMRendererGpuCpuBridgeVk::~OMRendererGpuCpuBridgeVk()
@@ -42,7 +42,7 @@ void OMRendererGpuCpuBridgeVk::waitCpu()
 {
     try
     {
-        device.waitForFences(1, &handle, true, std::numeric_limits<uint64_t>::max());
+        auto result = device.waitForFences(1, &handle, true, std::numeric_limits<uint64_t>::max());
     }
     catch (SystemError &e)
     {
@@ -59,7 +59,7 @@ void OMRendererGpuCpuBridgeVk::reset()
 {
     try
     {
-        device.resetFences(1, &handle);
+        auto result = device.resetFences(1, &handle);
     }
     catch (SystemError &e)
     {

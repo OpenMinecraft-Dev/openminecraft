@@ -430,13 +430,12 @@ void OMRendererTaskOpenGL::bindResourceSet(common::OMRendererResourceSet *resour
         }
         case common::UniformTexelBuffer:
             ops.push_back({ActiveTexture, static_cast<GLuint>(GL_TEXTURE0 + i)});
-            ops.push_back({BindTexture, GL_TEXTURE_BUFFER,
-                           reinterpret_cast<OMRendererBufferOpenGL *>(obj)->texel});
+            ops.push_back({BindTexture, GL_TEXTURE_BUFFER, reinterpret_cast<OMRendererBufferOpenGL *>(obj)->texel});
             break;
         case common::UniformBuffer:
-            ops.push_back({BindBufferBase,
-                           {GL_UNIFORM_BUFFER, static_cast<GLuint>(i),
-                            reinterpret_cast<OMRendererBufferOpenGL *>(obj)->buffer}});
+            ops.push_back(
+                {BindBufferBase,
+                 {GL_UNIFORM_BUFFER, static_cast<GLuint>(i), reinterpret_cast<OMRendererBufferOpenGL *>(obj)->buffer}});
             break;
         case common::ShaderStorageBuffer:
             ops.push_back({BindBufferBase,

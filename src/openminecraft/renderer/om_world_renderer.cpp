@@ -333,8 +333,7 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
                                  std::shared_ptr<OMChunkManager<16>> chunkManager, int renderDistance)
     : OMRendererHandler(renderer), camera(std::move(camera)), logger("OMWorldRenderer", this), renderer(renderer)
 {
-    const uint32_t airId =
-        data::block::blockStateRegistry.id(data::block::makeBlockState("minecraft:air[]"));
+    const uint32_t airId = data::block::blockStateRegistry.id(data::block::makeBlockState("minecraft:air[]"));
 
     format.nextGroup()->decideStruct();
 
@@ -445,8 +444,7 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
     colorManager->updateGameTime(12000);
     voxelManager = new wrap::voxel::OMVoxelManager(
         renderer, tempTarget->target(), textureAtlas->texture.getTag(), textureAtlas->textureSecondary.getTag(),
-        chunkManager,
-        [&](bool r) -> void { record(r); }, this->voxelHandler,
+        chunkManager, [&](bool r) -> void { record(r); }, this->voxelHandler,
         [&](uint32_t v, uint64_t cx, uint64_t cy, uint64_t cz, int x, int y, int z) -> uint32_t {
             const auto &reg = data::block::blockStateRegistry.idToRegistry[v];
             uint64_t h = (cx * 16 + x) * 341873128712L + (cy * 16 + y) * 132897987541L + cz * 16 + z + 1L;
@@ -497,8 +495,6 @@ void OMWorldRenderer::afterFrame()
         gameT %= 24000;
         colorManager->updateGameTime(gameT);
     }
-
-
 }
 
 void OMWorldRenderer::submitTasks()

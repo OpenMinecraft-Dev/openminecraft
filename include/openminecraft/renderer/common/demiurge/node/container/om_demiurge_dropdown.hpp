@@ -74,7 +74,4 @@ class OMDemiurgeDropDownPane : public OMDemiurgePane, public OMDemiurgeControl
 };
 } // namespace openminecraft::renderer::common::demiurge::node::container
 
-
-
-
 #endif

@@ -95,8 +95,8 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::voxel::
     ~OMModelPrecompiler() = default;
 
     auto precompile(OMIdentifier, bool = true) -> std::shared_ptr<openminecraft::compiler::json::OMJsonNode>;
-    auto wrapFace(std::shared_ptr<openminecraft::compiler::json::OMJsonNode>, OMModelCullSide, glm::vec3 from, glm::vec3 to)
-        -> OMModelFace;
+    auto wrapFace(std::shared_ptr<openminecraft::compiler::json::OMJsonNode>, OMModelCullSide, glm::vec3 from,
+                  glm::vec3 to) -> OMModelFace;
     auto wrapPart(std::shared_ptr<openminecraft::compiler::json::OMJsonNode>) -> OMModelPart;
 
     auto composeModel(std::vector<int>, bool = true, bool = false, bool = false) -> int;
@@ -106,12 +106,13 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::voxel::
     auto loadModelPart(OMIdentifier) -> int;
     auto loadModelPartWithArgs(OMIdentifier, int, int, int, bool) -> int;
 
-    auto querySkipsRendering(int modelId, int targetModelId, openminecraft::renderer::common::wrap::voxel::OMVoxelFacing)
-        -> bool override;
+    auto querySkipsRendering(int modelId, int targetModelId,
+                             openminecraft::renderer::common::wrap::voxel::OMVoxelFacing) -> bool override;
     auto queryNumParts(int modelId) -> int override;
     auto queryPartFaceEnabled(int modelId, int pid, openminecraft::renderer::common::wrap::voxel::OMVoxelFacing)
         -> bool override;
-    auto queryPartFaceTex(int modelId, int pid, openminecraft::renderer::common::wrap::voxel::OMVoxelFacing) -> int override;
+    auto queryPartFaceTex(int modelId, int pid, openminecraft::renderer::common::wrap::voxel::OMVoxelFacing)
+        -> int override;
     auto queryPartFaceCull(int modelId, int pid, openminecraft::renderer::common::wrap::voxel::OMVoxelFacing)
         -> openminecraft::renderer::common::wrap::voxel::OMVoxelFacing override;
     auto queryPartAABB(int modelId, int pid) -> openminecraft::renderer::common::wrap::voxel::OMVoxelAABB override;
@@ -130,8 +131,8 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::voxel::
     auto queryPartAmbientOcclusion(int modelId, int pid) -> bool override;
     auto queryPartShade(int modelId, int pid) -> bool override;
     auto queryPartComplex(int modelId, int pid) -> bool override;
-    auto queryPartFaceSecondaryTexture(int modelId, int pid, openminecraft::renderer::common::wrap::voxel::OMVoxelFacing)
-        -> bool override;
+    auto queryPartFaceSecondaryTexture(int modelId, int pid,
+                                       openminecraft::renderer::common::wrap::voxel::OMVoxelFacing) -> bool override;
     auto queryPartRotationAngleF(int modelId, int pid) -> float override;
     auto queryPartRotationAngleExt(int modelId, int pid) -> glm::vec3 override;
     auto queryTranslucent(int modelId) -> bool override;

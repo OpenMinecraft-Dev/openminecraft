@@ -35,8 +35,7 @@ OMDemiurgeButton::OMDemiurgeButton(geom::OMFontSet *fontset)
     // Internal structure is addressable through child ids. These nodes own their
     // own visual styles; the Button only syncs text/color/animation state.
     bkgNode->style("radius", glm::vec4(5.0f));
-    textNode->style("textHeight", 16)
-        ->style("margin", std::array<OMDemiurgeSize, 4>{5_px, 10_px, 5_px, 5_px});
+    textNode->style("textHeight", 16)->style("margin", std::array<OMDemiurgeSize, 4>{5_px, 10_px, 5_px, 5_px});
 
     this->mountDirect(bkgNode, "background");
     this->mountDirect(textNode, "text");
@@ -48,8 +47,7 @@ void OMDemiurgeButton::update()
 
     const glm::vec4 background = backgroundColor.get();
     const glm::vec3 backgroundRgb = glm::mix(glm::vec3(background), glm::vec3(0.30f), disabledValue * 0.75f);
-    const float alpha =
-        std::clamp(background.a * opacity.get() * (1.0f - disabledValue * 0.5f), 0.0f, 1.0f);
+    const float alpha = std::clamp(background.a * opacity.get() * (1.0f - disabledValue * 0.5f), 0.0f, 1.0f);
 
     glm::vec4 text = textColor.get();
     glm::vec3 textRgb = glm::mix(glm::vec3(text), glm::vec3(0.55f), disabledValue * 0.75f);

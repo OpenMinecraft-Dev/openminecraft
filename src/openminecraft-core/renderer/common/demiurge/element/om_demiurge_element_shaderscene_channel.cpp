@@ -28,7 +28,6 @@ void OMDemiurgeShaderSceneChannel::init(const std::string &uniformTag, const std
     renderer->registerBuffer(timeBuffer.getTag(), Uniform, sizeof(float));
     timeBuffer->updateData(std::array<float, 1>{0.0f}.data());
 
-
     startedAt = std::chrono::steady_clock::now();
 }
 
@@ -82,7 +81,10 @@ auto OMDemiurgeShaderSceneChannel::submitTask(OMRendererTask *task, uint32_t lay
         }
 
         applyClipScissor(task, i);
-        task->pipeline(pipeline)->resourceSet(resourceSets[i])->vertexBufferInstanced({instanceBuffer}, i)->drawInstance(6, 1, i);
+        task->pipeline(pipeline)
+            ->resourceSet(resourceSets[i])
+            ->vertexBufferInstanced({instanceBuffer}, i)
+            ->drawInstance(6, 1, i);
     }
 }
 

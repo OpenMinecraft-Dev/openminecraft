@@ -243,8 +243,9 @@ class OMRendererSegBuf
         uint32_t end;
     };
 
-    // Adjacent/overlapping dirty ranges merge when the gap is <= 16KB, avoiding too many per-block upload calls without treating
-    // the whole buffer as dirty (the old [dirtyMin, dirtyMax] scheme degraded to full uploads when chunks were scattered).
+    // Adjacent/overlapping dirty ranges merge when the gap is <= 16KB, avoiding too many per-block upload calls without
+    // treating the whole buffer as dirty (the old [dirtyMin, dirtyMax] scheme degraded to full uploads when chunks were
+    // scattered).
     static constexpr uint32_t dirtyMergeGap = 16 * 1024;
     std::vector<OMRendererSegBufDirtyRange> dirtyRanges;
     uint32_t frameCounter = 0;

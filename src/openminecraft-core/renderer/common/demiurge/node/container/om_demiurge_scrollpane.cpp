@@ -399,8 +399,7 @@ void OMDemiurgeScrollPane::update()
     // Only react to a meaningful shrink. The content viewport can jitter by a
     // pixel while scrollbars are laid out, and clamping on every jitter would
     // cancel wheel/bounce/inertia animations.
-    const bool contentShrunk =
-        maxScrollX + 1.5f < lastMaxScrollX || maxScrollY + 1.5f < lastMaxScrollY;
+    const bool contentShrunk = maxScrollX + 1.5f < lastMaxScrollX || maxScrollY + 1.5f < lastMaxScrollY;
 
     lastMaxScrollX = maxScrollX;
     lastMaxScrollY = maxScrollY;
@@ -445,8 +444,7 @@ void OMDemiurgeScrollPane::update()
     viewportClip->style("width", OMDemiurgeSize::pixels(viewWidth))
         ->style("height", OMDemiurgeSize::pixels(viewHeight));
     contentHost->setClipNode(viewportClip);
-    contentHost->style("offsetX", OMDemiurgeSize::pixels(-visualX))
-        ->style("offsetY", OMDemiurgeSize::pixels(-visualY));
+    contentHost->style("offsetX", OMDemiurgeSize::pixels(-visualX))->style("offsetY", OMDemiurgeSize::pixels(-visualY));
 
     verticalBar->setVisible(verticalVisible);
     horizontalBar->setVisible(horizontalVisible);
@@ -621,8 +619,8 @@ auto OMDemiurgeScrollPane::processMouseUp(float x, float y, uint8_t button) -> O
 
     if (wasDragging)
     {
-        const bool outside = scrollX.get() < 0.0f || scrollX.get() > maxScrollX || scrollY.get() < 0.0f ||
-                             scrollY.get() > maxScrollY;
+        const bool outside =
+            scrollX.get() < 0.0f || scrollX.get() > maxScrollX || scrollY.get() < 0.0f || scrollY.get() > maxScrollY;
 
         if (outside)
         {

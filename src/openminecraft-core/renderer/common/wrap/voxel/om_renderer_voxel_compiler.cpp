@@ -181,9 +181,9 @@ auto OMVoxelCompiler::isFullBlock(int modelId) -> bool
     return handler->queryFullBlock(modelId);
 }
 
-auto OMVoxelCompiler::fluidIsFullCell(
-    const world::OMChunk<16> &chunk,
-    std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor, glm::ivec3 v, int modelId) -> bool
+auto OMVoxelCompiler::fluidIsFullCell(const world::OMChunk<16> &chunk,
+                                      std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor,
+                                      glm::ivec3 v, int modelId) -> bool
 {
     if (checkExistFluidSame(chunk, externalAccessor, v, PosY, modelId))
     {
@@ -199,7 +199,8 @@ auto OMVoxelCompiler::fluidIsFullCell(
     auto above = v;
     above.y += 1;
     const uint32_t aboveState = queryBlockState(chunk, externalAccessor, above.x, above.y, above.z);
-    const int aboveModel = modelFetcher(aboveState, chunk.chunkx, chunk.chunky, chunk.chunkz, above.x, above.y, above.z);
+    const int aboveModel =
+        modelFetcher(aboveState, chunk.chunkx, chunk.chunky, chunk.chunkz, above.x, above.y, above.z);
 
     if (!isFullBlock(aboveModel))
     {
@@ -229,8 +230,8 @@ auto OMVoxelCompiler::fluidIsFullCell(
 
         const bool falling = handler->queryFluidFalling(model);
         const bool fluidAbove = checkExistFluidSame(chunk, externalAccessor, p, PosY, model);
-        const bool covered = falling || fluidAbove ||
-                             (! ( (handler->queryFluidLevel(model) & 0b111) != 0 ) && isFullBlock(naModel));
+        const bool covered =
+            falling || fluidAbove || (!((handler->queryFluidLevel(model) & 0b111) != 0) && isFullBlock(naModel));
 
         if (!covered)
         {
@@ -679,28 +680,29 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                         }
                         else
                         {
-                        int selfA = 0, selfB = 0, nA = 0, nB = 0;
+                            int selfA = 0, selfB = 0, nA = 0, nB = 0;
 
-                        switch (f)
-                        {
-                        case PosX:
-                            selfA = 2, selfB = 3, nA = 0, nB = 1;
-                            break;
-                        case NegX:
-                            selfA = 0, selfB = 1, nA = 2, nB = 3;
-                            break;
-                        case PosZ:
-                            selfA = 1, selfB = 3, nA = 0, nB = 2;
-                            break;
-                        default: // NegZ
-                            selfA = 0, selfB = 2, nA = 1, nB = 3;
-                            break;
-                        }
+                            switch (f)
+                            {
+                            case PosX:
+                                selfA = 2, selfB = 3, nA = 0, nB = 1;
+                                break;
+                            case NegX:
+                                selfA = 0, selfB = 1, nA = 2, nB = 3;
+                                break;
+                            case PosZ:
+                                selfA = 1, selfB = 3, nA = 0, nB = 2;
+                                break;
+                            default: // NegZ
+                                selfA = 0, selfB = 2, nA = 1, nB = 3;
+                                break;
+                            }
 
-                        const float selfH = std::max(cornerHeights[selfA], cornerHeights[selfB]);
-                        const float neighbourH = std::max(cornerHeightOf(np, nmdl, nA), cornerHeightOf(np, nmdl, nB));
+                            const float selfH = std::max(cornerHeights[selfA], cornerHeights[selfB]);
+                            const float neighbourH =
+                                std::max(cornerHeightOf(np, nmdl, nA), cornerHeightOf(np, nmdl, nB));
 
-                        culled = neighbourH >= selfH - 1e-3f;
+                            culled = neighbourH >= selfH - 1e-3f;
                         }
                     }
                 }
@@ -726,8 +728,7 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                         }
                         else if (f == PosY)
                         {
-                            const bool aboveIsAir =
-                                !handler->queryFluid(nmdl) && handler->queryNumParts(nmdl) == 0;
+                            const bool aboveIsAir = !handler->queryFluid(nmdl) && handler->queryNumParts(nmdl) == 0;
 
                             if (aboveIsAir)
                             {

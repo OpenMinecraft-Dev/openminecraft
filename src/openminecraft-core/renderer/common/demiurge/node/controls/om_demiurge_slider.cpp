@@ -14,9 +14,8 @@ static constexpr float TrackHeight = 4.0f;
 static constexpr float ThumbSize = 12.0f;
 
 OMDemiurgeSlider::OMDemiurgeSlider()
-    : hoverAmount(0.0f), pressAmount(0.0f), disabledAmount(0.0f),
-      trackColor(glm::vec4(0.22f, 0.22f, 0.26f, 0.9f)), fillColor(glm::vec4(0.0f, 0.55f, 0.75f, 1.0f)),
-      thumbColor(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f))
+    : hoverAmount(0.0f), pressAmount(0.0f), disabledAmount(0.0f), trackColor(glm::vec4(0.22f, 0.22f, 0.26f, 0.9f)),
+      fillColor(glm::vec4(0.0f, 0.55f, 0.75f, 1.0f)), thumbColor(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f))
 {
     setFocusable(true);
 

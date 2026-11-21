@@ -8,8 +8,7 @@ using namespace openminecraft::renderer::common::animation;
 
 namespace openminecraft::renderer::common::demiurge::node::controls
 {
-OMDemiurgeDivider::OMDemiurgeDivider(bool vertical)
-    : lineColor(glm::vec4(1.0f, 1.0f, 1.0f, 0.15f)), vertical(vertical)
+OMDemiurgeDivider::OMDemiurgeDivider(bool vertical) : lineColor(glm::vec4(1.0f, 1.0f, 1.0f, 0.15f)), vertical(vertical)
 {
     if (vertical)
     {

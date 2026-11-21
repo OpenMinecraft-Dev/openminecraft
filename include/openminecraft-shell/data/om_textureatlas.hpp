@@ -325,8 +325,7 @@ class OMTextureAtlas
                 continue;
             }
 
-            pendingWideUpdates.push_back(
-                {cache.frames[frame].data(), static_cast<uint64_t>(subtexWide[p.first])});
+            pendingWideUpdates.push_back({cache.frames[frame].data(), static_cast<uint64_t>(subtexWide[p.first])});
             cache.lastUploaded = frame;
         }
 

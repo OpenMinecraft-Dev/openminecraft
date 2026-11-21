@@ -32,9 +32,8 @@ class OMVoxelCompiler
     // True when this fluid cell is covered from above and all four horizontal
     // neighbors are themselves covered fluid cells. Used to distinguish an
     // interior ice-covered water column from a spring whose neighbors flow.
-    auto fluidIsFullCell(const world::OMChunk<16> &,
-                         std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>, glm::ivec3, int modelId)
-        -> bool;
+    auto fluidIsFullCell(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>,
+                         glm::ivec3, int modelId) -> bool;
     auto existFluidSame(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>,
                         int x, int y, int z, int) -> bool;
     auto computeAO(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>, int x,

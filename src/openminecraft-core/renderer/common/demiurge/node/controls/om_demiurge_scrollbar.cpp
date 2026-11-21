@@ -215,8 +215,7 @@ void OMDemiurgeScrollBar::update()
     const float cornerRadius = std::min(std::max(radius.x, 0.0f), thickness * 0.5f);
     const glm::vec4 thumbRadius(cornerRadius);
 
-    trackNode->style("color", (int)stylesStorage.get<int>("trackColor", (int)0))
-        ->style("radius", radius);
+    trackNode->style("color", (int)stylesStorage.get<int>("trackColor", (int)0))->style("radius", radius);
     thumbNode->style("radius", thumbRadius)
         ->style("color", (int)(scrollable ? applyDisabled(stylesStorage.get<int>("color", (int)0x00d4ffff)) : 0));
 

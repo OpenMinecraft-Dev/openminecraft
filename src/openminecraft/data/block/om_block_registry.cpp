@@ -74,8 +74,7 @@ void registerBlocks()
                                                        ->setFluidType(FluidWater)
                                                        ->isTranslucent(true)
                                                        ->setColorSource(BiomeWater));
-    registerBlock(OMIdentifier("minecraft:lava"),
-                  std::make_shared<OMBlock>()->isSolid(false)->setFluidType(FluidLava));
+    registerBlock(OMIdentifier("minecraft:lava"), std::make_shared<OMBlock>()->isSolid(false)->setFluidType(FluidLava));
 
     registerBlock(OMIdentifier("minecraft:amethyst_block"), std::make_shared<OMBlock>()->isSolid(true));
     registerBlock(OMIdentifier("minecraft:amethyst_cluster"), std::make_shared<OMBlock>()->isSolid(false));

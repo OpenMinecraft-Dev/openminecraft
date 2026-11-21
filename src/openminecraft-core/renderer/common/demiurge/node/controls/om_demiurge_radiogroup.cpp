@@ -93,8 +93,8 @@ void OMDemiurgeRadioGroup::click(const std::shared_ptr<OMDemiurgeRadioBox> &box)
 void OMDemiurgeRadioGroup::setDirection(OMDemiurgeDirection direction)
 {
     stylesStorage.put("flexDirection", direction);
-    stylesStorage.put("alignItems", direction == OMDemiurgeDirection::Row ? OMDemiurgeAlign::Center
-                                                                          : OMDemiurgeAlign::FlexStart);
+    stylesStorage.put("alignItems",
+                      direction == OMDemiurgeDirection::Row ? OMDemiurgeAlign::Center : OMDemiurgeAlign::FlexStart);
 }
 
 void OMDemiurgeRadioGroup::setGap(float pixels)

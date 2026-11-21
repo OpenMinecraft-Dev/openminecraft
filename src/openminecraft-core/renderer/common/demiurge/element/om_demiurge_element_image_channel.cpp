@@ -27,7 +27,6 @@ void OMDemiurgeImageChannel::init(const std::string &uniformTag, const std::stri
     frgShader = renderer->shaderManager.preprocess("demiurge/image.frag.glsl", Fragment, GLSLSource, format);
 
     resetInstanceBuffer(8);
-
 }
 
 auto OMDemiurgeImageChannel::submitTask(OMRendererTask *task, uint32_t layer) -> void
@@ -67,7 +66,10 @@ auto OMDemiurgeImageChannel::submitTask(OMRendererTask *task, uint32_t layer) ->
             }
 
             applyClipScissor(task, i);
-            task->pipeline(pipelines[i])->resourceSet(resourceSets[i])->vertexBufferInstanced({instanceBuffer}, i)->drawInstance(6, 1, i);
+            task->pipeline(pipelines[i])
+                ->resourceSet(resourceSets[i])
+                ->vertexBufferInstanced({instanceBuffer}, i)
+                ->drawInstance(6, 1, i);
         }
     }
 }

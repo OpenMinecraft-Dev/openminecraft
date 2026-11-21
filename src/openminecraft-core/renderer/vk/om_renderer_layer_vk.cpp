@@ -457,9 +457,8 @@ void OMRendererVk::render(OMTicker &t)
         auto *frame = frameContexts[thisFrame].get();
 
         t.push("vk_lifecycle");
-        lifeCycle->collect([this](uint32_t frameIndex, uint64_t frameSerial) {
-            return isFrameComplete(frameIndex, frameSerial);
-        });
+        lifeCycle->collect(
+            [this](uint32_t frameIndex, uint64_t frameSerial) { return isFrameComplete(frameIndex, frameSerial); });
         lifeCycle->setFrameTag(thisFrame, frame->nextFrameSerial());
         t.pop();
 
@@ -719,14 +718,14 @@ auto OMRendererVk::deviceSelection(std::function<int(std::vector<std::string>)> 
         std::vector<std::string> d;
         logger->info(translate("openminecraft.renderer.vk.devcount", phyDev.size()));
         int id = 0;
-        
-	for (auto pdev : phyDev)
-	{
-	    auto n = pdev.getProperties().deviceName;
-	    d.emplace_back(n.data());
-	}
-	
-	auto ids = dev(d);
+
+        for (auto pdev : phyDev)
+        {
+            auto n = pdev.getProperties().deviceName;
+            d.emplace_back(n.data());
+        }
+
+        auto ids = dev(d);
         PhysicalDevice devtarget;
         for (auto pdev : phyDev)
         {
@@ -1120,22 +1119,21 @@ auto OMRendererVk::deviceInfos() -> std::string
                            limits.maxSamplerAllocationCount, limits.maxComputeWorkGroupInvocations,
                            limits.maxComputeSharedMemorySize, static_cast<double>(limits.maxSamplerAnisotropy),
                            static_cast<double>(limits.timestampPeriod));
-        out += fmt::format("features: samplerAnisotropy={}, tessellation={}, geometry={}, multiDrawIndirect={}, "
-                           "drawIndirectFirstInstance={}, independentBlend={}, depthClamp={}, depthBiasClamp={}, "
-                           "fillModeNonSolid={}, wideLines={}, largePoints={}, shaderInt64={}, shaderFloat64={}, "
-                           "vertexPipelineStoresAndAtomics={}, fragmentStoresAndAtomics={}, textureCompressionBC={}, "
-                           "shaderStorageImageWriteWithoutFormat={}\n",
-                           static_cast<bool>(features.samplerAnisotropy), static_cast<bool>(features.tessellationShader),
-                           static_cast<bool>(features.geometryShader), static_cast<bool>(features.multiDrawIndirect),
-                           static_cast<bool>(features.drawIndirectFirstInstance),
-                           static_cast<bool>(features.independentBlend), static_cast<bool>(features.depthClamp),
-                           static_cast<bool>(features.depthBiasClamp), static_cast<bool>(features.fillModeNonSolid),
-                           static_cast<bool>(features.wideLines), static_cast<bool>(features.largePoints),
-                           static_cast<bool>(features.shaderInt64), static_cast<bool>(features.shaderFloat64),
-                           static_cast<bool>(features.vertexPipelineStoresAndAtomics),
-                           static_cast<bool>(features.fragmentStoresAndAtomics),
-                           static_cast<bool>(features.textureCompressionBC),
-                           static_cast<bool>(features.shaderStorageImageWriteWithoutFormat));
+        out += fmt::format(
+            "features: samplerAnisotropy={}, tessellation={}, geometry={}, multiDrawIndirect={}, "
+            "drawIndirectFirstInstance={}, independentBlend={}, depthClamp={}, depthBiasClamp={}, "
+            "fillModeNonSolid={}, wideLines={}, largePoints={}, shaderInt64={}, shaderFloat64={}, "
+            "vertexPipelineStoresAndAtomics={}, fragmentStoresAndAtomics={}, textureCompressionBC={}, "
+            "shaderStorageImageWriteWithoutFormat={}\n",
+            static_cast<bool>(features.samplerAnisotropy), static_cast<bool>(features.tessellationShader),
+            static_cast<bool>(features.geometryShader), static_cast<bool>(features.multiDrawIndirect),
+            static_cast<bool>(features.drawIndirectFirstInstance), static_cast<bool>(features.independentBlend),
+            static_cast<bool>(features.depthClamp), static_cast<bool>(features.depthBiasClamp),
+            static_cast<bool>(features.fillModeNonSolid), static_cast<bool>(features.wideLines),
+            static_cast<bool>(features.largePoints), static_cast<bool>(features.shaderInt64),
+            static_cast<bool>(features.shaderFloat64), static_cast<bool>(features.vertexPipelineStoresAndAtomics),
+            static_cast<bool>(features.fragmentStoresAndAtomics), static_cast<bool>(features.textureCompressionBC),
+            static_cast<bool>(features.shaderStorageImageWriteWithoutFormat));
 
         const auto queueFamilies = physicalDevice.getQueueFamilyProperties();
         out += fmt::format("queue families ({}):\n", queueFamilies.size());
@@ -1152,7 +1150,8 @@ auto OMRendererVk::deviceInfos() -> std::string
                 presentSupport = false;
             }
 
-            out += fmt::format("  family {}: queues={} flags=0x{:x} present={} timestampValidBits={} imageTransferGranularity={}x{}x{}\n",
+            out += fmt::format("  family {}: queues={} flags=0x{:x} present={} timestampValidBits={} "
+                               "imageTransferGranularity={}x{}x{}\n",
                                i, qf.queueCount, static_cast<uint32_t>(qf.queueFlags), presentSupport,
                                qf.timestampValidBits, qf.minImageTransferGranularity.width,
                                qf.minImageTransferGranularity.height, qf.minImageTransferGranularity.depth);
@@ -1169,10 +1168,10 @@ auto OMRendererVk::deviceInfos() -> std::string
         for (uint32_t i = 0; i < memory.memoryHeapCount; ++i)
         {
             const auto &heap = memory.memoryHeaps[i];
-            const bool local = (heap.flags & ::vk::MemoryHeapFlagBits::eDeviceLocal) ==
-                               ::vk::MemoryHeapFlagBits::eDeviceLocal;
-            out += fmt::format("memory heap {}: {:.1f} MB{}\n", i,
-                               static_cast<double>(heap.size) / (1024.0 * 1024.0), local ? " (device local)" : "");
+            const bool local =
+                (heap.flags & ::vk::MemoryHeapFlagBits::eDeviceLocal) == ::vk::MemoryHeapFlagBits::eDeviceLocal;
+            out += fmt::format("memory heap {}: {:.1f} MB{}\n", i, static_cast<double>(heap.size) / (1024.0 * 1024.0),
+                               local ? " (device local)" : "");
         }
 
         const auto extensions = physicalDevice.enumerateDeviceExtensionProperties();

@@ -29,7 +29,7 @@ namespace openminecraft::renderer::common
 {
 class OMRendererGpuEvent;
 class OMRendererGpuCpuBridge;
-}
+} // namespace openminecraft::renderer::common
 
 namespace openminecraft::renderer
 {

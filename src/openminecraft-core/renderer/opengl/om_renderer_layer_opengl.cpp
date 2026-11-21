@@ -113,8 +113,8 @@ auto OMRendererOpenGL::deviceInfos() -> std::string
     out += fmt::format("OpenGL shading language: {}\n", glString(GL_SHADING_LANGUAGE_VERSION));
     out += fmt::format("Window pixel format: {} ({})\n", SDL_GetPixelFormatName(pixelFormat),
                        static_cast<int>(pixelFormat));
-    out += fmt::format("Surface format: RGBA={}{}{}{}, depth={}, stencil={}\n", red, green, blue, alpha, depth,
-                       stencil);
+    out +=
+        fmt::format("Surface format: RGBA={}{}{}{}, depth={}, stencil={}\n", red, green, blue, alpha, depth, stencil);
     out += fmt::format("Present mode equivalents: doubleBuffer={}, swapInterval={}, MSAA buffers={} samples={} "
                        "(GL={}/{}), sRGB={}\n",
                        doubleBuffer, swapInterval, multisampleBuffers, multisampleSamples, glSampleBuffers, glSamples,
@@ -332,9 +332,8 @@ void OMRendererOpenGL::render(util::OMTicker &t)
         t.pop();
     }
     t.push("gl_lifecycle");
-    lifeCycle->collect([this](uint32_t frameIndex, uint64_t frameSerial) {
-        return isFrameComplete(frameIndex, frameSerial);
-    });
+    lifeCycle->collect(
+        [this](uint32_t frameIndex, uint64_t frameSerial) { return isFrameComplete(frameIndex, frameSerial); });
     lifeCycle->setFrameTag(0, 0);
     t.pop();
 

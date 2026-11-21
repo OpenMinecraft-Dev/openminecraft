@@ -58,8 +58,7 @@ auto OMRendererFrameContextVk::beginFrame() -> bool
         }
         if (result != Result::eSuccess && result != Result::eSuboptimalKHR)
         {
-            throw OMRendererException(
-                VkErrorTranslate(SystemError(result), "openminecraft.renderer.vk.err.nextimage"));
+            throw OMRendererException(VkErrorTranslate(SystemError(result), "openminecraft.renderer.vk.err.nextimage"));
         }
 
         currentImage = image;
@@ -113,8 +112,8 @@ void OMRendererFrameContextVk::submit(const std::vector<CommandBuffer> &commands
 
     SubmitInfo info(1, &waitSemaphore, &stages, static_cast<uint32_t>(commands.size()), commands.data(), 1,
                     &signalSemaphore);
-    renderer->queues.first.submit(
-        info, lastLayer ? reinterpret_cast<OMRendererGpuCpuBridgeVk *>(syncFence)->fence() : nullptr);
+    renderer->queues.first.submit(info, lastLayer ? reinterpret_cast<OMRendererGpuCpuBridgeVk *>(syncFence)->fence()
+                                                  : nullptr);
 }
 
 auto OMRendererFrameContextVk::present() -> bool

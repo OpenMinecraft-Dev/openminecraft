@@ -185,8 +185,7 @@ class OMRendererTask : public OMRendererObject
     // firstInstance but assumes firstIndex == 0 and vertexOffset == 0 (the
     // voxel index buffer layout).
     inline auto drawIndexedIndirectN(OMRendererBuffer *indirect, uint64_t begin, uint64_t count,
-                                     const std::vector<OMRendererDrawIndexedIndirect> &fallback)
-        -> OMRendererTask *
+                                     const std::vector<OMRendererDrawIndexedIndirect> &fallback) -> OMRendererTask *
     {
         if (isSupportIndirect())
         {

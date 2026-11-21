@@ -190,8 +190,8 @@ void OMBlockStateResolver::buildModel(OMIdentifier ident, OMBlockState state)
         // 26.3: bit3 of level is the falling flag; the low 3 bits are the fluid level
         const int rawLevel = st.properties.count("level") ? std::stoi(st.properties["level"]) : 0;
 
-        states[ident][st].emplace_back(compiler.composeFluidModel(
-            ident, blk->fluidType, blk->translucent, rawLevel >= 8, static_cast<uint8_t>(rawLevel & 7)));
+        states[ident][st].emplace_back(compiler.composeFluidModel(ident, blk->fluidType, blk->translucent,
+                                                                  rawLevel >= 8, static_cast<uint8_t>(rawLevel & 7)));
         return;
     }
 
