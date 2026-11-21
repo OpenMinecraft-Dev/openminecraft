@@ -1,3 +1,4 @@
+#include "openminecraft/compiler/om_compiler_utils.hpp"
 #define NOMINMAX
 #include <SDL3/SDL_error.h>
 
@@ -65,6 +66,54 @@ using namespace openminecraft::renderer;
 
 namespace openminecraft::shell
 {
+struct MyPreprocessingHooks : boost::wave::context_policies::default_preprocessing_hooks
+{
+    MyPreprocessingHooks() = default;
+
+    template <typename ContextT>
+    auto locate_include_file(ContextT &ctx, std::string &file_path, bool is_system, char const *current_name,
+                             std::string &dir_path, std::string &native_name) -> bool
+    {
+        if (vfs::fsfetch("/bootassets/openminecraft-renderer/shaders/" + file_path))
+        {
+            native_name = file_path;
+            dir_path = "";
+            return true;
+        }
+
+        return false;
+    }
+};
+
+std::vector<std::string> storage;
+struct memory_input_policy
+{
+    template <typename IterContext> class inner
+    {
+      public:
+        template <typename Position>
+        static void init_iterators(IterContext &iter_ctx, Position const &act_pos,
+                                   boost::wave::language_support language)
+        {
+            using iterator_type = typename IterContext::iterator_type;
+
+            const std::string &id = std::string(iter_ctx.filename.c_str());
+            auto pth = "/bootassets/openminecraft-renderer/shaders/" + id;
+            auto istr = vfs::fsfetch(pth);
+
+            auto cnt = compiler::readOnce(istr.get());
+            std::string data(cnt.begin(), cnt.end());
+
+            storage.emplace_back(data);
+
+            auto &content = storage.back();
+            iter_ctx.first =
+                typename IterContext::iterator_type(content.begin(), content.end(), Position(pth.c_str()), language);
+            iter_ctx.last = typename IterContext::iterator_type();
+        }
+    };
+};
+
 OMApplication::OMApplication(std::vector<std::string> args) : logger("OMApplication", this), args(args)
 {
 }
@@ -178,15 +227,11 @@ auto OMApplication::entry() -> int
             using token_type = boost::wave::cpplexer::lex_token<>;
             using lex_iterator_type = boost::wave::cpplexer::lex_iterator<token_type>;
 
-            using context_type = boost::wave::context<std::string::iterator, lex_iterator_type>;
+            using context_type = boost::wave::context<std::string::iterator, lex_iterator_type, memory_input_policy,
+                                                      MyPreprocessingHooks>;
 
-            context_type ctx(input.begin(), input.end(), "input.cpp");
+            context_type ctx(input.begin(), input.end(), args[2].c_str(), MyPreprocessingHooks());
 
-            // 4. （可选）配置 include 路径、预定义宏等
-            // ctx.add_include_path("...");
-            // ctx.add_macro_definition(...);
-
-            ctx.add_include_path("bootassets/openminecraft-renderer/shaders");
             ctx.add_macro_definition("GSL_BACKEND_VULKAN", true);
 
             try
@@ -202,7 +247,6 @@ auto OMApplication::entry() -> int
             }
             catch (boost::wave::cpp_exception const &e)
             {
-                // 核心诊断信息
                 std::cerr << "Wave Error: " << e.description() << std::endl;
                 std::cerr << "  File: " << e.file_name() << std::endl;
                 std::cerr << "  Line: " << e.line_no() << ", Column: " << e.column_no() << std::endl;

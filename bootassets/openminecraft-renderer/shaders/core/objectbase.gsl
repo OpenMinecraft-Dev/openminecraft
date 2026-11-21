@@ -5,7 +5,7 @@ struct ObjectInfo {
     mat4 model;
 };
 
-[[vertex_struct]] struct ObjectVertex;
+[vertex_struct] struct ObjectVertex;
 
 [[location(0), transfer]] vec2 objTexCoord;
 [[location(1), transfer]] vec3 objNormal;
