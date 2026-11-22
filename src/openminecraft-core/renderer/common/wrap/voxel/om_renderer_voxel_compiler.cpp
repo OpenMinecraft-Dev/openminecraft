@@ -181,67 +181,6 @@ auto OMVoxelCompiler::isFullBlock(int modelId) -> bool
     return handler->queryFullBlock(modelId);
 }
 
-auto OMVoxelCompiler::fluidIsFullCell(const world::OMChunk<16> &chunk,
-                                      std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor,
-                                      glm::ivec3 v, int modelId) -> bool
-{
-    if (checkExistFluidSame(chunk, externalAccessor, v, PosY, modelId))
-    {
-        return true;
-    }
-
-    // A flowing cell keeps a sloped/lower surface even when covered.
-    if (!handler->queryFluidFalling(modelId) && (handler->queryFluidLevel(modelId) & 0b111) != 0)
-    {
-        return false;
-    }
-
-    auto above = v;
-    above.y += 1;
-    const uint32_t aboveState = queryBlockState(chunk, externalAccessor, above.x, above.y, above.z);
-    const int aboveModel =
-        modelFetcher(aboveState, chunk.chunkx, chunk.chunky, chunk.chunkz, above.x, above.y, above.z);
-
-    if (!isFullBlock(aboveModel))
-    {
-        return false;
-    }
-
-    static constexpr glm::ivec3 dirs[4] = {{-1, 0, 0}, {1, 0, 0}, {0, 0, -1}, {0, 0, 1}};
-
-    for (const auto &d : dirs)
-    {
-        const glm::ivec3 p = v + d;
-        const uint32_t state = queryBlockState(chunk, externalAccessor, p.x, p.y, p.z);
-        const int model = modelFetcher(state, chunk.chunkx, chunk.chunky, chunk.chunkz, p.x, p.y, p.z);
-
-        if (!handler->queryFluid(model) || !handler->queryFluidSame(model, modelId))
-        {
-            // An air/solid neighbor is an exposed edge or a hole; the water
-            // surface must slope toward it instead of staying a full plateau.
-            return false;
-        }
-
-        auto nAbove = p;
-        nAbove.y += 1;
-        const uint32_t naState = queryBlockState(chunk, externalAccessor, nAbove.x, nAbove.y, nAbove.z);
-        const int naModel =
-            modelFetcher(naState, chunk.chunkx, chunk.chunky, chunk.chunkz, nAbove.x, nAbove.y, nAbove.z);
-
-        const bool falling = handler->queryFluidFalling(model);
-        const bool fluidAbove = checkExistFluidSame(chunk, externalAccessor, p, PosY, model);
-        const bool covered =
-            falling || fluidAbove || (!((handler->queryFluidLevel(model) & 0b111) != 0) && isFullBlock(naModel));
-
-        if (!covered)
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-
 auto OMVoxelCompiler::existFullBlock(const world::OMChunk<16> &chunk,
                                      std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor,
                                      int x, int y, int z) -> bool
@@ -249,27 +188,6 @@ auto OMVoxelCompiler::existFullBlock(const world::OMChunk<16> &chunk,
     const uint32_t state = queryBlockState(chunk, externalAccessor, x, y, z);
     const int model = modelFetcher(state, chunk.chunkx, chunk.chunky, chunk.chunkz, x, y, z);
     return isFullBlock(model);
-}
-
-auto OMVoxelCompiler::existFluidSame(const world::OMChunk<16> &chunk,
-                                     std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor,
-                                     int x, int y, int z, int modelId) -> bool
-{
-    bool exist;
-    if (x < 0 || y < 0 || z < 0 || x > 15 || y > 15 || z > 15)
-    {
-        exist = handler->queryFluid(
-            modelFetcher(externalAccessor(glm::ivec3(x, y, z), chunk.chunkx, chunk.chunky, chunk.chunkz), chunk.chunkx,
-                         chunk.chunky, chunk.chunkz, x, y, z));
-    }
-    else
-    {
-        exist =
-            handler->queryFluid(modelFetcher(chunk.fetch(x, y, z), chunk.chunkx, chunk.chunky, chunk.chunkz, x, y, z));
-    }
-    return exist && handler->queryFluidSame(modelFetcher(queryBlockState(chunk, externalAccessor, x, y, z),
-                                                         chunk.chunkx, chunk.chunky, chunk.chunkz, x, y, z),
-                                            modelId);
 }
 
 auto OMVoxelCompiler::queryBlockState(const world::OMChunk<16> &chunk,
@@ -416,30 +334,6 @@ auto OMVoxelCompiler::checkExistSoild(const world::OMChunk<16> &chunk,
     }
 }
 
-auto OMVoxelCompiler::checkExistFluidSame(
-    const world::OMChunk<16> &chunk, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor,
-    glm::ivec3 v, OMVoxelFacing f, int state) -> bool
-{
-    switch (f)
-    {
-    default:
-    case None:
-        return false;
-    case NegX:
-        return existFluidSame(chunk, externalAccessor, v.x - 1, v.y, v.z, state);
-    case NegY:
-        return existFluidSame(chunk, externalAccessor, v.x, v.y - 1, v.z, state);
-    case NegZ:
-        return existFluidSame(chunk, externalAccessor, v.x, v.y, v.z - 1, state);
-    case PosX:
-        return existFluidSame(chunk, externalAccessor, v.x + 1, v.y, v.z, state);
-    case PosY:
-        return existFluidSame(chunk, externalAccessor, v.x, v.y + 1, v.z, state);
-    case PosZ:
-        return existFluidSame(chunk, externalAccessor, v.x, v.y, v.z + 1, state);
-    }
-}
-
 auto OMVoxelCompiler::checkSkip(const world::OMChunk<16> &chunk,
                                 std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor,
                                 glm::ivec3 v, OMVoxelFacing f, uint32_t id) -> bool
@@ -470,75 +364,6 @@ auto OMVoxelCompiler::checkSkip(const world::OMChunk<16> &chunk,
         break;
     }
     return handler->querySkipsRendering(id, target, f);
-}
-
-auto OMVoxelCompiler::checkAvgFluid(const world::OMChunk<16> &chunk,
-                                    std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor,
-                                    glm::ivec3 v, int idx, int current) -> float
-{
-    uint32_t selfModel = modelFetcher(queryBlockState(chunk, externalAccessor, v.x, v.y, v.z), chunk.chunkx,
-                                      chunk.chunky, chunk.chunkz, v.x, v.y, v.z);
-    if (!handler->queryFluid(selfModel))
-    {
-        return 0.0f;
-    }
-
-    // If the block above is the same fluid, this cell is not a surface; use a full cell (9);
-    // otherwise use vanilla's 8 - level (source water = 8, i.e. 8/9 of a block).
-    const bool selfHasFluidAbove = checkExistFluidSame(chunk, externalAccessor, v, PosY, selfModel);
-
-    // A full block above only fills the cell when the surrounding water is
-    // also a covered column. A spring/edge with flowing neighbors stays lower.
-    const bool selfIsFullCell = fluidIsFullCell(chunk, externalAccessor, v, selfModel);
-
-    float tot = (selfHasFluidAbove || selfIsFullCell)
-                    ? 9.0f
-                    : (handler->queryFluidFalling(selfModel) ? 9.0f : (8.0f - current));
-    int lev = 1;
-
-    std::array<glm::ivec3, 3> nPos;
-    switch (idx)
-    {
-    case 0:
-        nPos = {{{v.x - 1, v.y, v.z - 1}, {v.x - 1, v.y, v.z}, {v.x, v.y, v.z - 1}}};
-        break;
-    case 2:
-        nPos = {{{v.x + 1, v.y, v.z - 1}, {v.x + 1, v.y, v.z}, {v.x, v.y, v.z - 1}}};
-        break;
-    case 1:
-        nPos = {{{v.x - 1, v.y, v.z + 1}, {v.x - 1, v.y, v.z}, {v.x, v.y, v.z + 1}}};
-        break;
-    case 3:
-        nPos = {{{v.x + 1, v.y, v.z + 1}, {v.x + 1, v.y, v.z}, {v.x, v.y, v.z + 1}}};
-        break;
-    default:
-        return 227.0f * (tot / 8.0f);
-    }
-
-    for (const auto &p : nPos)
-    {
-        uint32_t ns = modelFetcher(queryBlockState(chunk, externalAccessor, p.x, p.y, p.z), chunk.chunkx, chunk.chunky,
-                                   chunk.chunkz, p.x, p.y, p.z);
-        if (!handler->queryFluid(ns))
-            continue;
-
-        if (!handler->queryFluidSame(selfModel, ns))
-        {
-            continue;
-        }
-
-        if (handler->queryFluidFalling(ns) || fluidIsFullCell(chunk, externalAccessor, p, ns))
-        {
-            tot += 9.0f;
-        }
-        else
-        {
-            tot += 8.0f - (handler->queryFluidLevel(ns) & 0b111);
-        }
-        lev++;
-    }
-
-    return 255.0f * (tot / lev) / 9.0f;
 }
 
 auto OMVoxelCompiler::computeVisibility(const world::OMChunk<16> &chunk,
@@ -597,183 +422,18 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
             const auto isFalling = handler->queryFluidFalling(bsid);
             const auto fluidLevel = (handler->queryFluidLevel(bsid) & 0b111);
 
-            // Same fluid above => this cell is not a surface and should fill the whole cell;
-            // only source water on the top surface layer is 8/9 of a block tall (vanilla behavior).
-            const bool fluidAbove = checkExistFluidSame(chunk, externalAccessor, v.first, PosY, bsid);
-            const bool fullBlock = isFalling || fluidAbove || fluidIsFullCell(chunk, externalAccessor, v.first, bsid);
+            auto useSec = fluidLevel != 0 || isFalling;
 
-            const std::array<float, 4> cornerHeights = {
-                fullBlock ? 255.0f : checkAvgFluid(chunk, externalAccessor, v.first, 0, fluidLevel),
-                fullBlock ? 255.0f : checkAvgFluid(chunk, externalAccessor, v.first, 1, fluidLevel),
-                fullBlock ? 255.0f : checkAvgFluid(chunk, externalAccessor, v.first, 2, fluidLevel),
-                fullBlock ? 255.0f : checkAvgFluid(chunk, externalAccessor, v.first, 3, fluidLevel),
-            };
+            const glm::u8vec3 fluidTint =
+                paletteProvider ? paletteProvider->fluidColor(chunk, v.first.x, v.first.y, v.first.z, v.second)
+                                : glm::u8vec3{255, 255, 255};
 
-            // Fluid height comparison uses corner heights (0..255) on both sides of the shared edge:
-            // corner heights average the same 4 neighboring cells, so both sides agree,
-            // leaving no gaps from 1/255 quantization and ensuring each face is drawn once.
-            auto cornerHeightOf = [&](const glm::ivec3 &p, int mdl, int idx) -> float {
-                if (handler->queryFluidFalling(mdl) || checkExistFluidSame(chunk, externalAccessor, p, PosY, mdl))
-                {
-                    return 255.0f;
-                }
-
-                const auto level = static_cast<uint8_t>(handler->queryFluidLevel(mdl) & 0b111);
-                return checkAvgFluid(chunk, externalAccessor, p, idx, level);
-            };
-
-            for (auto f : {NegX, NegY, NegZ, PosX, PosY, PosZ})
-            {
-                bool culled = false;
-
-                if (f == NegX || f == PosX || f == NegZ || f == PosZ)
-                {
-                    // Side face: cannot be culled when the neighbor is the same fluid with a lower surface,
-                    // otherwise waterfall/step flows show gaps on their sides
-                    glm::ivec3 np = v.first;
-
-                    switch (f)
-                    {
-                    case NegX:
-                        np.x -= 1;
-                        break;
-                    case PosX:
-                        np.x += 1;
-                        break;
-                    case NegZ:
-                        np.z -= 1;
-                        break;
-                    case PosZ:
-                        np.z += 1;
-                        break;
-                    default:
-                        break;
-                    }
-
-                    const uint32_t nst = queryBlockState(chunk, externalAccessor, np.x, np.y, np.z);
-                    const int nmdl = modelFetcher(nst, chunk.chunkx, chunk.chunky, chunk.chunkz, np.x, np.y, np.z);
-
-                    if (isFullBlock(nmdl))
-                    {
-                        // The fluid side contacts a full cube. Its face is
-                        // hidden inside the block and must not be rendered,
-                        // matching vanilla fluid face culling. This also covers
-                        // translucent full blocks such as ice.
-                        culled = true;
-                    }
-                    else if (handler->queryFluid(nmdl) && handler->queryFluidSame(nmdl, bsid))
-                    {
-                        auto covered = [&](glm::ivec3 p) -> bool {
-                            auto above = p;
-                            above.y += 1;
-                            const uint32_t ast = queryBlockState(chunk, externalAccessor, above.x, above.y, above.z);
-                            const int amdl =
-                                modelFetcher(ast, chunk.chunkx, chunk.chunky, chunk.chunkz, above.x, above.y, above.z);
-                            return isFullBlock(amdl) || checkExistFluidSame(chunk, externalAccessor, p, PosY, bsid);
-                        };
-
-                        if (covered(v.first) && covered(np))
-                        {
-                            // Both water cells are under a full ceiling: their
-                            // shared side is an internal volume boundary.
-                            culled = true;
-                        }
-                        else
-                        {
-                            int selfA = 0, selfB = 0, nA = 0, nB = 0;
-
-                            switch (f)
-                            {
-                            case PosX:
-                                selfA = 2, selfB = 3, nA = 0, nB = 1;
-                                break;
-                            case NegX:
-                                selfA = 0, selfB = 1, nA = 2, nB = 3;
-                                break;
-                            case PosZ:
-                                selfA = 1, selfB = 3, nA = 0, nB = 2;
-                                break;
-                            default: // NegZ
-                                selfA = 0, selfB = 2, nA = 1, nB = 3;
-                                break;
-                            }
-
-                            const float selfH = std::max(cornerHeights[selfA], cornerHeights[selfB]);
-                            const float neighbourH =
-                                std::max(cornerHeightOf(np, nmdl, nA), cornerHeightOf(np, nmdl, nB));
-
-                            culled = neighbourH >= selfH - 1e-3f;
-                        }
-                    }
-                }
-                else
-                {
-                    culled = checkExistFluidSame(chunk, externalAccessor, v.first, f, bsid);
-
-                    if (!culled)
-                    {
-                        glm::ivec3 np = v.first;
-                        if (f == PosY)
-                            np.y += 1;
-                        else if (f == NegY)
-                            np.y -= 1;
-
-                        const uint32_t nst = queryBlockState(chunk, externalAccessor, np.x, np.y, np.z);
-                        const int nmdl = modelFetcher(nst, chunk.chunkx, chunk.chunky, chunk.chunkz, np.x, np.y, np.z);
-
-                        if (f == NegY)
-                        {
-                            // The bottom always touches the block below.
-                            culled = isFullBlock(nmdl);
-                        }
-                        else if (f == PosY)
-                        {
-                            const bool aboveIsAir = !handler->queryFluid(nmdl) && handler->queryNumParts(nmdl) == 0;
-
-                            if (aboveIsAir)
-                            {
-                                culled = false;
-                            }
-                            else if (handler->queryTranslucent(nmdl))
-                            {
-                                // Ice/glass/leaves let the surface show through.
-                                // Cull only when the water actually reaches the
-                                // block; otherwise keep the top to avoid a hole.
-                                culled = isFalling || fluidAbove ||
-                                         (cornerHeights[0] >= 254.0f && cornerHeights[1] >= 254.0f &&
-                                          cornerHeights[2] >= 254.0f && cornerHeights[3] >= 254.0f);
-                            }
-                            else
-                            {
-                                // Under any other block, cull only when the
-                                // surface reaches it. A sloped/flowing surface
-                                // under an overhang is still visible from the
-                                // side and must not leave a hole at the wall.
-                                culled = isFalling || fluidAbove ||
-                                         (cornerHeights[0] >= 254.0f && cornerHeights[1] >= 254.0f &&
-                                          cornerHeights[2] >= 254.0f && cornerHeights[3] >= 254.0f);
-                            }
-                        }
-                    }
-                }
-
-                if (!culled)
-                {
-                    auto useSec = fluidLevel != 0 || isFalling;
-
-                    const glm::u8vec3 fluidTint =
-                        paletteProvider ? paletteProvider->fluidColor(chunk, v.first.x, v.first.y, v.first.z, v.second)
-                                        : glm::u8vec3{255, 255, 255};
-
-                    auto vox =
-                        packVoxelFluid(v.first.x, v.first.y, v.first.z, f,
-                                       useSec ? handler->queryFluidTexSec(bsid) : handler->queryFluidTex(bsid), chunkid,
-                                       15, 15, 15, 15, 0, 0, 0, 0, cornerHeights[0], cornerHeights[1], cornerHeights[2],
-                                       cornerHeights[3], useSec, fluidTint.r, fluidTint.g, fluidTint.b);
-                    (trans || handler->queryWaterlogged(bsid) ? committerTranslucentFluid : committerFluid)(
-                        OMVoxelFluid{vox[0], vox[1], vox[2], vox[3], vox[4]});
-                }
-            }
+            auto vox =
+                packVoxelFluid(v.first.x, v.first.y, v.first.z, PosY,
+                               useSec ? handler->queryFluidTexSec(bsid) : handler->queryFluidTex(bsid), chunkid, 15, 15,
+                               15, 15, 0, 0, 0, 0, 255, 255, 255, 255, useSec, fluidTint.r, fluidTint.g, fluidTint.b);
+            (trans || handler->queryWaterlogged(bsid) ? committerTranslucentFluid : committerFluid)(
+                OMVoxelFluid{vox[0], vox[1], vox[2], vox[3], vox[4]});
         }
 
         if (handler->queryNumParts(bsid) == 0)
