@@ -417,7 +417,7 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
         auto bsid = modelFetcher(v.second, chunk.chunkx, chunk.chunky, chunk.chunkz, v.first.x, v.first.y, v.first.z);
         auto trans = handler->queryTranslucent(bsid);
 
-        if (handler->queryFluid(bsid))
+        /*if (handler->queryFluid(bsid))
         {
             const auto isFalling = handler->queryFluidFalling(bsid);
             const auto fluidLevel = (handler->queryFluidLevel(bsid) & 0b111);
@@ -434,7 +434,7 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
                                15, 15, 0, 0, 0, 0, 255, 255, 255, 255, useSec, fluidTint.r, fluidTint.g, fluidTint.b);
             (trans || handler->queryWaterlogged(bsid) ? committerTranslucentFluid : committerFluid)(
                 OMVoxelFluid{vox[0], vox[1], vox[2], vox[3], vox[4]});
-        }
+        }*/
 
         if (handler->queryNumParts(bsid) == 0)
         {
