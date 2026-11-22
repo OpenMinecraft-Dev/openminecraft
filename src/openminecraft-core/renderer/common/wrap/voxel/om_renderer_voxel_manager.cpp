@@ -1770,6 +1770,7 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
         tsk->resolve(cutoutTarget->target());
     }
 
+    renderClouds = true;
     if (renderClouds)
     {
         tsk->beginDebugTag("clouds")
@@ -1800,11 +1801,12 @@ auto OMVoxelManager::submit(OMRendererTask *task, OMRendererTempTarget *resolveT
     tsk->beginDebugTag("translucent chunks")
         ->clearColor(glm::vec4(0.0), 0)
         ->clearColor(glm::vec4(1.0), 1)
-        ->target(translucentTargetMS->target())
-        ->pipeline(cloudComposePipeline)
-        ->resourceSet(resources(cloudComposePipeline))
-        ->drawN(6)
-        ->pipeline(translucentPipeline)
+        ->target(translucentTargetMS->target());
+    if (renderClouds)
+    {
+        tsk->pipeline(cloudComposePipeline)->resourceSet(resources(cloudComposePipeline))->drawN(6);
+    }
+    tsk->pipeline(translucentPipeline)
         ->resourceSet(resources(translucentPipeline))
         ->vertexBuffer({voxelTranslucentLayer->buf()->buffer()})
         ->indexBuffer(voxelIndexBuffer)
