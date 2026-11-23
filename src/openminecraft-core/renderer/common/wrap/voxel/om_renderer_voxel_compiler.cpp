@@ -164,32 +164,6 @@ static constexpr auto packVoxelComplex(uint8_t x, uint8_t y, uint8_t z, OMVoxelF
                            modelSize, angleExt.y, angleExt.z, colormapr << 16 | colormapg << 8 | colormapb);
 }
 
-auto OMVoxelCompiler::existSoild(const world::OMChunk<16> &chunk,
-                                 std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor, int x,
-                                 int y, int z) -> bool
-{
-    if (x < 0 || y < 0 || z < 0 || x > 15 || y > 15 || z > 15)
-        return handler->querySoild(
-            modelFetcher(externalAccessor(glm::ivec3(x, y, z), chunk.chunkx, chunk.chunky, chunk.chunkz), chunk.chunkx,
-                         chunk.chunky, chunk.chunkz, x, y, z));
-
-    return handler->querySoild(modelFetcher(chunk.fetch(x, y, z), chunk.chunkx, chunk.chunky, chunk.chunkz, x, y, z));
-}
-
-auto OMVoxelCompiler::isFullBlock(int modelId) -> bool
-{
-    return handler->queryFullBlock(modelId);
-}
-
-auto OMVoxelCompiler::existFullBlock(const world::OMChunk<16> &chunk,
-                                     std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor,
-                                     int x, int y, int z) -> bool
-{
-    const uint32_t state = queryBlockState(chunk, externalAccessor, x, y, z);
-    const int model = modelFetcher(state, chunk.chunkx, chunk.chunky, chunk.chunkz, x, y, z);
-    return isFullBlock(model);
-}
-
 auto OMVoxelCompiler::queryBlockState(const world::OMChunk<16> &chunk,
                                       std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor,
                                       int x, int y, int z) -> uint32_t
@@ -310,9 +284,9 @@ auto OMVoxelCompiler::computeAO(const world::OMChunk<16> &chunk,
     return {ao1, ao2, ao3, ao4};
 }
 
-auto OMVoxelCompiler::checkExistSoild(const world::OMChunk<16> &chunk,
-                                      std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor,
-                                      glm::ivec3 v, OMVoxelFacing f) -> bool
+auto OMVoxelCompiler::checkSkipRendering(
+    const world::OMChunk<16> &chunk, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor,
+    glm::ivec3 v, OMVoxelFacing f, uint32_t id) -> bool
 {
     switch (f)
     {
@@ -320,50 +294,69 @@ auto OMVoxelCompiler::checkExistSoild(const world::OMChunk<16> &chunk,
     case None:
         return false;
     case NegX:
-        return existSoild(chunk, externalAccessor, v.x - 1, v.y, v.z);
+        v.x -= 1;
+        break;
     case NegY:
-        return existSoild(chunk, externalAccessor, v.x, v.y - 1, v.z);
+        v.y -= 1;
+        break;
     case NegZ:
-        return existSoild(chunk, externalAccessor, v.x, v.y, v.z - 1);
+        v.z -= 1;
+        break;
     case PosX:
-        return existSoild(chunk, externalAccessor, v.x + 1, v.y, v.z);
+        v.x += 1;
+        break;
     case PosY:
-        return existSoild(chunk, externalAccessor, v.x, v.y + 1, v.z);
+        v.y += 1;
+        break;
     case PosZ:
-        return existSoild(chunk, externalAccessor, v.x, v.y, v.z + 1);
+        v.z += 1;
+        break;
     }
+    return handler->querySkipsRendering(id, queryBlockState(chunk, externalAccessor, v.x, v.y, v.z), f);
 }
 
-auto OMVoxelCompiler::checkSkip(const world::OMChunk<16> &chunk,
-                                std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor,
-                                glm::ivec3 v, OMVoxelFacing f, uint32_t id) -> bool
+auto OMVoxelCompiler::checkVoxelOcculusion(
+    const world::OMChunk<16> &chunk, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor,
+    glm::ivec3 v, OMVoxelFacing f, uint32_t id) -> bool
 {
-    uint32_t target = 0;
     switch (f)
     {
     default:
     case None:
         return false;
     case NegX:
-        target = queryBlockState(chunk, externalAccessor, v.x - 1, v.y, v.z);
+        v.x -= 1;
         break;
     case NegY:
-        target = queryBlockState(chunk, externalAccessor, v.x, v.y - 1, v.z);
+        v.y -= 1;
         break;
     case NegZ:
-        target = queryBlockState(chunk, externalAccessor, v.x, v.y, v.z - 1);
+        v.z -= 1;
         break;
     case PosX:
-        target = queryBlockState(chunk, externalAccessor, v.x + 1, v.y, v.z);
+        v.x += 1;
         break;
     case PosY:
-        target = queryBlockState(chunk, externalAccessor, v.x, v.y + 1, v.z);
+        v.y += 1;
         break;
     case PosZ:
-        target = queryBlockState(chunk, externalAccessor, v.x, v.y, v.z + 1);
+        v.z += 1;
         break;
     }
-    return handler->querySkipsRendering(id, target, f);
+    auto target = modelFetcher(queryBlockState(chunk, externalAccessor, v.x, v.y, v.z), chunk.chunkx, chunk.chunky,
+                               chunk.chunkz, v.x, v.y, v.z);
+
+    if (handler->queryTranslucent(target))
+    {
+        return false;
+    }
+
+    if (handler->querySoild(target))
+    {
+        return true;
+    }
+
+    return false;
 }
 
 auto OMVoxelCompiler::computeVisibility(const world::OMChunk<16> &chunk,
@@ -446,8 +439,10 @@ auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
             for (auto f : {NegX, NegY, NegZ, PosX, PosY, PosZ})
             {
                 if (handler->queryPartFaceEnabled(bsid, i, f) &&
-                    !checkExistSoild(chunk, externalAccessor, v.first, handler->queryPartFaceCull(bsid, i, f)) &&
-                    !checkSkip(chunk, externalAccessor, v.first, handler->queryPartFaceCull(bsid, i, f), v.second))
+                    !checkVoxelOcculusion(chunk, externalAccessor, v.first, handler->queryPartFaceCull(bsid, i, f),
+                                          v.second) &&
+                    !checkSkipRendering(chunk, externalAccessor, v.first, handler->queryPartFaceCull(bsid, i, f),
+                                        v.second))
                 {
                     auto [ao1, ao2, ao3, ao4] =
                         handler->queryPartAmbientOcclusion(bsid, i) && handler->queryPartShade(bsid, i)

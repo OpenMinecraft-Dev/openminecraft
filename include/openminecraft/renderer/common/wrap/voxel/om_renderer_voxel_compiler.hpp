@@ -22,19 +22,13 @@ class OMVoxelCompiler
 
     auto queryBlockState(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>,
                          int x, int y, int z) -> uint32_t;
-    auto existSoild(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>, int x,
-                    int y, int z) -> bool;
-    // A full-cube occluder (ice/glass included), unlike querySoild which only
-    // marks opaque blocks. Used for fluid height and face occlusion.
-    auto existFullBlock(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>,
-                        int x, int y, int z) -> bool;
-    auto isFullBlock(int modelId) -> bool;
     auto computeAO(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>, int x,
                    int y, int z, OMVoxelFacing, int bsid, int pid) -> std::tuple<uint8_t, uint8_t, uint8_t, uint8_t>;
-    auto checkExistSoild(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>,
-                         glm::ivec3, OMVoxelFacing) -> bool;
-    auto checkSkip(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>,
-                   glm::ivec3, OMVoxelFacing, uint32_t) -> bool;
+    auto checkSkipRendering(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>,
+                            glm::ivec3, OMVoxelFacing, uint32_t) -> bool;
+    auto checkVoxelOcculusion(const world::OMChunk<16> &,
+                              std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>, glm::ivec3, OMVoxelFacing,
+                              uint32_t) -> bool;
     auto compile(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>,
                  int chunkid, std::function<void(OMVoxel)>, std::function<void(OMVoxelComplex)>,
                  std::function<void(OMVoxelFluid)>, std::function<void(OMVoxel)>, std::function<void(OMVoxelComplex)>,
