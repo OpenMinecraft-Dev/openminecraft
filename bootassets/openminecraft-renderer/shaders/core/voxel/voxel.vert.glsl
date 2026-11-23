@@ -110,7 +110,7 @@ void main()
         worldPos = vec3(0, orgin.x, orgin.y);
         worldPosOffset = vec3(modelSize.x == 0 ? 0 : sign, 0, 0);
         norm = vec3(1.0, 0.0, 0.0);
-        uv = (sign == 0.0) ? vec2(orgin.y, inv_or.x) : inv_or.yx;
+        uv = (worldPosOffset.x == 0.0) ? vec2(orgin.y, inv_or.x) : inv_or.yx;
         oruv = uv;
         uv = doRotate(uv);
         voxFactor = 0.6;
@@ -120,7 +120,7 @@ void main()
         worldPos = vec3(orgin.x, orgin.y, 0);
         worldPosOffset = vec3(0, 0, modelSize.z == 0 ? 0 : sign);
         norm = vec3(0.0, 0.0, 1.0);
-        uv = (sign == 0.0) ? inv_or.xy : vec2(orgin.x, inv_or.y);
+        uv = (worldPosOffset.z == 0.0) ? inv_or.xy : vec2(orgin.x, inv_or.y);
         oruv = uv;
         uv = doRotate(uv);
         voxFactor = 0.8;
