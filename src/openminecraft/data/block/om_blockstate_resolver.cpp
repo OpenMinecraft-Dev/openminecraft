@@ -179,6 +179,7 @@ void OMBlockStateResolver::buildModel(OMIdentifier ident, OMBlockState state)
 {
     auto &blk = blockRegistry.getRegistry(ident);
     auto &st = state;
+    const bool leaves = blk->leaves || ident.path.find("leaves") != std::string::npos;
 
     if (states[ident].count(st))
     {
@@ -212,7 +213,7 @@ void OMBlockStateResolver::buildModel(OMIdentifier ident, OMBlockState state)
                 {
                     auto i = compiler.composeModel(
                         {requiredModels[ident][identFrom(var.second)]}, blk->soild, blk->translucent,
-                        st.properties.count("waterlogged") ? st.properties["waterlogged"] == "true" : false);
+                        st.properties.count("waterlogged") ? st.properties["waterlogged"] == "true" : false, leaves);
                     states[ident][st].emplace_back(i);
                     return;
                 }
@@ -222,7 +223,7 @@ void OMBlockStateResolver::buildModel(OMIdentifier ident, OMBlockState state)
                     {
                         auto i = compiler.composeModel(
                             {requiredModels[ident][identFrom(lp)]}, blk->soild, blk->translucent,
-                            st.properties.count("waterlogged") ? st.properties["waterlogged"] == "true" : false);
+                            st.properties.count("waterlogged") ? st.properties["waterlogged"] == "true" : false, leaves);
                         states[ident][st].emplace_back(i);
                     }
                     return;
@@ -258,7 +259,7 @@ void OMBlockStateResolver::buildModel(OMIdentifier ident, OMBlockState state)
 
         auto i =
             compiler.composeModel(ids, blk->soild, blk->translucent,
-                                  st.properties.count("waterlogged") ? st.properties["waterlogged"] == "true" : false);
+                                  st.properties.count("waterlogged") ? st.properties["waterlogged"] == "true" : false, leaves);
         states[ident][st].emplace_back(i);
         return;
     }

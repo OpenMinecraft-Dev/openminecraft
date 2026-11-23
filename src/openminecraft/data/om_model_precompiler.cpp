@@ -79,6 +79,11 @@ auto OMModelPrecompiler::queryTranslucent(int modelId) -> bool
     return blockModels[modelId].translucent;
 }
 
+auto OMModelPrecompiler::queryLeaves(int modelId) -> bool
+{
+    return blockModels[modelId].leaves;
+}
+
 auto OMModelPrecompiler::queryPartFaceSecondaryTexture(int modelId, int pid,
                                                        openminecraft::renderer::common::wrap::voxel::OMVoxelFacing f)
     -> bool
@@ -812,11 +817,12 @@ auto OMModelPrecompiler::wrapFace(std::shared_ptr<openminecraft::compiler::json:
             face->getMap().count("tintindex") ? static_cast<int>(face->getMap()["tintindex"]->getNumber()) : -1};
 }
 
-auto OMModelPrecompiler::composeModel(std::vector<int> partids, bool soild, bool translucent, bool waterlogged) -> int
+auto OMModelPrecompiler::composeModel(std::vector<int> partids, bool soild, bool translucent, bool waterlogged, bool leaves) -> int
 {
     auto &m = blockModels.emplace_back();
     m.soild = soild;
     m.translucent = translucent;
+    m.leaves = leaves;
     m.fluid = waterlogged;
     m.fluidFalling = false;
     m.fluidLevel = 0;

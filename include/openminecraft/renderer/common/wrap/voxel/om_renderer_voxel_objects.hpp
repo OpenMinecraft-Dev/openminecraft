@@ -174,6 +174,10 @@ class OMVoxelHandler
     virtual auto queryPartFaceSecondaryTexture(int bsid, int pid, OMVoxelFacing) -> bool = 0;
     virtual auto queryPartRotationAngleF(int bsid, int pid) -> float = 0;
     virtual auto queryTranslucent(int bsid) -> bool = 0;
+    virtual auto queryLeaves(int bsid) -> bool
+    {
+        return false;
+    }
     virtual auto queryFluid(int bsid) -> bool = 0;
     virtual auto queryFluidLava(int bsid) -> bool
     {

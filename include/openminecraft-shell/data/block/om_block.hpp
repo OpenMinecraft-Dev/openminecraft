@@ -89,6 +89,11 @@ class OMBlock : public std::enable_shared_from_this<OMBlock>
         translucent = v;
         return shared_from_this();
     }
+    auto setLeaves(bool v) -> std::shared_ptr<OMBlock>
+    {
+        leaves = v;
+        return shared_from_this();
+    }
 
     virtual auto skipsRendering(const OMBlockStateCombined &state, const OMBlockStateCombined &other,
                                 OMVoxelFacing direction) -> bool
@@ -114,6 +119,7 @@ class OMBlock : public std::enable_shared_from_this<OMBlock>
 
     bool soild = true;
     bool translucent = false;
+    bool leaves = false;
     OMBlockFluidType fluidType = FluidNone;
     bool fluid = false;
     std::unordered_map<std::string, std::vector<std::string>> properties;

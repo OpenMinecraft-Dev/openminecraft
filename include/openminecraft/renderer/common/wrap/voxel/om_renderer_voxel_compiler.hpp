@@ -27,8 +27,8 @@ class OMVoxelCompiler
     auto checkSkipRendering(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>,
                             glm::ivec3, OMVoxelFacing, uint32_t) -> bool;
     auto checkVoxelOcculusion(const world::OMChunk<16> &,
-                              std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>, glm::ivec3, OMVoxelFacing,
-                              uint32_t) -> bool;
+                              std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>, glm::ivec3,
+                              OMVoxelFacing face, OMVoxelFacing cullFace, uint32_t id, int pid) -> bool;
     auto compile(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>,
                  int chunkid, std::function<void(OMVoxel)>, std::function<void(OMVoxelComplex)>,
                  std::function<void(OMVoxelFluid)>, std::function<void(OMVoxel)>, std::function<void(OMVoxelComplex)>,

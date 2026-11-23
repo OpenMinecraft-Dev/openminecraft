@@ -87,6 +87,7 @@ struct OMModel
     uint32_t fluidTex;
     uint32_t fluidTexFlow;
     bool waterlogged;
+    bool leaves = false;
 };
 class OMModelPrecompiler : public openminecraft::renderer::common::wrap::voxel::OMVoxelHandler
 {
@@ -99,7 +100,7 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::voxel::
                   glm::vec3 to) -> OMModelFace;
     auto wrapPart(std::shared_ptr<openminecraft::compiler::json::OMJsonNode>) -> OMModelPart;
 
-    auto composeModel(std::vector<int>, bool = true, bool = false, bool = false) -> int;
+    auto composeModel(std::vector<int>, bool = true, bool = false, bool = false, bool = false) -> int;
     auto composeFluidModel(OMIdentifier ident, block::OMBlockFluidType fluidType, bool translucent, bool falling,
                            uint8_t level) -> int;
 
@@ -136,6 +137,7 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::voxel::
     auto queryPartRotationAngleF(int modelId, int pid) -> float override;
     auto queryPartRotationAngleExt(int modelId, int pid) -> glm::vec3 override;
     auto queryTranslucent(int modelId) -> bool override;
+    auto queryLeaves(int modelId) -> bool override;
     auto queryFluid(int modelId) -> bool override;
     auto queryFluidLava(int modelId) -> bool override;
     auto queryFluidFalling(int modelId) -> bool override;
