@@ -89,9 +89,9 @@ class OMBlock : public std::enable_shared_from_this<OMBlock>
         translucent = v;
         return shared_from_this();
     }
-    auto setLeaves(bool v) -> std::shared_ptr<OMBlock>
+    auto setSolidRender(bool v) -> std::shared_ptr<OMBlock>
     {
-        leaves = v;
+        isSolidRender = v;
         return shared_from_this();
     }
 
@@ -119,7 +119,7 @@ class OMBlock : public std::enable_shared_from_this<OMBlock>
 
     bool soild = true;
     bool translucent = false;
-    bool leaves = false;
+    bool isSolidRender = true;
     OMBlockFluidType fluidType = FluidNone;
     bool fluid = false;
     std::unordered_map<std::string, std::vector<std::string>> properties;

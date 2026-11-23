@@ -143,7 +143,7 @@ void registerBlocks()
     registerBlock(OMIdentifier("minecraft:spawner"), std::make_shared<OMBlock>()->isSolid(true));
     registerBlock(OMIdentifier("minecraft:spore_blossom"), std::make_shared<OMBlock>()->isSolid(false));
     registerBlock(OMIdentifier("minecraft:spruce_leaves"),
-                  std::make_shared<OMBlock>()->isSolid(false)->setLeaves(true)->setColorSource(BiomeFoliage));
+                  std::make_shared<OMBlock>()->isSolid(false)->setSolidRender(false)->setColorSource(BiomeFoliage));
     registerBlock(OMIdentifier("minecraft:spruce_log"), std::make_shared<OMBlock>()->isSolid(true));
     registerBlock(OMIdentifier("minecraft:sweet_berry_bush"), std::make_shared<OMBlock>()->isSolid(false));
     registerBlock(OMIdentifier("minecraft:tuff"), std::make_shared<OMBlock>()->isSolid(true));

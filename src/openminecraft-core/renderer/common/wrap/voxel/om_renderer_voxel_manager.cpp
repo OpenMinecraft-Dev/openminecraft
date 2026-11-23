@@ -891,7 +891,7 @@ auto OMVoxelManager::updateFluidFog(basics::OMCamera &camera) -> void
     {
         fluidFogColor = glm::vec3(0.72f, 0.13f, 0.02f);
         // FogData.x is the fully fogged distance, .y is where fog starts.
-        fluidFogRange = glm::vec2(1.0f, 0.25f);
+        fluidFogRange = glm::vec2(4.0f, 0.25f);
     }
     else
     {

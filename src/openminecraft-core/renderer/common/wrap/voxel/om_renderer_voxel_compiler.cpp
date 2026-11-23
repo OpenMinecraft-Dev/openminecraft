@@ -548,7 +548,7 @@ auto OMVoxelCompiler::checkVoxelOcculusion(
     const auto neighbourState = queryBlockState(chunk, externalAccessor, n.x, n.y, n.z);
     const auto neighbourModel = modelFetcher(neighbourState, chunk.chunkx, chunk.chunky, chunk.chunkz, n.x, n.y, n.z);
 
-    if (handler->queryTranslucent(neighbourModel) || handler->queryLeaves(neighbourModel))
+    if (handler->queryTranslucent(neighbourModel) || !handler->querySolidRender(neighbourModel))
     {
         return false;
     }
