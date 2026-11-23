@@ -416,6 +416,98 @@ auto rotateVoxelElement90(const glm::vec3 &from, const glm::vec3 &to, int i) -> 
     return {newMin, newMax};
 }
 
+static auto rotatePoint90(const glm::vec3 &p, int mode) -> glm::vec3
+{
+    const auto c = p - glm::vec3(8, 8, 8);
+    glm::vec3 r;
+    switch (mode)
+    {
+    case 0:
+        r = {c.x, -c.z, c.y};
+        break;
+    case 1:
+        r = {-c.z, c.y, c.x};
+        break;
+    default:
+        r = {-c.y, c.x, c.z};
+        break;
+    }
+    return r + glm::vec3(8, 8, 8);
+}
+
+static auto rotateVector90(const glm::vec3 &v, int mode) -> glm::vec3
+{
+    switch (mode)
+    {
+    case 0:
+        return {v.x, -v.z, v.y};
+    case 1:
+        return {-v.z, v.y, v.x};
+    default:
+        return {-v.y, v.x, v.z};
+    }
+}
+
+// Blockstate x/y/z rotations must also rotate the element-local rotation
+// frame. Leaving "axis": "y" untouched while rotating the AABB is what made
+// some amethyst clusters (cross model, 45 degrees around Y) appear rotated
+// into an unrelated direction.
+static void rotateElementRotation(const std::shared_ptr<openminecraft::compiler::json::OMJsonNode> &element, int mode)
+{
+    auto &map = element->getMap();
+    if (!map.count("rotation"))
+    {
+        return;
+    }
+
+    auto &rot = map["rotation"];
+    auto &rmap = rot->getMap();
+    if (rmap.count("origin"))
+    {
+        auto &origin = rmap["origin"]->getArray();
+        auto p = glm::vec3(origin[0]->getNumberFloating(), origin[1]->getNumberFloating(),
+                           origin[2]->getNumberFloating());
+        p = rotatePoint90(p, mode);
+        origin[0] = std::make_shared<openminecraft::compiler::json::OMJsonNodeNumber>(p.x);
+        origin[1] = std::make_shared<openminecraft::compiler::json::OMJsonNodeNumber>(p.y);
+        origin[2] = std::make_shared<openminecraft::compiler::json::OMJsonNodeNumber>(p.z);
+    }
+
+    if (!rmap.count("axis"))
+    {
+        return;
+    }
+
+    const auto axis = rmap["axis"]->getString();
+    glm::vec3 axisVector = axis == "x" ? glm::vec3(1, 0, 0) : (axis == "y" ? glm::vec3(0, 1, 0) : glm::vec3(0, 0, 1));
+    const auto rotatedAxis = rotateVector90(axisVector, mode);
+
+    std::string newAxis;
+    float sign = 1.0f;
+    if (std::abs(rotatedAxis.x) > 0.5f)
+    {
+        newAxis = "x";
+        sign = rotatedAxis.x < 0 ? -1.0f : 1.0f;
+    }
+    else if (std::abs(rotatedAxis.y) > 0.5f)
+    {
+        newAxis = "y";
+        sign = rotatedAxis.y < 0 ? -1.0f : 1.0f;
+    }
+    else
+    {
+        newAxis = "z";
+        sign = rotatedAxis.z < 0 ? -1.0f : 1.0f;
+    }
+
+    rmap["axis"] = std::make_shared<openminecraft::compiler::json::OMJsonNodeString>(newAxis);
+    if (sign < 0 && rmap.count("angle"))
+    {
+        rmap["angle"] = std::make_shared<openminecraft::compiler::json::OMJsonNodeNumber>(
+            -rmap["angle"]->getNumberFloating());
+    }
+}
+
 auto OMModelPrecompiler::loadModelPartWithArgs(OMIdentifier i, int xrot, int yrot, int zrot, bool lockuv) -> int
 {
     logger.info("precompiling {}:{} @ {}, rot {} {} {}, uvlock {}", i.namesp, i.path, modelId, xrot, yrot, zrot,
@@ -468,6 +560,7 @@ auto OMModelPrecompiler::loadModelPartWithArgs(OMIdentifier i, int xrot, int yro
                 }
             };
             auto xrot90 = [&]() {
+                rotateElementRotation(p, 0);
                 auto &from = p->getMap()["from"]->getArray();
                 auto &to = p->getMap()["to"]->getArray();
                 auto fromv =
@@ -476,12 +569,12 @@ auto OMModelPrecompiler::loadModelPartWithArgs(OMIdentifier i, int xrot, int yro
                     glm::vec3{to[0]->getNumberFloating(), to[1]->getNumberFloating(), to[2]->getNumberFloating()};
                 auto rotated = rotateVoxelElement90(fromv, tov, 0);
 
-                from[0] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotated.first.x));
-                from[1] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotated.first.y));
-                from[2] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotated.first.z));
-                to[0] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotated.second.x));
-                to[1] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotated.second.y));
-                to[2] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotated.second.z));
+                from[0] = std::make_shared<json::OMJsonNodeNumber>(rotated.first.x);
+                from[1] = std::make_shared<json::OMJsonNodeNumber>(rotated.first.y);
+                from[2] = std::make_shared<json::OMJsonNodeNumber>(rotated.first.z);
+                to[0] = std::make_shared<json::OMJsonNodeNumber>(rotated.second.x);
+                to[1] = std::make_shared<json::OMJsonNodeNumber>(rotated.second.y);
+                to[2] = std::make_shared<json::OMJsonNodeNumber>(rotated.second.z);
 
                 auto fup = fetchface("up");
                 auto fsouth = fetchface("south");
@@ -512,6 +605,7 @@ auto OMModelPrecompiler::loadModelPartWithArgs(OMIdentifier i, int xrot, int yro
                 }
             };
             auto yrot90 = [&]() {
+                rotateElementRotation(p, 1);
                 auto &from = p->getMap()["from"]->getArray();
                 auto &to = p->getMap()["to"]->getArray();
                 auto fromv =
@@ -520,12 +614,12 @@ auto OMModelPrecompiler::loadModelPartWithArgs(OMIdentifier i, int xrot, int yro
                     glm::vec3{to[0]->getNumberFloating(), to[1]->getNumberFloating(), to[2]->getNumberFloating()};
                 auto rotated = rotateVoxelElement90(fromv, tov, 1);
 
-                from[0] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotated.first.x));
-                from[1] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotated.first.y));
-                from[2] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotated.first.z));
-                to[0] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotated.second.x));
-                to[1] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotated.second.y));
-                to[2] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotated.second.z));
+                from[0] = std::make_shared<json::OMJsonNodeNumber>(rotated.first.x);
+                from[1] = std::make_shared<json::OMJsonNodeNumber>(rotated.first.y);
+                from[2] = std::make_shared<json::OMJsonNodeNumber>(rotated.first.z);
+                to[0] = std::make_shared<json::OMJsonNodeNumber>(rotated.second.x);
+                to[1] = std::make_shared<json::OMJsonNodeNumber>(rotated.second.y);
+                to[2] = std::make_shared<json::OMJsonNodeNumber>(rotated.second.z);
 
                 auto feast = fetchface("east");
                 auto fsouth = fetchface("south");
@@ -556,6 +650,7 @@ auto OMModelPrecompiler::loadModelPartWithArgs(OMIdentifier i, int xrot, int yro
                 }
             };
             auto zrot90 = [&]() {
+                rotateElementRotation(p, 2);
                 auto &from = p->getMap()["from"]->getArray();
                 auto &to = p->getMap()["to"]->getArray();
                 auto fromv =
@@ -564,12 +659,12 @@ auto OMModelPrecompiler::loadModelPartWithArgs(OMIdentifier i, int xrot, int yro
                     glm::vec3{to[0]->getNumberFloating(), to[1]->getNumberFloating(), to[2]->getNumberFloating()};
                 auto rotated = rotateVoxelElement90(fromv, tov, 2);
 
-                from[0] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotated.first.x));
-                from[1] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotated.first.y));
-                from[2] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotated.first.z));
-                to[0] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotated.second.x));
-                to[1] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotated.second.y));
-                to[2] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotated.second.z));
+                from[0] = std::make_shared<json::OMJsonNodeNumber>(rotated.first.x);
+                from[1] = std::make_shared<json::OMJsonNodeNumber>(rotated.first.y);
+                from[2] = std::make_shared<json::OMJsonNodeNumber>(rotated.first.z);
+                to[0] = std::make_shared<json::OMJsonNodeNumber>(rotated.second.x);
+                to[1] = std::make_shared<json::OMJsonNodeNumber>(rotated.second.y);
+                to[2] = std::make_shared<json::OMJsonNodeNumber>(rotated.second.z);
 
                 auto fup = fetchface("up");
                 auto fwest = fetchface("west");
