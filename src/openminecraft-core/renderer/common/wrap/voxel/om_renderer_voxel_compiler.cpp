@@ -319,6 +319,7 @@ auto OMVoxelCompiler::checkVoxelOcculusion(
     const world::OMChunk<16> &chunk, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor,
     glm::ivec3 v, OMVoxelFacing f, uint32_t id) -> bool
 {
+    auto current = modelFetcher(id, chunk.chunkx, chunk.chunky, chunk.chunkz, v.x, v.y, v.z);
     switch (f)
     {
     default:
