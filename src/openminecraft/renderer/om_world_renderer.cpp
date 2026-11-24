@@ -496,26 +496,7 @@ void OMWorldRenderer::afterFrame()
         colorManager->updateGameTime(gameT);
     }
 
-    if (std::getenv("OM_CHUNK_TEST") != nullptr)
-    {
-        static bool screenshotTaken = false;
-        static auto screenshotStart = std::chrono::steady_clock::now();
-        if (!screenshotTaken &&
-            std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - screenshotStart)
-                    .count() > 5500)
-        {
-            screenshotTaken = true;
-            auto *color = tempTarget->colorTexture();
-            auto data = color->fetchData();
-            std::ofstream out("/tmp/om_chunk_test.ppm", std::ios::binary);
-            out << "P6\n" << color->width << " " << color->height << "\n255\n";
-            auto *pixels = static_cast<unsigned char *>(data.get());
-            for (uint64_t i = 0; i < color->width * color->height; ++i)
-            {
-                out.write(reinterpret_cast<char *>(pixels + i * 4), 3);
-            }
-        }
-    }
+
 }
 
 void OMWorldRenderer::submitTasks()
