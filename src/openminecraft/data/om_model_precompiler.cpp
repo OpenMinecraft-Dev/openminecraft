@@ -574,117 +574,146 @@ auto OMModelPrecompiler::loadModelPartWithArgs(OMIdentifier i, int xrot, int yro
                 }
                 face->getMap()["rotation"] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotation));
             };
-            auto rotateFaces = [&](std::initializer_list<std::pair<const char *, int>> entries) {
+            struct FaceRotationEntry
+            {
+                const char *face;
+                int degrees;
+            };
+            struct FaceMove
+            {
+                const char *from;
+                const char *to;
+            };
+
+            constexpr std::array<const char *, 6> faceNames = {"north", "south", "east", "west", "up", "down"};
+            enum FaceIndex : size_t
+            {
+                North,
+                South,
+                East,
+                West,
+                Up,
+                Down
+            };
+
+            auto applyQuarterTurn = [&](int axis) {
+                rotateElementRotation(p, axis);
+
+                auto &from = p->getMap()["from"]->getArray();
+                auto &to = p->getMap()["to"]->getArray();
+                auto fromv =
+                    glm::vec3{from[0]->getNumberFloating(), from[1]->getNumberFloating(), from[2]->getNumberFloating()};
+                auto tov =
+                    glm::vec3{to[0]->getNumberFloating(), to[1]->getNumberFloating(), to[2]->getNumberFloating()};
+                auto rotated = rotateVoxelElement90(fromv, tov, axis);
+
+                from[0] = std::make_shared<json::OMJsonNodeNumber>(rotated.first.x);
+                from[1] = std::make_shared<json::OMJsonNodeNumber>(rotated.first.y);
+                from[2] = std::make_shared<json::OMJsonNodeNumber>(rotated.first.z);
+                to[0] = std::make_shared<json::OMJsonNodeNumber>(rotated.second.x);
+                to[1] = std::make_shared<json::OMJsonNodeNumber>(rotated.second.y);
+                to[2] = std::make_shared<json::OMJsonNodeNumber>(rotated.second.z);
+
+                // UV deltas are applied to the old face before it is renamed.
+                std::array<FaceRotationEntry, 6> faceRotations = {};
+                std::array<FaceMove, 4> faceMoves = {};
+
+                if (axis == 0)
+                {
+                    // The south face becomes down. North/south variants need
+                    // the pre-rotation; east/west get it from the Y table.
+                    const int southRotation = ((yrot % 180) + 180) % 180 == 0 ? 180 : 0;
+                    faceRotations = {{{"north", 180},
+                                      {"south", southRotation},
+                                      {"east", 270},
+                                      {"west", 90},
+                                      {"up", 0},
+                                      {"down", 0}}};
+                    faceMoves = {{{"up", "south"}, {"south", "down"}, {"down", "north"}, {"north", "up"}}};
+                }
+                else if (axis == 1)
+                {
+                    faceRotations = {{{"north", 0},
+                                      {"south", 0},
+                                      {"east", 0},
+                                      {"west", 0},
+                                      {"up", 270},
+                                      {"down", 90}}};
+                    faceMoves = {{{"east", "north"}, {"north", "west"}, {"west", "south"}, {"south", "east"}}};
+                }
+                else
+                {
+                    faceRotations = {{{"north", 90},
+                                      {"south", 270},
+                                      {"east", 270},
+                                      {"west", 90},
+                                      {"up", 270},
+                                      {"down", 90}}};
+                    faceMoves = {{{"up", "west"}, {"west", "down"}, {"down", "east"}, {"east", "up"}}};
+                }
+
+                if (!lockuv)
+                {
+                    for (const auto &entry : faceRotations)
+                    {
+                        addFaceRotation(entry.face, entry.degrees);
+                    }
+                }
+
+                // Fetch all six first, otherwise one rename can overwrite a
+                // face that is still needed by the next rename.
+                std::array<std::shared_ptr<openminecraft::compiler::json::OMJsonNode>, 6> original = {};
+                for (size_t n = 0; n < faceNames.size(); ++n)
+                {
+                    original[n] = fetchface(faceNames[n]);
+                }
+
+                auto indexOf = [&](const char *name) -> size_t {
+                    for (size_t n = 0; n < faceNames.size(); ++n)
+                    {
+                        if (std::strcmp(faceNames[n], name) == 0)
+                        {
+                            return n;
+                        }
+                    }
+                    return 0;
+                };
+
+                for (const auto &move : faceMoves)
+                {
+                    putface(move.to, original[indexOf(move.from)]);
+                }
+            };
+
+            auto applyFinalCorrections = [&]() {
                 if (lockuv)
                 {
                     return;
                 }
-                for (const auto &entry : entries)
+                const int nx = ((xrot % 360) + 360) % 360;
+                const int ny = ((yrot % 360) + 360) % 360;
+
+                if (nx == 90 && ny != 0 && ny != 180)
                 {
-                    addFaceRotation(entry.first, entry.second);
+                    addFaceRotation("south", 180);
                 }
-            };
-            auto xrot90 = [&]() {
-                rotateElementRotation(p, 0);
-                auto &from = p->getMap()["from"]->getArray();
-                auto &to = p->getMap()["to"]->getArray();
-                auto fromv =
-                    glm::vec3{from[0]->getNumberFloating(), from[1]->getNumberFloating(), from[2]->getNumberFloating()};
-                auto tov =
-                    glm::vec3{to[0]->getNumberFloating(), to[1]->getNumberFloating(), to[2]->getNumberFloating()};
-                auto rotated = rotateVoxelElement90(fromv, tov, 0);
-
-                from[0] = std::make_shared<json::OMJsonNodeNumber>(rotated.first.x);
-                from[1] = std::make_shared<json::OMJsonNodeNumber>(rotated.first.y);
-                from[2] = std::make_shared<json::OMJsonNodeNumber>(rotated.first.z);
-                to[0] = std::make_shared<json::OMJsonNodeNumber>(rotated.second.x);
-                to[1] = std::make_shared<json::OMJsonNodeNumber>(rotated.second.y);
-                to[2] = std::make_shared<json::OMJsonNodeNumber>(rotated.second.z);
-
-                auto fup = fetchface("up");
-                auto fsouth = fetchface("south");
-                auto fdown = fetchface("down");
-                auto fnorth = fetchface("north");
-
-                // Canonical up/down 0deg points north; side faces 0deg are
-                // upright. Rotate the old face bases before renaming them.
-                // south becomes down under xrot90. For north/south variants
-                // (y multiple of 180) the down basis needs 180; for east/west
-                // (y=90/270) the Y table already supplies 270 and the extra
-                // 180 would make it 90.
-                const int southRotation = ((yrot % 180) + 180) % 180 == 0 ? 180 : 0;
-                rotateFaces({{"north", 180},
-                             {"south", southRotation},
-                             {"west", 90},
-                             {"east", 270},
-                             {"up", 0},
-                             {"down", 0}});
-
-                putface("south", fup);
-                putface("down", fsouth);
-                putface("north", fdown);
-                putface("up", fnorth);
-
-                // up/down -> north/south: texture V axis flips.
-            };
-            auto yrot90 = [&]() {
-                rotateElementRotation(p, 1);
-                auto &from = p->getMap()["from"]->getArray();
-                auto &to = p->getMap()["to"]->getArray();
-                auto fromv =
-                    glm::vec3{from[0]->getNumberFloating(), from[1]->getNumberFloating(), from[2]->getNumberFloating()};
-                auto tov =
-                    glm::vec3{to[0]->getNumberFloating(), to[1]->getNumberFloating(), to[2]->getNumberFloating()};
-                auto rotated = rotateVoxelElement90(fromv, tov, 1);
-
-                from[0] = std::make_shared<json::OMJsonNodeNumber>(rotated.first.x);
-                from[1] = std::make_shared<json::OMJsonNodeNumber>(rotated.first.y);
-                from[2] = std::make_shared<json::OMJsonNodeNumber>(rotated.first.z);
-                to[0] = std::make_shared<json::OMJsonNodeNumber>(rotated.second.x);
-                to[1] = std::make_shared<json::OMJsonNodeNumber>(rotated.second.y);
-                to[2] = std::make_shared<json::OMJsonNodeNumber>(rotated.second.z);
-
-                auto feast = fetchface("east");
-                auto fsouth = fetchface("south");
-                auto fwest = fetchface("west");
-                auto fnorth = fetchface("north");
-
-                rotateFaces({{"north", 0}, {"south", 0}, {"west", 0}, {"east", 0}, {"up", 270}, {"down", 90}});
-
-                putface("north", feast);
-                putface("west", fnorth);
-                putface("south", fwest);
-                putface("east", fsouth);
-
-            };
-            auto zrot90 = [&]() {
-                rotateElementRotation(p, 2);
-                auto &from = p->getMap()["from"]->getArray();
-                auto &to = p->getMap()["to"]->getArray();
-                auto fromv =
-                    glm::vec3{from[0]->getNumberFloating(), from[1]->getNumberFloating(), from[2]->getNumberFloating()};
-                auto tov =
-                    glm::vec3{to[0]->getNumberFloating(), to[1]->getNumberFloating(), to[2]->getNumberFloating()};
-                auto rotated = rotateVoxelElement90(fromv, tov, 2);
-
-                from[0] = std::make_shared<json::OMJsonNodeNumber>(rotated.first.x);
-                from[1] = std::make_shared<json::OMJsonNodeNumber>(rotated.first.y);
-                from[2] = std::make_shared<json::OMJsonNodeNumber>(rotated.first.z);
-                to[0] = std::make_shared<json::OMJsonNodeNumber>(rotated.second.x);
-                to[1] = std::make_shared<json::OMJsonNodeNumber>(rotated.second.y);
-                to[2] = std::make_shared<json::OMJsonNodeNumber>(rotated.second.z);
-
-                auto fup = fetchface("up");
-                auto fwest = fetchface("west");
-                auto fdown = fetchface("down");
-                auto feast = fetchface("east");
-
-                rotateFaces({{"north", 90}, {"south", 270}, {"west", 90}, {"east", 270}, {"up", 270}, {"down", 90}});
-
-                putface("west", fup);
-                putface("down", fwest);
-                putface("east", fdown);
-                putface("up", feast);
+                if (nx == 90 && (ny == 0 || ny == 180))
+                {
+                    addFaceRotation("east", 180);
+                }
+                if (ny == 180 || (nx == 90 && ny == 0))
+                {
+                    static constexpr std::array<FaceRotationEntry, 6> allFaces = {{{"north", 180},
+                                                                                    {"south", 180},
+                                                                                    {"east", 180},
+                                                                                    {"west", 180},
+                                                                                    {"up", 180},
+                                                                                    {"down", 180}}};
+                    for (const auto &entry : allFaces)
+                    {
+                        addFaceRotation(entry.face, entry.degrees);
+                    }
+                }
             };
 
             int txrot = xrot;
@@ -692,48 +721,21 @@ auto OMModelPrecompiler::loadModelPartWithArgs(OMIdentifier i, int xrot, int yro
             int tzrot = zrot;
             while (txrot > 0)
             {
-                xrot90();
+                applyQuarterTurn(0);
                 txrot -= 90;
             }
             while (tyrot > 0)
             {
-                yrot90();
+                applyQuarterTurn(1);
                 tyrot -= 90;
             }
             while (tzrot > 0)
             {
-                zrot90();
+                applyQuarterTurn(2);
                 tzrot -= 90;
             }
 
-            // For east/west wall variants the final south face is built from
-            // the old east/west face; its texture basis is 180deg from the
-            // canonical south face.
-            if (!lockuv)
-            {
-                const int nx = ((xrot % 360) + 360) % 360;
-                const int ny = ((yrot % 360) + 360) % 360;
-                if (nx == 90 && ny != 0 && ny != 180)
-                {
-                    addFaceRotation("south", 180);
-                }
-                if (nx == 90 && (ny == 0 || ny == 180))
-                {
-                    // north/south wall variants: the final east face comes from
-                    // the old east (y=0) or west (y=180) face.
-                    addFaceRotation("east", 180);
-                }
-            }
-
-            if (!lockuv)
-            {
-                const int nx = ((xrot % 360) + 360) % 360;
-                const int ny = ((yrot % 360) + 360) % 360;
-                if (ny == 180 || (nx == 90 && ny == 0))
-                {
-                    rotateFaces({{"north", 180}, {"south", 180}, {"west", 180}, {"east", 180}, {"up", 180}, {"down", 180}});
-                }
-            }
+            applyFinalCorrections();
 
             modelParts[modelId].emplace_back(wrapPart(p));
         }
