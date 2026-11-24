@@ -104,6 +104,7 @@ void main()
         oruv = uv;
         uv = doRotate(uv);
         voxFactor = 0.6;
+        worldPos += vec3(10000);
         break;
     }
     case 1: {
@@ -124,6 +125,7 @@ void main()
         oruv = uv;
         uv = doRotate(uv);
         voxFactor = sign == 1 ? 1.0 : 0.5;
+        worldPos += vec3(10000);
         break;
     }
     default: {
@@ -137,7 +139,7 @@ void main()
     worldPos *= modelSize;
     worldPos += modelOffset;
 
-    if (rotationAxis != 3)
+    /*if (rotationAxis != 3)
     {
         vec3 rotAxis = vec3(0.0);
         if (rotationAxis == 0)
@@ -156,7 +158,7 @@ void main()
         worldPos = rotateVec(worldPos, radians(voxelRotationAngleExt1), vec3(0.0, 1.0, 0.0));
         worldPos =
             rotateVec(worldPos, radians(voxelRotationAngleExt2), vec3(0.0, 0.0, 1.0)) + rotationCenter / vec3(16.0);
-    }
+    }*/
 
     worldPos += vec3(bx, by, bz);
 

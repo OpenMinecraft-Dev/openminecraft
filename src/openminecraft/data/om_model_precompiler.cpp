@@ -608,7 +608,17 @@ auto OMModelPrecompiler::loadModelPartWithArgs(OMIdentifier i, int xrot, int yro
 
                 // Canonical up/down 0deg points north; side faces 0deg are
                 // upright. Rotate the old face bases before renaming them.
-                rotateFaces({{"north", 180}, {"south", 180}, {"west", 90}, {"east", 270}, {"up", 0}, {"down", 0}});
+                // south becomes down under xrot90. For north/south variants
+                // (y multiple of 180) the down basis needs 180; for east/west
+                // (y=90/270) the Y table already supplies 270 and the extra
+                // 180 would make it 90.
+                const int southRotation = ((yrot % 180) + 180) % 180 == 0 ? 180 : 0;
+                rotateFaces({{"north", 180},
+                             {"south", southRotation},
+                             {"west", 90},
+                             {"east", 270},
+                             {"up", 0},
+                             {"down", 0}});
 
                 putface("south", fup);
                 putface("down", fsouth);
