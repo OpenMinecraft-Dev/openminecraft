@@ -401,7 +401,7 @@ auto rotateVoxelElement90(const glm::vec3 &from, const glm::vec3 &to, int i) -> 
             rotated = {centered.x, -centered.z, centered.y};
             break;
         case 1:
-            rotated = {-centered.z, centered.y, centered.x};
+            rotated = {centered.z, centered.y, -centered.x};
             break;
         case 2:
             rotated = {-centered.y, centered.x, centered.z};
@@ -426,7 +426,7 @@ static auto rotatePoint90(const glm::vec3 &p, int mode) -> glm::vec3
         r = {c.x, -c.z, c.y};
         break;
     case 1:
-        r = {-c.z, c.y, c.x};
+        r = {c.z, c.y, -c.x};
         break;
     default:
         r = {-c.y, c.x, c.z};
@@ -442,7 +442,7 @@ static auto rotateVector90(const glm::vec3 &v, int mode) -> glm::vec3
     case 0:
         return {v.x, -v.z, v.y};
     case 1:
-        return {-v.z, v.y, v.x};
+        return {v.z, v.y, -v.x};
     default:
         return {-v.y, v.x, v.z};
     }
@@ -649,12 +649,12 @@ auto OMModelPrecompiler::loadModelPartWithArgs(OMIdentifier i, int xrot, int yro
                 auto fwest = fetchface("west");
                 auto fnorth = fetchface("north");
 
-                rotateFaces({{"north", 0}, {"south", 0}, {"west", 0}, {"east", 0}, {"up", 90}, {"down", 270}});
+                rotateFaces({{"north", 0}, {"south", 0}, {"west", 0}, {"east", 0}, {"up", 270}, {"down", 90}});
 
-                putface("south", feast);
-                putface("west", fsouth);
-                putface("north", fwest);
-                putface("east", fnorth);
+                putface("north", feast);
+                putface("west", fnorth);
+                putface("south", fwest);
+                putface("east", fsouth);
 
             };
             auto zrot90 = [&]() {
@@ -722,6 +722,16 @@ auto OMModelPrecompiler::loadModelPartWithArgs(OMIdentifier i, int xrot, int yro
                     // north/south wall variants: the final east face comes from
                     // the old east (y=0) or west (y=180) face.
                     addFaceRotation("east", 180);
+                }
+            }
+
+            if (!lockuv)
+            {
+                const int nx = ((xrot % 360) + 360) % 360;
+                const int ny = ((yrot % 360) + 360) % 360;
+                if (ny == 180 || (nx == 90 && ny == 0))
+                {
+                    rotateFaces({{"north", 180}, {"south", 180}, {"west", 180}, {"east", 180}, {"up", 180}, {"down", 180}});
                 }
             }
 

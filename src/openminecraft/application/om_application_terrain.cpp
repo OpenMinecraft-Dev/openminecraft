@@ -446,16 +446,17 @@ static void runChunkTestGeneration(world::OMChunkManager<16> &manager, std::func
         chunk.setBlock(4, 6, 4, stoneId);
         cluster("down", 4, 5, 4);
 
-        chunk.setBlock(4, 4, 0, stoneId);
+        // facing points away from the attachment block
+        chunk.setBlock(4, 4, 2, stoneId);
         cluster("north", 4, 4, 1);
 
-        chunk.setBlock(4, 4, 8, stoneId);
+        chunk.setBlock(4, 4, 6, stoneId);
         cluster("south", 4, 4, 7);
 
-        chunk.setBlock(8, 4, 4, stoneId);
+        chunk.setBlock(6, 4, 4, stoneId);
         cluster("east", 7, 4, 4);
 
-        chunk.setBlock(0, 4, 4, stoneId);
+        chunk.setBlock(2, 4, 4, stoneId);
         cluster("west", 1, 4, 4);
 
         manager.loadChunk(chunk);
