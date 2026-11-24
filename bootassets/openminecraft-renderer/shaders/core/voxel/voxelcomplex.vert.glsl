@@ -104,7 +104,6 @@ void main()
         oruv = uv;
         uv = doRotate(uv);
         voxFactor = 0.6;
-        worldPos += vec3(10000);
         break;
     }
     case 1: {
@@ -115,6 +114,7 @@ void main()
         oruv = uv;
         uv = doRotate(uv);
         voxFactor = 0.8;
+        worldPos += vec3(10000);
         break;
     }
     case 2: {

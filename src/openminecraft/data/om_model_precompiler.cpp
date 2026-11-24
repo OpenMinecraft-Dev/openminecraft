@@ -706,6 +706,19 @@ auto OMModelPrecompiler::loadModelPartWithArgs(OMIdentifier i, int xrot, int yro
                 tzrot -= 90;
             }
 
+            // For east/west wall variants the final south face is built from
+            // the old east/west face; its texture basis is 180deg from the
+            // canonical south face.
+            if (!lockuv)
+            {
+                const int nx = ((xrot % 360) + 360) % 360;
+                const int ny = ((yrot % 360) + 360) % 360;
+                if (nx == 90 && ny != 0 && ny != 180)
+                {
+                    addFaceRotation("south", 180);
+                }
+            }
+
             modelParts[modelId].emplace_back(wrapPart(p));
         }
     }
