@@ -40,9 +40,9 @@ auto main(int argc, char **argv) -> int
         logger.debug(argv[i]);
     }
     logger.info("Booting kernel...");
-    openminecraft::vfs::fsmountZipArchive(
-        _binary_boot_bundle_start, (uint32_t)(_binary_boot_bundle_end - _binary_boot_bundle_start), "/bootassets");
-    // openminecraft::vfs::fsmountReal("./bootassets", "/bootassets");
+    /*openminecraft::vfs::fsmountZipArchive(
+        _binary_boot_bundle_start, (uint32_t)(_binary_boot_bundle_end - _binary_boot_bundle_start), "/bootassets");*/
+    openminecraft::vfs::fsmountReal("./bootassets", "/bootassets");
     openminecraft::vfs::fsmountZipArchive(_binary_external_bundle_start,
                                           (uint32_t)(_binary_external_bundle_end - _binary_external_bundle_start),
                                           "/external");

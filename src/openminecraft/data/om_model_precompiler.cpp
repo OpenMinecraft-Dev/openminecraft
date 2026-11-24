@@ -465,8 +465,8 @@ static void rotateElementRotation(const std::shared_ptr<openminecraft::compiler:
     if (rmap.count("origin"))
     {
         auto &origin = rmap["origin"]->getArray();
-        auto p = glm::vec3(origin[0]->getNumberFloating(), origin[1]->getNumberFloating(),
-                           origin[2]->getNumberFloating());
+        auto p =
+            glm::vec3(origin[0]->getNumberFloating(), origin[1]->getNumberFloating(), origin[2]->getNumberFloating());
         p = rotatePoint90(p, mode);
         origin[0] = std::make_shared<openminecraft::compiler::json::OMJsonNodeNumber>(p.x);
         origin[1] = std::make_shared<openminecraft::compiler::json::OMJsonNodeNumber>(p.y);
@@ -503,8 +503,8 @@ static void rotateElementRotation(const std::shared_ptr<openminecraft::compiler:
     rmap["axis"] = std::make_shared<openminecraft::compiler::json::OMJsonNodeString>(newAxis);
     if (sign < 0 && rmap.count("angle"))
     {
-        rmap["angle"] = std::make_shared<openminecraft::compiler::json::OMJsonNodeNumber>(
-            -rmap["angle"]->getNumberFloating());
+        rmap["angle"] =
+            std::make_shared<openminecraft::compiler::json::OMJsonNodeNumber>(-rmap["angle"]->getNumberFloating());
     }
 }
 
@@ -565,16 +565,14 @@ auto OMModelPrecompiler::loadModelPartWithArgs(OMIdentifier i, int xrot, int yro
                 {
                     return;
                 }
-                int rotation = face->getMap().count("rotation")
-                                   ? static_cast<int>(face->getMap()["rotation"]->getNumber())
-                                   : 0;
+                int rotation =
+                    face->getMap().count("rotation") ? static_cast<int>(face->getMap()["rotation"]->getNumber()) : 0;
                 rotation = (rotation + amount) % 360;
                 if (rotation < 0)
                 {
                     rotation += 360;
                 }
-                face->getMap()["rotation"] =
-                    std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotation));
+                face->getMap()["rotation"] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotation));
             };
             auto xrot90 = [&]() {
                 rotateElementRotation(p, 0);
@@ -614,14 +612,14 @@ auto OMModelPrecompiler::loadModelPartWithArgs(OMIdentifier i, int xrot, int yro
                 {
                     fwest->getMap()["rotation"] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(
                         ((fwest->getMap().count("rotation") ? fwest->getMap()["rotation"]->getNumber() : 0) +
-                         (lockuv ? -90 : 90)) %
+                         (lockuv ? 90 : -90)) %
                         360));
                 }
                 if (feast)
                 {
                     feast->getMap()["rotation"] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(
                         ((feast->getMap().count("rotation") ? feast->getMap()["rotation"]->getNumber() : 0) +
-                         (lockuv ? -90 : 90)) %
+                         (lockuv ? 90 : -90)) %
                         360));
                 }
             };
@@ -705,15 +703,15 @@ auto OMModelPrecompiler::loadModelPartWithArgs(OMIdentifier i, int xrot, int yro
             int txrot = xrot;
             int tyrot = yrot;
             int tzrot = zrot;
-            while (txrot > 0)
-            {
-                xrot90();
-                txrot -= 90;
-            }
             while (tyrot > 0)
             {
                 yrot90();
                 tyrot -= 90;
+            }
+            while (txrot > 0)
+            {
+                xrot90();
+                txrot -= 90;
             }
             while (tzrot > 0)
             {
@@ -919,7 +917,8 @@ auto OMModelPrecompiler::wrapFace(std::shared_ptr<openminecraft::compiler::json:
             face->getMap().count("tintindex") ? static_cast<int>(face->getMap()["tintindex"]->getNumber()) : -1};
 }
 
-auto OMModelPrecompiler::composeModel(std::vector<int> partids, bool soild, bool translucent, bool waterlogged, bool isSolidRender) -> int
+auto OMModelPrecompiler::composeModel(std::vector<int> partids, bool soild, bool translucent, bool waterlogged,
+                                      bool isSolidRender) -> int
 {
     auto &m = blockModels.emplace_back();
     m.soild = soild;
