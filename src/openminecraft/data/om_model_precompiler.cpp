@@ -690,28 +690,50 @@ auto OMModelPrecompiler::loadModelPartWithArgs(OMIdentifier i, int xrot, int yro
                 {
                     return;
                 }
+
                 const int nx = ((xrot % 360) + 360) % 360;
                 const int ny = ((yrot % 360) + 360) % 360;
 
-                if (nx == 90 && ny != 0 && ny != 180)
+                // Residual texture-basis corrections after the three quarter
+                // turns. They are keyed by the original blockstate variant.
+                //
+                // north/south walls (x=90, y=0/180): the final east face comes
+                // from the old east/west face, so it needs 180; the whole cross
+                // also needs a half turn because north is the reference wall.
+                //
+                // east/west walls (x=90, y=90/270): the final south face comes
+                // from the old east/west face and needs 180.
+                struct VariantCorrection
                 {
-                    addFaceRotation("south", 180);
-                }
-                if (nx == 90 && (ny == 0 || ny == 180))
+                    int x;
+                    int y;
+                    std::array<int, 6> faces;
+                };
+                static constexpr std::array<VariantCorrection, 4> corrections = {{
+                    {90, 0, {{180, 180, 0, 180, 180, 180}}},
+                    {90, 90, {{0, 180, 0, 0, 0, 0}}},
+                    {90, 180, {{180, 180, 0, 180, 180, 180}}},
+                    {90, 270, {{0, 180, 0, 0, 0, 0}}},
+                }};
+
+                for (const auto &correction : corrections)
                 {
-                    addFaceRotation("east", 180);
-                }
-                if (ny == 180 || (nx == 90 && ny == 0))
-                {
-                    static constexpr std::array<FaceRotationEntry, 6> allFaces = {{{"north", 180},
-                                                                                    {"south", 180},
-                                                                                    {"east", 180},
-                                                                                    {"west", 180},
-                                                                                    {"up", 180},
-                                                                                    {"down", 180}}};
-                    for (const auto &entry : allFaces)
+                    if (nx == correction.x && ny == correction.y)
                     {
-                        addFaceRotation(entry.face, entry.degrees);
+                        for (size_t n = 0; n < faceNames.size(); ++n)
+                        {
+                            addFaceRotation(faceNames[n], correction.faces[n]);
+                        }
+                        return;
+                    }
+                }
+
+                // A pure Y half-turn affects every face regardless of X.
+                if (ny == 180)
+                {
+                    for (const char *face : faceNames)
+                    {
+                        addFaceRotation(face, 180);
                     }
                 }
             };
