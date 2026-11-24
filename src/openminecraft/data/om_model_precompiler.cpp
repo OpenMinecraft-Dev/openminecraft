@@ -559,6 +559,23 @@ auto OMModelPrecompiler::loadModelPartWithArgs(OMIdentifier i, int xrot, int yro
                     faces[f] = a;
                 }
             };
+            auto addFaceRotation = [&](const char *faceName, int amount) {
+                auto face = fetchface(faceName);
+                if (!face)
+                {
+                    return;
+                }
+                int rotation = face->getMap().count("rotation")
+                                   ? static_cast<int>(face->getMap()["rotation"]->getNumber())
+                                   : 0;
+                rotation = (rotation + amount) % 360;
+                if (rotation < 0)
+                {
+                    rotation += 360;
+                }
+                face->getMap()["rotation"] =
+                    std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotation));
+            };
             auto xrot90 = [&]() {
                 rotateElementRotation(p, 0);
                 auto &from = p->getMap()["from"]->getArray();
@@ -585,6 +602,10 @@ auto OMModelPrecompiler::loadModelPartWithArgs(OMIdentifier i, int xrot, int yro
                 putface("down", fsouth);
                 putface("north", fdown);
                 putface("up", fnorth);
+
+                // up/down -> north/south: texture V axis flips.
+                addFaceRotation("north", 180);
+                addFaceRotation("south", 180);
 
                 auto fwest = fetchface("west");
                 auto feast = fetchface("east");
@@ -676,23 +697,9 @@ auto OMModelPrecompiler::loadModelPartWithArgs(OMIdentifier i, int xrot, int yro
                 putface("east", fdown);
                 putface("up", feast);
 
-                auto fnorth = fetchface("north");
-                auto fsouth = fetchface("south");
-
-                if (fnorth)
-                {
-                    fnorth->getMap()["rotation"] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(
-                        ((fnorth->getMap().count("rotation") ? fnorth->getMap()["rotation"]->getNumber() : 0) +
-                         (lockuv ? -90 : 90)) %
-                        360));
-                }
-                if (fsouth)
-                {
-                    fsouth->getMap()["rotation"] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(
-                        ((fsouth->getMap().count("rotation") ? fsouth->getMap()["rotation"]->getNumber() : 0) +
-                         (lockuv ? -90 : 90)) %
-                        360));
-                }
+                // up/down -> west/east: texture U axis becomes vertical.
+                addFaceRotation("west", lockuv ? -90 : 90);
+                addFaceRotation("east", lockuv ? -90 : 90);
             };
 
             int txrot = xrot;

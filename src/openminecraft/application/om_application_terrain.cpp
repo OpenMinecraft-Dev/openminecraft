@@ -348,6 +348,20 @@ auto startupCamera() -> OMStartupCamera
 
     OMStartupCamera cam;
 
+    if (std::getenv("OM_CHUNK_TEST") != nullptr)
+    {
+        // Two isolated test chunks along +X, viewed from the south.
+        cam.chunkX = 0;
+        cam.chunkY = 1;
+        cam.chunkZ = 2;
+        cam.localX = 8.0f;
+        cam.localY = 8.0f;
+        cam.localZ = 8.0f;
+        cam.yaw = 90.0f;
+        cam.pitch = -25.0f;
+        return cam;
+    }
+
     if (preloadFromDisk)
     {
         const auto bounds = preloadChunkBounds();
@@ -379,11 +393,127 @@ auto startupCamera() -> OMStartupCamera
     return cam;
 }
 
+static void runChunkTestGeneration(world::OMChunkManager<16> &manager, std::function<void(double)> statusReport)
+{
+    using data::block::blockStateRegistry;
+    using data::block::makeBlockState;
+
+    auto stateId = [&](const std::string &raw) -> uint32_t {
+        try
+        {
+            return blockStateRegistry.id(makeBlockState(raw));
+        }
+        catch (const std::exception &)
+        {
+            std::fprintf(stderr, "OM_CHUNK_TEST missing state: %s\n", raw.c_str());
+            throw;
+        }
+    };
+
+    const uint32_t airId = stateId("minecraft:air[]");
+    const uint32_t stoneId = stateId("minecraft:stone[]");
+
+    auto makeChunk = [&](int64_t cx, int64_t cy, int64_t cz) {
+        world::OMChunk<16> chunk(cx, cy, cz);
+        chunk.setAirId(airId);
+        chunk.fill(airId);
+        return chunk;
+    };
+
+    auto fillFloor = [&](world::OMChunk<16> &chunk) {
+        for (int x = 0; x < 16; ++x)
+        {
+            for (int z = 0; z < 16; ++z)
+            {
+                chunk.setBlock(x, 0, z, stoneId);
+            }
+        }
+    };
+
+    // Chunk 0: one amethyst cluster for each of the six facing values.
+    {
+        auto chunk = makeChunk(0, 0, 0);
+        fillFloor(chunk);
+
+        auto cluster = [&](const char *facing, int x, int y, int z) {
+            chunk.setBlock(x, y, z,
+                           stateId(std::string("minecraft:amethyst_cluster[facing=") + facing +
+                                   ",waterlogged=false]"));
+        };
+
+        cluster("up", 4, 1, 4);
+
+        chunk.setBlock(4, 6, 4, stoneId);
+        cluster("down", 4, 5, 4);
+
+        chunk.setBlock(4, 4, 0, stoneId);
+        cluster("north", 4, 4, 1);
+
+        chunk.setBlock(4, 4, 8, stoneId);
+        cluster("south", 4, 4, 7);
+
+        chunk.setBlock(8, 4, 4, stoneId);
+        cluster("east", 7, 4, 4);
+
+        chunk.setBlock(0, 4, 4, stoneId);
+        cluster("west", 1, 4, 4);
+
+        manager.loadChunk(chunk);
+    }
+
+    // Chunk 1: 4 facings * 2 hinges * 2 open states.
+    {
+        auto chunk = makeChunk(1, 0, 0);
+        fillFloor(chunk);
+
+        const char *facings[] = {"north", "south", "east", "west"};
+        const char *hinges[] = {"left", "right"};
+        const char *opens[] = {"false", "true"};
+
+        for (int fi = 0; fi < 4; ++fi)
+        {
+            for (int hi = 0; hi < 2; ++hi)
+            {
+                for (int oi = 0; oi < 2; ++oi)
+                {
+                    const int x = 2 + fi * 4;
+                    const int z = 2 + (hi * 2 + oi) * 4;
+
+                    for (const char *half : {"lower", "upper"})
+                    {
+                        std::string state = "minecraft:cherry_door[facing=";
+                        state += facings[fi];
+                        state += ",half=";
+                        state += half;
+                        state += ",hinge=";
+                        state += hinges[hi];
+                        state += ",open=";
+                        state += opens[oi];
+                        state += ",powered=false]";
+
+                        chunk.setBlock(x, std::string(half) == "lower" ? 1 : 2, z, stateId(state));
+                    }
+                }
+            }
+        }
+
+        manager.loadChunk(chunk);
+    }
+
+    statusReport(1.0);
+}
+
 void runTerrainGeneration(world::OMChunkManager<16> &manager, std::atomic<bool> &stopProducing,
                           std::function<void(double)> statusReport)
 {
     static const bool preloadFromDisk = std::getenv("OM_CHUNK_PRELOAD") != nullptr;
     constexpr int64_t worldOffsetChunks = 0;
+
+    if (std::getenv("OM_CHUNK_TEST") != nullptr)
+    {
+        runChunkTestGeneration(manager, statusReport);
+        return;
+    }
 
     if (preloadFromDisk)
     {
