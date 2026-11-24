@@ -717,6 +717,12 @@ auto OMModelPrecompiler::loadModelPartWithArgs(OMIdentifier i, int xrot, int yro
                 {
                     addFaceRotation("south", 180);
                 }
+                if (nx == 90 && (ny == 0 || ny == 180))
+                {
+                    // north/south wall variants: the final east face comes from
+                    // the old east (y=0) or west (y=180) face.
+                    addFaceRotation("east", 180);
+                }
             }
 
             modelParts[modelId].emplace_back(wrapPart(p));
