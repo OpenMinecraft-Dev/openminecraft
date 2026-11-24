@@ -633,22 +633,13 @@ auto OMModelPrecompiler::loadModelPartWithArgs(OMIdentifier i, int xrot, int yro
                 }
                 else if (axis == 1)
                 {
-                    faceRotations = {{{"north", 0},
-                                      {"south", 0},
-                                      {"east", 0},
-                                      {"west", 0},
-                                      {"up", 270},
-                                      {"down", 90}}};
+                    faceRotations = {{{"north", 0}, {"south", 0}, {"east", 0}, {"west", 0}, {"up", 270}, {"down", 90}}};
                     faceMoves = {{{"east", "north"}, {"north", "west"}, {"west", "south"}, {"south", "east"}}};
                 }
                 else
                 {
-                    faceRotations = {{{"north", 90},
-                                      {"south", 270},
-                                      {"east", 270},
-                                      {"west", 90},
-                                      {"up", 270},
-                                      {"down", 90}}};
+                    faceRotations = {
+                        {{"north", 90}, {"south", 270}, {"east", 270}, {"west", 90}, {"up", 270}, {"down", 90}}};
                     faceMoves = {{{"up", "west"}, {"west", "down"}, {"down", "east"}, {"east", "up"}}};
                 }
 
@@ -710,10 +701,10 @@ auto OMModelPrecompiler::loadModelPartWithArgs(OMIdentifier i, int xrot, int yro
                     std::array<int, 6> faces;
                 };
                 static constexpr std::array<VariantCorrection, 4> corrections = {{
-                    {90, 0, {{180, 180, 0, 180, 180, 180}}},
-                    {90, 90, {{0, 180, 0, 0, 0, 0}}},
-                    {90, 180, {{180, 180, 0, 180, 180, 180}}},
-                    {90, 270, {{0, 180, 0, 0, 0, 0}}},
+                    {90, 0, {{180, 180, 180, 180, 180, 180}}},
+                    {90, 90, {{0, 0, 0, 0, 0, 0}}},
+                    {90, 180, {{180, 180, 180, 180, 180, 180}}},
+                    {90, 270, {{0, 0, 0, 0, 0, 0}}},
                 }};
 
                 for (const auto &correction : corrections)
