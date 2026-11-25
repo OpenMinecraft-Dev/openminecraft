@@ -550,7 +550,7 @@ static void runChunkTestGeneration(world::OMChunkManager<16> &manager, std::func
 
     // Chunk 4: normal standing signs, all 16 rotations and waterlogged states.
     {
-        auto chunk = makeChunk(4, 0, 0);
+        auto chunk = makeChunk(0, 0, 1);
         fillFloor(chunk);
 
         int index = 0;
@@ -576,7 +576,7 @@ static void runChunkTestGeneration(world::OMChunkManager<16> &manager, std::func
 
     // Chunk 5: hanging signs, all rotations, attached and waterlogged states.
     {
-        auto chunk = makeChunk(5, 0, 0);
+        auto chunk = makeChunk(1, 0, 1);
         fillFloor(chunk);
 
         int index = 0;
@@ -607,7 +607,7 @@ static void runChunkTestGeneration(world::OMChunkManager<16> &manager, std::func
 
     // Chunk 6: fences, all connection and waterlogged states.
     {
-        auto chunk = makeChunk(6, 0, 0);
+        auto chunk = makeChunk(2, 0, 1);
         fillFloor(chunk);
 
         int index = 0;
@@ -648,7 +648,7 @@ static void runChunkTestGeneration(world::OMChunkManager<16> &manager, std::func
 
     // Chunk 7: fence gates, all facing/open/in_wall/powered states.
     {
-        auto chunk = makeChunk(7, 0, 0);
+        auto chunk = makeChunk(3, 0, 1);
         fillFloor(chunk);
 
         int index = 0;
@@ -678,6 +678,169 @@ static void runChunkTestGeneration(world::OMChunkManager<16> &manager, std::func
                 }
             }
         }
+
+        manager.loadChunk(chunk);
+    }
+
+    // Chunk 8: buttons, pressure plates and rails.
+    {
+        auto chunk = makeChunk(0, 0, 2);
+        fillFloor(chunk);
+        int index = 0;
+
+        for (const char *face : {"floor", "wall", "ceiling"})
+        {
+            for (const char *facing : {"north", "south", "east", "west"})
+            {
+                for (const char *powered : {"false", "true"})
+                {
+                    std::string state = "minecraft:cherry_button[face=";
+                    state += face;
+                    state += ",facing=";
+                    state += facing;
+                    state += ",powered=";
+                    state += powered;
+                    state += "]";
+                    const int x = 1 + (index % 8) * 2;
+                    const int z = 1 + (index / 8) * 2;
+                    chunk.setBlock(x, 1, z, stateId(state));
+                    ++index;
+                }
+            }
+        }
+
+        for (const char *powered : {"false", "true"})
+        {
+            std::string state = "minecraft:stone_pressure_plate[powered=";
+            state += powered;
+            state += "]";
+            chunk.setBlock(1 + (index % 8) * 2, 1, 1 + (index / 8) * 2, stateId(state));
+            ++index;
+        }
+
+        for (const char *shape : {"north_south", "east_west", "ascending_east", "ascending_west",
+                                  "ascending_north", "ascending_south", "south_east", "south_west",
+                                  "north_west", "north_east"})
+        {
+            for (const char *wet : {"false", "true"})
+            {
+                std::string state = "minecraft:rail[shape=";
+                state += shape;
+                state += ",waterlogged=";
+                state += wet;
+                state += "]";
+                const int x = 1 + (index % 8) * 2;
+                const int z = 1 + (index / 8) * 2;
+                chunk.setBlock(x, 1, z, stateId(state));
+                ++index;
+            }
+        }
+
+        manager.loadChunk(chunk);
+    }
+
+    // Chunk 9: shelves.
+    {
+        auto chunk = makeChunk(1, 0, 2);
+        fillFloor(chunk);
+        int index = 0;
+
+        for (const char *facing : {"north", "south", "east", "west"})
+        {
+            for (const char *side : {"unconnected", "right", "center", "left"})
+            {
+                for (const char *powered : {"false", "true"})
+                {
+                    for (const char *wet : {"false", "true"})
+                    {
+                        std::string state = "minecraft:cherry_shelf[facing=";
+                        state += facing;
+                        state += ",powered=";
+                        state += powered;
+                        state += ",side_chain=";
+                        state += side;
+                        state += ",waterlogged=";
+                        state += wet;
+                        state += "]";
+                        const int x = 1 + (index % 8) * 2;
+                        const int z = 1 + (index / 8) * 2;
+                        chunk.setBlock(x, 1, z, stateId(state));
+                        ++index;
+                    }
+                }
+            }
+        }
+
+        manager.loadChunk(chunk);
+    }
+
+    // Chunk 10: big dripleaf and stems.
+    {
+        auto chunk = makeChunk(2, 0, 2);
+        fillFloor(chunk);
+        int index = 0;
+
+        for (const char *facing : {"north", "south", "east", "west"})
+        {
+            for (const char *tilt : {"none", "unstable", "partial", "full"})
+            {
+                for (const char *wet : {"false", "true"})
+                {
+                    std::string state = "minecraft:big_dripleaf[facing=";
+                    state += facing;
+                    state += ",tilt=";
+                    state += tilt;
+                    state += ",waterlogged=";
+                    state += wet;
+                    state += "]";
+                    const int x = 1 + (index % 8) * 2;
+                    const int z = 1 + (index / 8) * 2;
+                    chunk.setBlock(x, 1, z, stateId(state));
+                    ++index;
+                }
+            }
+        }
+
+        for (const char *facing : {"north", "south", "east", "west"})
+        {
+            for (const char *wet : {"false", "true"})
+            {
+                std::string state = "minecraft:big_dripleaf_stem[facing=";
+                state += facing;
+                state += ",waterlogged=";
+                state += wet;
+                state += "]";
+                const int x = 1 + (index % 8) * 2;
+                const int z = 1 + (index / 8) * 2;
+                chunk.setBlock(x, 1, z, stateId(state));
+                ++index;
+            }
+        }
+
+        manager.loadChunk(chunk);
+    }
+
+    // Chunk 11: plants and other non-cube blocks.
+    {
+        auto chunk = makeChunk(3, 0, 2);
+        fillFloor(chunk);
+        int index = 0;
+
+        auto place = [&](const std::string &state) {
+            const int x = 1 + (index % 8) * 2;
+            const int z = 1 + (index / 8) * 2;
+            chunk.setBlock(x, 1, z, stateId(state));
+            ++index;
+        };
+
+        // Double-height plant: lower and upper occupy the same X/Z column.
+        chunk.setBlock(1, 1, 1, stateId("minecraft:tall_grass[half=lower]"));
+        chunk.setBlock(1, 2, 1, stateId("minecraft:tall_grass[half=upper]"));
+        ++index;
+
+        place("minecraft:azalea[]");
+        place("minecraft:brown_mushroom[]");
+        place("minecraft:amethyst_cluster[facing=up,waterlogged=false]");
 
         manager.loadChunk(chunk);
     }
