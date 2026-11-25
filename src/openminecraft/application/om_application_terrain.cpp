@@ -501,6 +501,53 @@ static void runChunkTestGeneration(world::OMChunkManager<16> &manager, std::func
         manager.loadChunk(chunk);
     }
 
+    // Chunks 2/3: every stairs state, spaced by one empty block. Each chunk
+    // holds 8x8 = 64 cells, so the 80 states span two chunks.
+    {
+        auto chunkA = makeChunk(2, 0, 0);
+        auto chunkB = makeChunk(3, 0, 0);
+        fillFloor(chunkA);
+        fillFloor(chunkB);
+
+        const char *facings[] = {"north", "south", "east", "west"};
+        const char *halves[] = {"top", "bottom"};
+        const char *shapes[] = {"straight", "inner_left", "inner_right", "outer_left", "outer_right"};
+        const char *waterlogged[] = {"true", "false"};
+
+        int index = 0;
+        for (const char *facing : facings)
+        {
+            for (const char *half : halves)
+            {
+                for (const char *shape : shapes)
+                {
+                    for (const char *wet : waterlogged)
+                    {
+                        std::string state = "minecraft:cherry_stairs[facing=";
+                        state += facing;
+                        state += ",half=";
+                        state += half;
+                        state += ",shape=";
+                        state += shape;
+                        state += ",waterlogged=";
+                        state += wet;
+                        state += "]";
+
+                        auto &chunk = index < 64 ? chunkA : chunkB;
+                        const int local = index % 64;
+                        const int x = 1 + (local % 8) * 2;
+                        const int z = 1 + (local / 8) * 2;
+                        chunk.setBlock(x, 1, z, stateId(state));
+                        ++index;
+                    }
+                }
+            }
+        }
+
+        manager.loadChunk(chunkA);
+        manager.loadChunk(chunkB);
+    }
+
     statusReport(1.0);
 }
 

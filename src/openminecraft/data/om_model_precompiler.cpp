@@ -613,6 +613,38 @@ static OMModelCullSide sideFromNormal(const glm::vec3 &n)
     return OMModelCullSide::None;
 }
 
+static auto resolveFaceQuarterTurn(OMModelCullSide side, const FaceBasis &target, const glm::vec3 &u1) -> int
+{
+    const glm::ivec3 ui = roundIVec(u1);
+    const glm::ivec3 tu = roundIVec(target.u);
+    const glm::ivec3 tv = roundIVec(target.v);
+
+    const int du = ui.x * tu.x + ui.y * tu.y + ui.z * tu.z;
+    const int dv = ui.x * tv.x + ui.y * tv.y + ui.z * tv.z;
+
+    if (du == 1)
+    {
+        return 0;
+    }
+    if (du == -1)
+    {
+        return 180;
+    }
+
+    // The texture V axis is flipped on the up/down faces, so the
+    // U -> target-V mapping runs in the opposite direction there.
+    const bool opposite = side == OMModelCullSide::East || side == OMModelCullSide::West;
+    if (dv == 1)
+    {
+        return opposite ? 270 : 90;
+    }
+    if (dv == -1)
+    {
+        return opposite ? 90 : 270;
+    }
+    return 0;
+}
+
 OMModelPart rotateModelPart(const OMModelPart &part, int xrot, int yrot, int zrot, bool lockuv)
 {
     const glm::mat3 R = rotationMat(xrot, yrot, zrot);
@@ -755,21 +787,7 @@ OMModelPart rotateModelPart(const OMModelPart &part, int xrot, int yrot, int zro
                 u1 = -u1;
                 mirrorU = true;
             }
-            glm::ivec3 u1i = roundIVec(u1);
-            glm::ivec3 nbui = roundIVec(nb.u);
-            glm::ivec3 nbvi = roundIVec(nb.v);
-
-            int du = u1i.x * nbui.x + u1i.y * nbui.y + u1i.z * nbui.z;
-            int dv = u1i.x * nbvi.x + u1i.y * nbvi.y + u1i.z * nbvi.z;
-
-            if (du == 1)
-                newRot = 0;
-            else if (du == -1)
-                newRot = 180;
-            else if (dv == 1)
-                newRot = (newSide == OMModelCullSide::East || newSide == OMModelCullSide::West) ? 270 : 90;
-            else if (dv == -1)
-                newRot = (newSide == OMModelCullSide::East || newSide == OMModelCullSide::West) ? 90 : 270;
+            newRot = resolveFaceQuarterTurn(newSide, nb, u1);
         }
         // lockuv：贴图世界朝向不跟转，等价于 rotation 锁为 0
 
