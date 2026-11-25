@@ -508,249 +508,341 @@ static void rotateElementRotation(const std::shared_ptr<openminecraft::compiler:
     }
 }
 
-auto OMModelPrecompiler::loadModelPartWithArgs(OMIdentifier i, int xrot, int yrot, int zrot, bool lockuv) -> int
+static auto rotationX(int deg) -> glm::mat3
+{
+    switch (((deg % 360) + 360) % 360)
+    {
+    case 90:
+        return glm::mat3(glm::vec3(1, 0, 0), glm::vec3(0, 0, 1), glm::vec3(0, -1, 0));
+    case 180:
+        return glm::mat3(glm::vec3(1, 0, 0), glm::vec3(0, -1, 0), glm::vec3(0, 0, -1));
+    case 270:
+        return glm::mat3(glm::vec3(1, 0, 0), glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));
+    default:
+        return glm::mat3(1.0f);
+    }
+}
+
+static auto rotationY(int deg) -> glm::mat3
+{
+    switch (((deg % 360) + 360) % 360)
+    {
+    case 90:
+        return glm::mat3(glm::vec3(0, 0, -1), glm::vec3(0, 1, 0), glm::vec3(1, 0, 0));
+    case 180:
+        return glm::mat3(glm::vec3(-1, 0, 0), glm::vec3(0, 1, 0), glm::vec3(0, 0, -1));
+    case 270:
+        return glm::mat3(glm::vec3(0, 0, 1), glm::vec3(0, 1, 0), glm::vec3(-1, 0, 0));
+    default:
+        return glm::mat3(1.0f);
+    }
+}
+
+static auto rotationZ(int deg) -> glm::mat3
+{
+    switch (((deg % 360) + 360) % 360)
+    {
+    case 90:
+        return glm::mat3(glm::vec3(0, 1, 0), glm::vec3(-1, 0, 0), glm::vec3(0, 0, 1));
+    case 180:
+        return glm::mat3(glm::vec3(-1, 0, 0), glm::vec3(0, -1, 0), glm::vec3(0, 0, 1));
+    case 270:
+        return glm::mat3(glm::vec3(0, -1, 0), glm::vec3(1, 0, 0), glm::vec3(0, 0, 1));
+    default:
+        return glm::mat3(1.0f);
+    }
+}
+
+static auto rotationMat(int x, int y, int z) -> glm::mat3
+{
+    return rotationZ(z) * rotationY(y) * rotationX(x);
+}
+
+static inline glm::ivec3 roundIVec(const glm::vec3 &v)
+{
+    return glm::ivec3(static_cast<int>(std::lround(v.x)), static_cast<int>(std::lround(v.y)),
+                      static_cast<int>(std::lround(v.z)));
+}
+
+static inline bool ivecEq(const glm::ivec3 &a, const glm::ivec3 &b)
+{
+    return a.x == b.x && a.y == b.y && a.z == b.z;
+}
+
+struct FaceBasis
+{
+    glm::vec3 n, u, v;
+};
+
+static FaceBasis standardBasis(OMModelCullSide side)
+{
+    switch (side)
+    {
+    case OMModelCullSide::North:
+        return {{0, 0, -1}, {-1, 0, 0}, {0, -1, 0}};
+    case OMModelCullSide::South:
+        return {{0, 0, 1}, {1, 0, 0}, {0, -1, 0}};
+    case OMModelCullSide::East:
+        return {{1, 0, 0}, {0, 0, -1}, {0, -1, 0}};
+    case OMModelCullSide::West:
+        return {{-1, 0, 0}, {0, 0, 1}, {0, -1, 0}};
+    case OMModelCullSide::Up:
+        return {{0, 1, 0}, {1, 0, 0}, {0, 0, -1}};
+    case OMModelCullSide::Down:
+        return {{0, -1, 0}, {1, 0, 0}, {0, 0, -1}};
+    default:
+        return {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}};
+    }
+}
+
+static OMModelCullSide sideFromNormal(const glm::vec3 &n)
+{
+    glm::ivec3 i = roundIVec(n);
+    if (ivecEq(i, {0, 0, -1}))
+        return OMModelCullSide::North;
+    if (ivecEq(i, {0, 0, 1}))
+        return OMModelCullSide::South;
+    if (ivecEq(i, {1, 0, 0}))
+        return OMModelCullSide::East;
+    if (ivecEq(i, {-1, 0, 0}))
+        return OMModelCullSide::West;
+    if (ivecEq(i, {0, 1, 0}))
+        return OMModelCullSide::Up;
+    if (ivecEq(i, {0, -1, 0}))
+        return OMModelCullSide::Down;
+    return OMModelCullSide::None;
+}
+
+OMModelPart rotateModelPart(const OMModelPart &part, int xrot, int yrot, int zrot, bool lockuv)
+{
+    const glm::mat3 R = rotationMat(xrot, yrot, zrot);
+    const glm::vec3 center(8.0f, 8.0f, 8.0f); // 原版 blockstate 旋转中心
+
+    OMModelPart out = part;
+
+    // ---------- 1. 几何 AABB ----------
+    {
+        glm::vec3 f = R * (part.from - center) + center;
+        glm::vec3 t = R * (part.to - center) + center;
+        out.from = glm::min(f, t);
+        out.to = glm::max(f, t);
+        // 90° 倍数下旋转后的 AABB 顶点仍轴对齐，min/max 即正确
+    }
+
+    // ---------- 2. 内层元素旋转（共轭变换） ----------
+    // 正确关系：R · Rot(axis, θ) = Rot(R·axis, θ) · R
+    // 因此：origin → R·origin，axis → R·axis，角度不变
+    if (part.rotate)
+    {
+        out.rotateOrigin = R * (part.rotateOrigin - center) + center;
+
+        if (part.rotateAxis != OMModelAxis::Any)
+        {
+            glm::vec3 axis(1.0f, 0.0f, 0.0f);
+            switch (part.rotateAxis)
+            {
+            case OMModelAxis::X:
+                axis = {1, 0, 0};
+                break;
+            case OMModelAxis::Y:
+                axis = {0, 1, 0};
+                break;
+            case OMModelAxis::Z:
+                axis = {0, 0, 1};
+                break;
+            default:
+                break;
+            }
+
+            glm::ivec3 newAxisI = roundIVec(R * axis);
+
+            OMModelAxis newAxis = OMModelAxis::Any;
+            int sgn = 1;
+            if (ivecEq(newAxisI, {1, 0, 0}))
+            {
+                newAxis = OMModelAxis::X;
+                sgn = 1;
+            }
+            else if (ivecEq(newAxisI, {-1, 0, 0}))
+            {
+                newAxis = OMModelAxis::X;
+                sgn = -1;
+            }
+            else if (ivecEq(newAxisI, {0, 1, 0}))
+            {
+                newAxis = OMModelAxis::Y;
+                sgn = 1;
+            }
+            else if (ivecEq(newAxisI, {0, -1, 0}))
+            {
+                newAxis = OMModelAxis::Y;
+                sgn = -1;
+            }
+            else if (ivecEq(newAxisI, {0, 0, 1}))
+            {
+                newAxis = OMModelAxis::Z;
+                sgn = 1;
+            }
+            else if (ivecEq(newAxisI, {0, 0, -1}))
+            {
+                newAxis = OMModelAxis::Z;
+                sgn = -1;
+            }
+
+            out.rotateAxis = newAxis;
+            out.rotateAngle = part.rotateAngle * sgn; // 负方向轴用角度取反表示
+        }
+        // Any 轴（三欧拉角复合旋转）：外层 R 无法分解回单轴+角度，
+        // 只旋转 origin，角度保持。升级方案见文末"可选：彻底矩阵化"
+    }
+
+    // ---------- 3. 面表 ----------
+    out.enableDown = out.enableUp = false;
+    out.enableSouth = out.enableNorth = false;
+    out.enableWest = out.enableEast = false;
+
+    struct Entry
+    {
+        OMModelCullSide side;
+        const OMModelFace *face;
+        bool enabled;
+    };
+    const Entry entries[6] = {
+        {OMModelCullSide::Down, &part.down, part.enableDown},
+        {OMModelCullSide::Up, &part.up, part.enableUp},
+        {OMModelCullSide::South, &part.south, part.enableSouth},
+        {OMModelCullSide::North, &part.north, part.enableNorth},
+        {OMModelCullSide::West, &part.west, part.enableWest},
+        {OMModelCullSide::East, &part.east, part.enableEast},
+    };
+
+    for (const auto &e : entries)
+    {
+        if (!e.enabled)
+            continue;
+
+        FaceBasis b = standardBasis(e.side);
+        glm::vec3 n = b.n, u = b.u, v = b.v;
+
+        // 施加 face.rotation（顺时针：u→v, v→-u）
+        int r = ((e.face->rotation / 90) % 4 + 4) % 4;
+        for (int i = 0; i < r; ++i)
+        {
+            glm::vec3 un = v;
+            glm::vec3 vn = -u;
+            u = un;
+            v = vn;
+        }
+
+        // 施加外层 R
+        glm::vec3 n1 = R * n;
+        glm::vec3 u1 = R * u;
+        glm::vec3 v1 = R * v;
+
+        OMModelCullSide newSide = sideFromNormal(n1);
+        if (newSide == OMModelCullSide::None)
+            continue;
+
+        bool mirrorU = false;
+        int newRot = 0;
+        if (!lockuv)
+        {
+            FaceBasis nb = standardBasis(newSide);
+            const float sourceHand = glm::dot(n1, glm::cross(u1, v1));
+            const float targetHand = glm::dot(nb.n, glm::cross(nb.u, nb.v));
+            if (sourceHand * targetHand < 0.0f)
+            {
+                u1 = -u1;
+                mirrorU = true;
+            }
+            glm::ivec3 u1i = roundIVec(u1);
+            glm::ivec3 nbui = roundIVec(nb.u);
+            glm::ivec3 nbvi = roundIVec(nb.v);
+
+            int du = u1i.x * nbui.x + u1i.y * nbui.y + u1i.z * nbui.z;
+            int dv = u1i.x * nbvi.x + u1i.y * nbvi.y + u1i.z * nbvi.z;
+
+            if (du == 1)
+                newRot = 0;
+            else if (du == -1)
+                newRot = 180;
+            else if (dv == 1)
+                newRot = (newSide == OMModelCullSide::East || newSide == OMModelCullSide::West) ? 270 : 90;
+            else if (dv == -1)
+                newRot = (newSide == OMModelCullSide::East || newSide == OMModelCullSide::West) ? 90 : 270;
+        }
+        // lockuv：贴图世界朝向不跟转，等价于 rotation 锁为 0
+
+        OMModelFace nf = *e.face;
+        nf.rotation = newRot;
+        if (mirrorU)
+        {
+            std::swap(nf.uv0.x, nf.uv1.x);
+        }
+        if (e.face->cull != OMModelCullSide::None)
+        {
+            nf.cull = newSide; // cullface 跟随面名
+        }
+
+        switch (newSide)
+        {
+        case OMModelCullSide::Down:
+            out.down = nf;
+            out.enableDown = true;
+            break;
+        case OMModelCullSide::Up:
+            out.up = nf;
+            out.enableUp = true;
+            break;
+        case OMModelCullSide::South:
+            out.south = nf;
+            out.enableSouth = true;
+            break;
+        case OMModelCullSide::North:
+            out.north = nf;
+            out.enableNorth = true;
+            break;
+        case OMModelCullSide::West:
+            out.west = nf;
+            out.enableWest = true;
+            break;
+        case OMModelCullSide::East:
+            out.east = nf;
+            out.enableEast = true;
+            break;
+        default:
+            break;
+        }
+    }
+
+    return out;
+}
+
+int OMModelPrecompiler::loadModelPartWithArgs(OMIdentifier i, int xrot, int yrot, int zrot, bool lockuv)
 {
     logger.info("precompiling {}:{} @ {}, rot {} {} {}, uvlock {}", i.namesp, i.path, modelId, xrot, yrot, zrot,
                 lockuv ? "true" : "false");
+
     modelParts.resize(modelId + 1);
     modelAmbientOcculusion.resize(modelId + 1);
     modelComplex.resize(modelId + 1);
 
     modelComplex[modelId] = false;
     modelParts[modelId] = {};
-
     modelPartIdents[i] = modelId;
 
     auto prem = precompile(i);
     modelAmbientOcculusion[modelId] =
         prem->getMap().count("ambientocclusion") ? prem->getMap()["ambientocclusion"]->getBoolean() : true;
-    auto pre = prem->getMap()["elements"];
 
+    auto pre = prem->getMap()["elements"];
     if (pre)
     {
         for (auto &p : pre->getArray())
         {
-            auto &faces = p->getMap()["faces"]->getMap();
-            auto fetchface = [&](std::string f) -> std::shared_ptr<openminecraft::compiler::json::OMJsonNode> {
-                auto face = faces.find(f);
-                if (face != faces.end())
-                {
-                    return face->second;
-                }
-                else
-                {
-                    return nullptr;
-                }
-            };
-            auto putface = [&](std::string f, std::shared_ptr<openminecraft::compiler::json::OMJsonNode> a) {
-                if (!a)
-                {
-                    if (faces.count(f))
-                    {
-                        faces.erase(f);
-                    }
-                }
-                else
-                {
-                    if (a->getMap().count("cullface"))
-                    {
-                        a->getMap()["cullface"] = std::make_shared<json::OMJsonNodeString>(f);
-                    }
-                    faces[f] = a;
-                }
-            };
-            auto addFaceRotation = [&](const char *faceName, int amount) {
-                auto face = fetchface(faceName);
-                if (!face)
-                {
-                    return;
-                }
-                int rotation =
-                    face->getMap().count("rotation") ? static_cast<int>(face->getMap()["rotation"]->getNumber()) : 0;
-                rotation = (rotation + amount) % 360;
-                if (rotation < 0)
-                {
-                    rotation += 360;
-                }
-                face->getMap()["rotation"] = std::make_shared<json::OMJsonNodeNumber>(static_cast<int64_t>(rotation));
-            };
-            struct FaceRotationEntry
-            {
-                const char *face;
-                int degrees;
-            };
-            struct FaceMove
-            {
-                const char *from;
-                const char *to;
-            };
-
-            constexpr std::array<const char *, 6> faceNames = {"north", "south", "east", "west", "up", "down"};
-            enum FaceIndex : size_t
-            {
-                North,
-                South,
-                East,
-                West,
-                Up,
-                Down
-            };
-
-            auto applyQuarterTurn = [&](int axis) {
-                rotateElementRotation(p, axis);
-
-                auto &from = p->getMap()["from"]->getArray();
-                auto &to = p->getMap()["to"]->getArray();
-                auto fromv =
-                    glm::vec3{from[0]->getNumberFloating(), from[1]->getNumberFloating(), from[2]->getNumberFloating()};
-                auto tov =
-                    glm::vec3{to[0]->getNumberFloating(), to[1]->getNumberFloating(), to[2]->getNumberFloating()};
-                auto rotated = rotateVoxelElement90(fromv, tov, axis);
-
-                from[0] = std::make_shared<json::OMJsonNodeNumber>(rotated.first.x);
-                from[1] = std::make_shared<json::OMJsonNodeNumber>(rotated.first.y);
-                from[2] = std::make_shared<json::OMJsonNodeNumber>(rotated.first.z);
-                to[0] = std::make_shared<json::OMJsonNodeNumber>(rotated.second.x);
-                to[1] = std::make_shared<json::OMJsonNodeNumber>(rotated.second.y);
-                to[2] = std::make_shared<json::OMJsonNodeNumber>(rotated.second.z);
-
-                // UV deltas are applied to the old face before it is renamed.
-                std::array<FaceRotationEntry, 6> faceRotations = {};
-                std::array<FaceMove, 4> faceMoves = {};
-
-                if (axis == 0)
-                {
-                    // The south face becomes down. North/south variants need
-                    // the pre-rotation; east/west get it from the Y table.
-                    const int southRotation = ((yrot % 180) + 180) % 180 == 0 ? 180 : 0;
-                    faceRotations = {{{"north", 180},
-                                      {"south", southRotation},
-                                      {"east", 270},
-                                      {"west", 90},
-                                      {"up", 0},
-                                      {"down", 0}}};
-                    faceMoves = {{{"up", "south"}, {"south", "down"}, {"down", "north"}, {"north", "up"}}};
-                }
-                else if (axis == 1)
-                {
-                    faceRotations = {{{"north", 0}, {"south", 0}, {"east", 0}, {"west", 0}, {"up", 270}, {"down", 90}}};
-                    faceMoves = {{{"east", "north"}, {"north", "west"}, {"west", "south"}, {"south", "east"}}};
-                }
-                else
-                {
-                    faceRotations = {
-                        {{"north", 90}, {"south", 270}, {"east", 270}, {"west", 90}, {"up", 270}, {"down", 90}}};
-                    faceMoves = {{{"up", "west"}, {"west", "down"}, {"down", "east"}, {"east", "up"}}};
-                }
-
-                if (!lockuv)
-                {
-                    for (const auto &entry : faceRotations)
-                    {
-                        addFaceRotation(entry.face, entry.degrees);
-                    }
-                }
-
-                // Fetch all six first, otherwise one rename can overwrite a
-                // face that is still needed by the next rename.
-                std::array<std::shared_ptr<openminecraft::compiler::json::OMJsonNode>, 6> original = {};
-                for (size_t n = 0; n < faceNames.size(); ++n)
-                {
-                    original[n] = fetchface(faceNames[n]);
-                }
-
-                auto indexOf = [&](const char *name) -> size_t {
-                    for (size_t n = 0; n < faceNames.size(); ++n)
-                    {
-                        if (std::strcmp(faceNames[n], name) == 0)
-                        {
-                            return n;
-                        }
-                    }
-                    return 0;
-                };
-
-                for (const auto &move : faceMoves)
-                {
-                    putface(move.to, original[indexOf(move.from)]);
-                }
-            };
-
-            auto applyFinalCorrections = [&]() {
-                if (lockuv)
-                {
-                    return;
-                }
-
-                const int nx = ((xrot % 360) + 360) % 360;
-                const int ny = ((yrot % 360) + 360) % 360;
-
-                // Residual texture-basis corrections after the three quarter
-                // turns. They are keyed by the original blockstate variant.
-                //
-                // north/south walls (x=90, y=0/180): the final east face comes
-                // from the old east/west face, so it needs 180; the whole cross
-                // also needs a half turn because north is the reference wall.
-                //
-                // east/west walls (x=90, y=90/270): the final south face comes
-                // from the old east/west face and needs 180.
-                struct VariantCorrection
-                {
-                    int x;
-                    int y;
-                    std::array<int, 6> faces;
-                };
-                static constexpr std::array<VariantCorrection, 4> corrections = {{
-                    {90, 0, {{180, 180, 180, 180, 180, 180}}},
-                    {90, 90, {{0, 0, 0, 0, 0, 0}}},
-                    {90, 180, {{180, 180, 180, 180, 180, 180}}},
-                    {90, 270, {{0, 0, 0, 0, 0, 0}}},
-                }};
-
-                for (const auto &correction : corrections)
-                {
-                    if (nx == correction.x && ny == correction.y)
-                    {
-                        for (size_t n = 0; n < faceNames.size(); ++n)
-                        {
-                            addFaceRotation(faceNames[n], correction.faces[n]);
-                        }
-                        return;
-                    }
-                }
-
-                // A pure Y half-turn affects every face regardless of X.
-                if (ny == 180)
-                {
-                    for (const char *face : faceNames)
-                    {
-                        addFaceRotation(face, 180);
-                    }
-                }
-            };
-
-            int txrot = xrot;
-            int tyrot = yrot;
-            int tzrot = zrot;
-            while (txrot > 0)
-            {
-                applyQuarterTurn(0);
-                txrot -= 90;
-            }
-            while (tyrot > 0)
-            {
-                applyQuarterTurn(1);
-                tyrot -= 90;
-            }
-            while (tzrot > 0)
-            {
-                applyQuarterTurn(2);
-                tzrot -= 90;
-            }
-
-            applyFinalCorrections();
-
-            modelParts[modelId].emplace_back(wrapPart(p));
+            OMModelPart baked = wrapPart(p); // 你的 JSON→OMModelPart
+            baked = rotateModelPart(baked, xrot, yrot, zrot, lockuv);
+            modelParts[modelId].emplace_back(baked);
         }
     }
 
