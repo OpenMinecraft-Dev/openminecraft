@@ -348,16 +348,37 @@ auto facePlane(const OMVoxelAABB &box, OMVoxelFacing face) -> FacePlane
     {
     case NegX:
     case PosX:
-        return {0, 1, 2, face == PosX, box.offset.y, box.offset.y + box.size.y, box.offset.z,
-                box.offset.z + box.size.z, face == PosX ? box.offset.x + box.size.x : box.offset.x};
+        return {0,
+                1,
+                2,
+                face == PosX,
+                box.offset.y,
+                box.offset.y + box.size.y,
+                box.offset.z,
+                box.offset.z + box.size.z,
+                face == PosX ? box.offset.x + box.size.x : box.offset.x};
     case NegY:
     case PosY:
-        return {1, 0, 2, face == PosY, box.offset.x, box.offset.x + box.size.x, box.offset.z,
-                box.offset.z + box.size.z, face == PosY ? box.offset.y + box.size.y : box.offset.y};
+        return {1,
+                0,
+                2,
+                face == PosY,
+                box.offset.x,
+                box.offset.x + box.size.x,
+                box.offset.z,
+                box.offset.z + box.size.z,
+                face == PosY ? box.offset.y + box.size.y : box.offset.y};
     case NegZ:
     case PosZ:
-        return {2, 0, 1, face == PosZ, box.offset.x, box.offset.x + box.size.x, box.offset.y,
-                box.offset.y + box.size.y, face == PosZ ? box.offset.z + box.size.z : box.offset.z};
+        return {2,
+                0,
+                1,
+                face == PosZ,
+                box.offset.x,
+                box.offset.x + box.size.x,
+                box.offset.y,
+                box.offset.y + box.size.y,
+                face == PosZ ? box.offset.z + box.size.z : box.offset.z};
     default:
         return {0, 1, 2, false, 0, 0, 0, 0, 0};
     }
@@ -383,9 +404,9 @@ auto rectCovers(const std::vector<FaceRect> &rects, const FaceRect &target) -> b
 
     auto uniqueSorted = [](std::vector<float> &values) {
         std::sort(values.begin(), values.end());
-        values.erase(std::unique(values.begin(), values.end(),
-                                 [](float a, float b) { return std::abs(a - b) <= faceEpsilon; }),
-                     values.end());
+        values.erase(
+            std::unique(values.begin(), values.end(), [](float a, float b) { return std::abs(a - b) <= faceEpsilon; }),
+            values.end());
     };
     uniqueSorted(us);
     uniqueSorted(vs);
@@ -485,11 +506,11 @@ auto OMVoxelCompiler::checkVoxelOcculusion(
             }
 
             const float u0 = std::max(faceRect.uMin, component(partBox.offset, planeInfo.u));
-            const float u1 = std::min(faceRect.uMax, component(partBox.offset, planeInfo.u) +
-                                                       component(partBox.size, planeInfo.u));
+            const float u1 =
+                std::min(faceRect.uMax, component(partBox.offset, planeInfo.u) + component(partBox.size, planeInfo.u));
             const float v0 = std::max(faceRect.vMin, component(partBox.offset, planeInfo.v));
-            const float v1 = std::min(faceRect.vMax, component(partBox.offset, planeInfo.v) +
-                                                       component(partBox.size, planeInfo.v));
+            const float v1 =
+                std::min(faceRect.vMax, component(partBox.offset, planeInfo.v) + component(partBox.size, planeInfo.v));
             if (u1 - u0 > faceEpsilon && v1 - v0 > faceEpsilon)
             {
                 rects.push_back({u0, u1, v0, v1});
@@ -506,8 +527,7 @@ auto OMVoxelCompiler::checkVoxelOcculusion(
         return true;
     }
 
-    const bool boundary = planeInfo.positive ? planeInfo.plane >= 16.0f - faceEpsilon
-                                             : planeInfo.plane <= faceEpsilon;
+    const bool boundary = planeInfo.positive ? planeInfo.plane >= 16.0f - faceEpsilon : planeInfo.plane <= faceEpsilon;
     if (!boundary || face != cullFace)
     {
         return false;

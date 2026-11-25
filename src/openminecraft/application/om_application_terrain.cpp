@@ -548,6 +548,63 @@ static void runChunkTestGeneration(world::OMChunkManager<16> &manager, std::func
         manager.loadChunk(chunkB);
     }
 
+    // Chunk 4: normal standing signs, all 16 rotations and waterlogged states.
+    {
+        auto chunk = makeChunk(4, 0, 0);
+        fillFloor(chunk);
+
+        int index = 0;
+        for (int rotation = 0; rotation < 16; ++rotation)
+        {
+            for (const char *wet : {"false", "true"})
+            {
+                std::string state = "minecraft:cherry_sign[rotation=";
+                state += std::to_string(rotation);
+                state += ",waterlogged=";
+                state += wet;
+                state += "]";
+
+                const int x = 1 + (index % 8) * 2;
+                const int z = 1 + (index / 8) * 2;
+                chunk.setBlock(x, 1, z, stateId(state));
+                ++index;
+            }
+        }
+
+        manager.loadChunk(chunk);
+    }
+
+    // Chunk 5: hanging signs, all rotations, attached and waterlogged states.
+    {
+        auto chunk = makeChunk(5, 0, 0);
+        fillFloor(chunk);
+
+        int index = 0;
+        for (int rotation = 0; rotation < 16; ++rotation)
+        {
+            for (const char *attached : {"false", "true"})
+            {
+                for (const char *wet : {"false", "true"})
+                {
+                    std::string state = "minecraft:cherry_hanging_sign[attached=";
+                    state += attached;
+                    state += ",rotation=";
+                    state += std::to_string(rotation);
+                    state += ",waterlogged=";
+                    state += wet;
+                    state += "]";
+
+                    const int x = 1 + (index % 8) * 2;
+                    const int z = 1 + (index / 8) * 2;
+                    chunk.setBlock(x, 2, z, stateId(state));
+                    ++index;
+                }
+            }
+        }
+
+        manager.loadChunk(chunk);
+    }
+
     statusReport(1.0);
 }
 
