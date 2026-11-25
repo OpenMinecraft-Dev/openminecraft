@@ -63,6 +63,7 @@ void registerBlocks()
     registerBlock(OMIdentifier("minecraft:cherry_shelf"), std::make_shared<OMBlock>()->isSolid(false));
     registerBlock(OMIdentifier("minecraft:grass_block"),
                   std::make_shared<OMBlock>()->isSolid(true)->setColorSource(BiomeGrass));
+    registerBlock(OMIdentifier("minecraft:cherry_fence"), std::make_shared<OMBlock>()->isSolid(false));
     registerBlock(OMIdentifier("minecraft:cherry_fence_gate"), std::make_shared<OMBlock>()->isSolid(false));
     registerBlock(OMIdentifier("minecraft:rail"), std::make_shared<OMBlock>()->isSolid(false));
     registerBlock(OMIdentifier("minecraft:white_stained_glass"),

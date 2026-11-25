@@ -176,7 +176,7 @@ class OMTextureAtlas
             texture->updateData(bm.data(), p.second);
         }
 
-        texture->mipFilter = openminecraft::renderer::common::Nearest;
+        texture->mipFilter = openminecraft::renderer::common::Linear;
         texture->magFilter = openminecraft::renderer::common::Nearest;
         texture->minFilter = openminecraft::renderer::common::Nearest;
         texture->setupSampler();
@@ -201,7 +201,7 @@ class OMTextureAtlas
             textureSecondary->updateData(bm.data(), p.second);
         }
 
-        textureSecondary->mipFilter = openminecraft::renderer::common::Nearest;
+        textureSecondary->mipFilter = openminecraft::renderer::common::Linear;
         textureSecondary->magFilter = openminecraft::renderer::common::Nearest;
         textureSecondary->minFilter = openminecraft::renderer::common::Nearest;
         textureSecondary->setupSampler();

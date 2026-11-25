@@ -605,6 +605,83 @@ static void runChunkTestGeneration(world::OMChunkManager<16> &manager, std::func
         manager.loadChunk(chunk);
     }
 
+    // Chunk 6: fences, all connection and waterlogged states.
+    {
+        auto chunk = makeChunk(6, 0, 0);
+        fillFloor(chunk);
+
+        int index = 0;
+        for (const char *east : {"false", "true"})
+        {
+            for (const char *north : {"false", "true"})
+            {
+                for (const char *south : {"false", "true"})
+                {
+                    for (const char *west : {"false", "true"})
+                    {
+                        for (const char *wet : {"false", "true"})
+                        {
+                            std::string state = "minecraft:cherry_fence[east=";
+                            state += east;
+                            state += ",north=";
+                            state += north;
+                            state += ",south=";
+                            state += south;
+                            state += ",waterlogged=";
+                            state += wet;
+                            state += ",west=";
+                            state += west;
+                            state += "]";
+
+                            const int x = 1 + (index % 8) * 2;
+                            const int z = 1 + (index / 8) * 2;
+                            chunk.setBlock(x, 1, z, stateId(state));
+                            ++index;
+                        }
+                    }
+                }
+            }
+        }
+
+        manager.loadChunk(chunk);
+    }
+
+    // Chunk 7: fence gates, all facing/open/in_wall/powered states.
+    {
+        auto chunk = makeChunk(7, 0, 0);
+        fillFloor(chunk);
+
+        int index = 0;
+        for (const char *facing : {"north", "south", "east", "west"})
+        {
+            for (const char *inWall : {"false", "true"})
+            {
+                for (const char *open : {"false", "true"})
+                {
+                    for (const char *powered : {"false", "true"})
+                    {
+                        std::string state = "minecraft:cherry_fence_gate[facing=";
+                        state += facing;
+                        state += ",in_wall=";
+                        state += inWall;
+                        state += ",open=";
+                        state += open;
+                        state += ",powered=";
+                        state += powered;
+                        state += "]";
+
+                        const int x = 1 + (index % 8) * 2;
+                        const int z = 1 + (index / 8) * 2;
+                        chunk.setBlock(x, 1, z, stateId(state));
+                        ++index;
+                    }
+                }
+            }
+        }
+
+        manager.loadChunk(chunk);
+    }
+
     statusReport(1.0);
 }
 

@@ -768,18 +768,23 @@ OMModelPart rotateModelPart(const OMModelPart &part, int xrot, int yrot, int zro
 
         // 施加外层 R
         glm::vec3 n1 = R * n;
-        glm::vec3 u1 = R * u;
-        glm::vec3 v1 = R * v;
-
         OMModelCullSide newSide = sideFromNormal(n1);
         if (newSide == OMModelCullSide::None)
             continue;
 
+        // uvlock keeps the side-face texture in world space. Up/down faces are
+        // different: their canonical UV axes don't encode the model's Y
+        // rotation, so their basis must follow the model or a 2x9 fence UV is
+        // stretched across the rotated long axis.
+        const bool keepUvWorld =
+            lockuv && newSide != OMModelCullSide::Up && newSide != OMModelCullSide::Down;
+        glm::vec3 u1 = keepUvWorld ? u : R * u;
+        glm::vec3 v1 = keepUvWorld ? v : R * v;
+
         bool mirrorU = false;
-        int newRot = 0;
+        FaceBasis nb = standardBasis(newSide);
         if (!lockuv)
         {
-            FaceBasis nb = standardBasis(newSide);
             const float sourceHand = glm::dot(n1, glm::cross(u1, v1));
             const float targetHand = glm::dot(nb.n, glm::cross(nb.u, nb.v));
             if (sourceHand * targetHand < 0.0f)
@@ -787,9 +792,10 @@ OMModelPart rotateModelPart(const OMModelPart &part, int xrot, int yrot, int zro
                 u1 = -u1;
                 mirrorU = true;
             }
-            newRot = resolveFaceQuarterTurn(newSide, nb, u1);
         }
-        // lockuv：贴图世界朝向不跟转，等价于 rotation 锁为 0
+        // With uvlock the unrotated basis is compared against the rotated
+        // face, producing the rotation that cancels the blockstate rotation.
+        int newRot = resolveFaceQuarterTurn(newSide, nb, u1);
 
         OMModelFace nf = *e.face;
         nf.rotation = newRot;
