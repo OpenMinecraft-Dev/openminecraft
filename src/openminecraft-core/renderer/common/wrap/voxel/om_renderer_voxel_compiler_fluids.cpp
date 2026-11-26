@@ -25,6 +25,10 @@ auto OMVoxelCompiler::checkFluidState(const world::OMChunk<16> &chunk,
     std::vector<OMVoxelFacing> fac;
     for (auto s : states)
     {
+        if (s.first == PosY)
+        {
+            continue;
+        }
         auto p = pos + s.second;
         auto next = externalAccessor(p, chunk.chunkx, chunk.chunky, chunk.chunkz);
         auto nextModel =
@@ -85,7 +89,7 @@ auto OMVoxelCompiler::checkFluidState(const world::OMChunk<16> &chunk,
                                                           glm::ivec3{0, 1, 1}, glm::ivec3{0, 1, -1}};
             for (const auto &offset : around)
             {
-                if (!handler->querySoild(modelAt(p + offset)))
+                if (!handler->querySoild(modelAt(p + offset)) && !handler->queryFluid(modelAt(p + offset)))
                 {
                     full = false;
                     break;
@@ -140,6 +144,34 @@ auto OMVoxelCompiler::checkFluidState(const world::OMChunk<16> &chunk,
         }
         const float average = sum / 4.0f;
         heights[corner] = static_cast<uint8_t>(std::clamp(std::lround(average * 255.0f), 0L, 255L));
+    }
+
+    auto isForcedFull = [&](glm::ivec3 p) -> bool {
+        if (!handler->querySoild(modelAt(p + glm::ivec3{0, 1, 0})))
+        {
+            return false;
+        }
+        constexpr std::array<glm::ivec3, 4> around = {glm::ivec3{1, 1, 0}, glm::ivec3{-1, 1, 0}, glm::ivec3{0, 1, 1},
+                                                      glm::ivec3{0, 1, -1}};
+        for (const auto &offset : around)
+        {
+            if (!handler->querySoild(modelAt(p + offset)))
+            {
+                return false;
+            }
+        }
+        return true;
+    };
+
+    // Emit the top face only for an actual fluid surface: no solid ceiling,
+    // no same-fluid block above. A forced-full source has no visible top.
+    if (!isForcedFull(pos))
+    {
+        const auto aboveModel = modelAt(pos + glm::ivec3{0, 1, 0});
+        if (!handler->queryFluid(aboveModel) || !handler->queryFluidSame(id, aboveModel))
+        {
+            fac.emplace_back(PosY);
+        }
     }
 
     return {heights, fac};
