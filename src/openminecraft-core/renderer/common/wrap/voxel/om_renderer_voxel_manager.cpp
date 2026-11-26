@@ -260,7 +260,7 @@ OMVoxelManager::OMVoxelManager(
                         ->blend(true)
                         ->depth(true, true)
                         ->depthBias(true, -1.0f, -2.0f)
-                        ->depthOp(Less)
+                        ->depthOp(LessOrEqual)
                         ->buildN();
     translucentPipeline =
         renderer->createPipeline()
@@ -343,7 +343,7 @@ OMVoxelManager::OMVoxelManager(
                                    ->blend(true)
                                    ->depth(true, false)
                                    ->depthBias(true, 1.0f, 2.0f)
-                                   ->depthOp(Less)
+                                   ->depthOp(LessOrEqual)
                                    ->buildN();
 
     debugPipeline = renderer->createPipeline()

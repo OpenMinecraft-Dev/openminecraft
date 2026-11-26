@@ -71,11 +71,6 @@ auto OMVoxelCompiler::checkFluidState(const world::OMChunk<16> &chunk,
             return 1.0f;
         }
 
-        if (handler->queryFluidFalling(model))
-        {
-            return 1.0f;
-        }
-
         const auto level = handler->queryFluidLevel(model);
         if (level != 0)
         {
@@ -155,7 +150,7 @@ auto OMVoxelCompiler::checkFluidState(const world::OMChunk<16> &chunk,
                                                       glm::ivec3{0, 1, -1}};
         for (const auto &offset : around)
         {
-            if (!handler->querySoild(modelAt(p + offset)))
+            if (!handler->querySoild(modelAt(p + offset)) && !handler->queryFluid(modelAt(p + offset)))
             {
                 return false;
             }
