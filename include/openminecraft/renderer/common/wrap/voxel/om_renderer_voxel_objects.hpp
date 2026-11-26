@@ -187,7 +187,7 @@ class OMVoxelHandler
     virtual auto queryFluidLevel(int bsid) -> uint8_t = 0;
     virtual auto queryFluidTex(int bsid) -> int = 0;
     virtual auto queryWaterlogged(int bsid) -> bool = 0;
-    virtual auto queryFluidSame(int bsid1, int bsid2) -> bool = 0;
+    virtual auto queryFluidSame(int modelId1, int modelId2) -> bool = 0;
     virtual auto queryFluidTexSec(int bsid) -> int = 0;
 };
 
@@ -300,7 +300,7 @@ class OMVoxelHandlerDummy : public OMVoxelHandler
     {
         return false;
     }
-    auto queryFluidSame(int bsid1, int bsid2) -> bool override
+    auto queryFluidSame(int modelId1, int modelId2) -> bool override
     {
         return true;
     }

@@ -1,0 +1,304 @@
+#include "glm/fwd.hpp"
+#include "openminecraft/renderer/common/wrap/voxel/om_renderer_voxel_compiler.hpp"
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <cstdint>
+#include <functional>
+#include <tuple>
+#include <unordered_map>
+
+namespace openminecraft::renderer::common::wrap::voxel
+{
+OMVoxelCompiler::OMVoxelCompiler() : logger("OMVoxelCompiler", this)
+{
+}
+OMVoxelCompiler::~OMVoxelCompiler()
+{
+}
+
+// INFO: letter -> meanings
+// x -> Voxel X Coordinate (4 bits)
+// y -> Voxel Y Coordinate (4 bits)
+// z -> Voxel Z Coordinate (4 bits)
+// f -> Voxel Facing (3 bits)
+// e -> Voxel Enable (1 bit)
+// t -> Voxel Texture Index (14 bits)
+// c -> Voxel Chunk ID (19 bits)
+// l -> Voxel Sky Light (4 * 4 bits)
+// L -> Voxel Block Light (4 * 4 bits)
+// h -> Voxel Fluid Corner Heights (4 * 8 bits)
+// S -> Voxel Fluid Source flag (1 bit)
+// M -> Voxel colormap id (24 bits)
+// u -> unused
+// xxxx yyyy zzzz efff uuuu uuuu uuuu cccS
+// uutt tttt tttt tttt cccc cccc cccc cccc
+// llll llll llll llll LLLL LLLL LLLL LLLL
+// hhhh hhhh hhhh hhhh hhhh hhhh hhhh hhhh
+// uuuu uuuu MMMM MMMM MMMM MMMM MMMM MMMM
+static constexpr auto packVoxelFluid(uint8_t x, uint8_t y, uint8_t z, OMVoxelFacing facing, uint16_t tex, int32_t chkid,
+                                     uint8_t l1, uint8_t l2, uint8_t l3, uint8_t l4, uint8_t bl1, uint8_t bl2,
+                                     uint8_t bl3, uint8_t bl4, uint8_t h1, uint8_t h2, uint8_t h3, uint8_t h4,
+                                     bool source, uint8_t colormapr, uint8_t colormapg, uint8_t colormapb)
+    -> std::array<int, 5>
+{
+    return {
+        x << 28 | y << 24 | z << 20 | 1 << 19 | (facing & 7) << 16 | (((chkid >> 16) & 7) << 1) | source,
+        ((tex & 0x3fff) << 16) | (chkid & 0xffff),
+        ((l1 & 0xf) << 28) | ((l2 & 0xf) << 24) | ((l3 & 0xf) << 20) | ((l4 & 0xf) << 16) | ((bl1 & 0xf) << 12) |
+            ((bl2 & 0xf) << 8) | ((bl3 & 0xf) << 4) | (bl4 & 0xf),
+        h1 << 24 | h2 << 16 | h3 << 8 | h4,
+        colormapr << 16 | colormapg << 8 | colormapb,
+    };
+}
+
+// INFO: letter -> meanings
+// x -> Voxel X Coordinate (4 bits)
+// y -> Voxel Y Coordinate (4 bits)
+// z -> Voxel Z Coordinate (4 bits)
+// f -> Voxel Facing (3 bits)
+// X -> Voxel X Coordinate Div (4 bits)
+// Y -> Voxel Y Coordinate Div (4 bits)
+// Z -> Voxel Z Coordinate Div (4 bits)
+// s -> Voxel Scale (3 * 5 bits)
+// e -> Voxel Enable (1 bit)
+// a -> Voxel Ambient Occclusion Levels (4 * 2 bits)
+// t -> Voxel Texture Index (14 bits)
+// c -> Voxel Chunk ID (19 bits)
+// r -> Voxel Rotation (2 bits, 00 -> 0deg, 01 -> 90deg, 10 -> 180deg, 11 -> 270deg)
+// l -> Voxel Sky Light (4 * 4 bits)
+// L -> Voxel Block Light (4 * 4 bits)
+// U -> Voxel UV Offset (4 * 5 bits)
+// A -> Voxel Rotation Axis (2 bits)
+// C -> Voxel Rotation Center (3 * 5 bits)
+// n -> Voxel Angle (3 bits)
+// S -> Voxel Shade (1 bit)
+// M -> Voxel colormap (24 bits)
+// u -> unused
+// INFO: packed vertex structure in u32
+// xxxx yyyy zzzz efff XXXX YYYY ZZZZ cccU
+// rrtt tttt tttt tttt cccc cccc cccc cccc
+// llll llll llll llll LLLL LLLL LLLL LLLL
+// ssss ssss ssss sssU UUUU UUUU aaaa aaaa
+// UUUU UUUU UUAA CCCC CCCC CCCC CCCu Snnn
+// uuuu uuuu MMMM MMMM MMMM MMMM MMMM MMMM
+static constexpr auto packVoxel(uint8_t x, uint8_t y, uint8_t z, OMVoxelFacing facing, uint8_t dx, uint8_t dy,
+                                uint8_t dz, uint16_t tex, int32_t chkid, uint8_t rotation, uint8_t l1, uint8_t l2,
+                                uint8_t l3, uint8_t l4, uint8_t bl1, uint8_t bl2, uint8_t bl3, uint8_t bl4,
+                                uint8_t scaleX, uint8_t scaleY, uint8_t scaleZ, uint8_t ao1, uint8_t ao2, uint8_t ao3,
+                                uint8_t ao4, uint8_t u0, uint8_t v0, uint8_t u1, uint8_t v1, uint8_t rotationAxis,
+                                uint8_t rotationCx, uint8_t rotationCy, uint8_t rotationCz, bool rCxNeg, bool rCyNeg,
+                                bool rCzNeg, uint8_t rAngle, bool shade, uint8_t colormapr, uint8_t colormapg,
+                                uint8_t colormapb) -> std::array<int, 6>
+{
+    return {
+        x << 28 | y << 24 | z << 20 | 1 << 19 | (facing & 7) << 16 | dx << 12 | dy << 8 | dz << 4 |
+            (((chkid >> 16) & 7) << 1) | ((u0 >> 4) & 1),
+        (rotation << 30) | ((tex & 0x3fff) << 16) | (chkid & 0xffff),
+        ((l1 & 0xf) << 28) | ((l2 & 0xf) << 24) | ((l3 & 0xf) << 20) | ((l4 & 0xf) << 16) | ((bl1 & 0xf) << 12) |
+            ((bl2 & 0xf) << 8) | ((bl3 & 0xf) << 4) | (bl4 & 0xf),
+        ((scaleX & 0x1f) << 27) | ((scaleY & 0x1f) << 22) | ((scaleZ & 0x1f) << 17) | ao1 << 6 | ao2 << 4 | ao3 << 2 |
+            ao4 | ((v0 & 0x1f) << 12) | ((u0 & 0xf) << 8),
+        ((u1 & 0x1f) << 27) | ((v1 & 0x1f) << 22) | ((rotationAxis & 3) << 20) | (rCxNeg << 19) | (rCyNeg << 18) |
+            (rCzNeg << 17) | ((rotationCx & 0xf) << 13) | ((rotationCy & 0xf) << 9) | ((rotationCz & 0xf) << 5) |
+            (shade << 3) | (rAngle & 7),
+        colormapr << 16 | colormapg << 8 | colormapb,
+    };
+}
+// INFO: letter -> meanings
+// x -> Voxel X Coordinate (4 bits)
+// y -> Voxel Y Coordinate (4 bits)
+// z -> Voxel Z Coordinate (4 bits)
+// f -> Voxel Facing (3 bits)
+// e -> Voxel Enable (1 bit)
+// a -> Voxel Ambient Occclusion Levels (4 * 2 bits)
+// t -> Voxel Texture Index (14 bits)
+// c -> Voxel Chunk ID (19 bits)
+// r -> Voxel Rotation (2 bits, 00 -> 0deg, 01 -> 90deg, 10 -> 180deg, 11 -> 270deg)
+// l -> Voxel Sky Light (4 * 4 bits)
+// L -> Voxel Block Light (4 * 4 bits)
+// S -> Voxel Shade (1 bit)
+// X/Y/Z -> Voxel Div Coordinate (3 floats)
+// U -> Voxel UV Offset (4 floats)
+// A -> Voxel Rotation Axis (2 bits)
+// n -> Voxel Rotation Angle (1 float)
+// C -> Voxel Rotation Center (3 floats)
+// s -> Voxel Uses Secondary Texture (1 bit)
+// c -> Voxel Size (3 floats)
+// M -> Voxel colormap (24 bits)
+// u -> unused
+// INFO: packed vertex structure in u32
+// xxxx yyyy zzzz efff cccs AASu aaaa aaaa
+// rrtt tttt tttt tttt cccc cccc cccc cccc
+// llll llll llll llll LLLL LLLL LLLL LLLL
+// XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX
+// YYYY YYYY YYYY YYYY YYYY YYYY YYYY YYYY
+// ZZZZ ZZZZ ZZZZ ZZZZ ZZZZ ZZZZ ZZZZ ZZZZ
+// UUUU UUUU UUUU UUUU UUUU UUUU UUUU UUUU
+// UUUU UUUU UUUU UUUU UUUU UUUU UUUU UUUU
+// UUUU UUUU UUUU UUUU UUUU UUUU UUUU UUUU
+// UUUU UUUU UUUU UUUU UUUU UUUU UUUU UUUU
+// nnnn nnnn nnnn nnnn nnnn nnnn nnnn nnnn
+// CCCC CCCC CCCC CCCC CCCC CCCC CCCC CCCC
+// CCCC CCCC CCCC CCCC CCCC CCCC CCCC CCCC
+// CCCC CCCC CCCC CCCC CCCC CCCC CCCC CCCC
+// cccc cccc cccc cccc cccc cccc cccc cccc
+// cccc cccc cccc cccc cccc cccc cccc cccc
+// cccc cccc cccc cccc cccc cccc cccc cccc
+// uuuu uuuu MMMM MMMM MMMM MMMM MMMM MMMM
+static constexpr auto packVoxelComplex(uint8_t x, uint8_t y, uint8_t z, OMVoxelFacing facing, bool texSec, uint16_t tex,
+                                       int32_t chkid, uint8_t rotation, uint8_t l1, uint8_t l2, uint8_t l3, uint8_t l4,
+                                       uint8_t bl1, uint8_t bl2, uint8_t bl3, uint8_t bl4, uint8_t ao1, uint8_t ao2,
+                                       uint8_t ao3, uint8_t ao4, bool shade, glm::vec3 modelOffset, glm::vec2 uv0,
+                                       glm::vec2 uv1, uint8_t rotationAxis, float rotationAngle,
+                                       glm::vec3 rotationCenter, glm::vec3 modelSize, glm::vec3 angleExt,
+                                       uint8_t colormapr, uint8_t colormapg, uint8_t colormapb)
+    -> std::tuple<int32_t, int32_t, int32_t, glm::vec3, glm::vec2, glm::vec2, float, glm::vec3, glm::vec3, float, float,
+                  int32_t>
+{
+    return std::make_tuple(x << 28 | y << 24 | z << 20 | 1 << 19 | (facing & 7) << 16 | (((chkid >> 16) & 7) << 13) |
+                               (texSec << 12) | ((rotationAxis & 3) << 10) | (shade << 9) | (ao1 << 6) | (ao2 << 4) |
+                               (ao3 << 2) | ao4,
+                           (rotation << 30) | ((tex & 0x3fff) << 16) | (chkid & 0xffff),
+                           ((l1 & 0xf) << 28) | ((l2 & 0xf) << 24) | ((l3 & 0xf) << 20) | ((l4 & 0xf) << 16) |
+                               ((bl1 & 0xf) << 12) | ((bl2 & 0xf) << 8) | ((bl3 & 0xf) << 4) | (bl4 & 0xf),
+                           modelOffset, uv0, uv1, rotationAxis == 3 ? angleExt.x : rotationAngle, rotationCenter,
+                           modelSize, angleExt.y, angleExt.z, colormapr << 16 | colormapg << 8 | colormapb);
+}
+
+auto OMVoxelCompiler::computeVisibility(const world::OMChunk<16> &chunk,
+                                        std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor)
+    -> uint64_t
+{
+    std::array<uint8_t, 4096> blocking = {};
+
+    // Solidness is constant per blockstate; cache it to avoid per-block model resolution
+    std::unordered_map<uint32_t, bool> solidCache;
+    solidCache.reserve(256);
+
+    for (int y = 0; y < 16; ++y)
+    {
+        for (int z = 0; z < 16; ++z)
+        {
+            for (int x = 0; x < 16; ++x)
+            {
+                const uint32_t state = chunk.fetch(x, y, z);
+                auto it = solidCache.find(state);
+
+                if (it == solidCache.end())
+                {
+                    const auto bsid = modelFetcher(state, chunk.chunkx, chunk.chunky, chunk.chunkz, x, y, z);
+                    it = solidCache.emplace(state, handler->querySoild(bsid)).first;
+                }
+
+                if (it->second)
+                {
+                    blocking[y * 256 + z * 16 + x] = 1;
+                }
+            }
+        }
+    }
+
+    return computeSectionVisibility(blocking);
+}
+
+auto OMVoxelCompiler::compile(const world::OMChunk<16> &chunk,
+                              std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)> externalAccessor,
+                              int chunkid, std::function<void(OMVoxel)> committer,
+                              std::function<void(OMVoxelComplex)> committerComplex,
+                              std::function<void(OMVoxelFluid)> committerFluid,
+                              std::function<void(OMVoxel)> committerTranslucent,
+                              std::function<void(OMVoxelComplex)> committerTranslucentComplex,
+                              std::function<void(OMVoxelFluid)> committerTranslucentFluid) -> void
+{
+    for (const auto &v : chunk)
+    {
+        auto modelid =
+            modelFetcher(v.second, chunk.chunkx, chunk.chunky, chunk.chunkz, v.first.x, v.first.y, v.first.z);
+        auto trans = handler->queryTranslucent(modelid);
+
+        if (handler->queryFluid(modelid))
+        {
+            const auto isFalling = handler->queryFluidFalling(modelid);
+            const auto fluidLevel = (handler->queryFluidLevel(modelid) & 0b111);
+
+            auto useSec = fluidLevel != 0 || isFalling;
+
+            const glm::u8vec3 fluidTint =
+                paletteProvider ? paletteProvider->fluidColor(chunk, v.first.x, v.first.y, v.first.z, v.second)
+                                : glm::u8vec3{255, 255, 255};
+
+            auto state = checkFluidState(chunk, externalAccessor, v.first, modelid);
+            auto heights = std::get<0>(state);
+            for (auto f : std::get<1>(state))
+            {
+                auto vox = packVoxelFluid(v.first.x, v.first.y, v.first.z, f,
+                                          useSec ? handler->queryFluidTexSec(modelid) : handler->queryFluidTex(modelid),
+                                          chunkid, 15, 15, 15, 15, 0, 0, 0, 0, heights[0], heights[1], heights[2],
+                                          heights[3], useSec, fluidTint.r, fluidTint.g, fluidTint.b);
+                (trans || handler->queryWaterlogged(modelid) ? committerTranslucentFluid : committerFluid)(
+                    OMVoxelFluid{vox[0], vox[1], vox[2], vox[3], vox[4]});
+            }
+        }
+
+        if (handler->queryNumParts(modelid) == 0)
+        {
+            continue;
+        }
+
+        for (int i = 0; i < handler->queryNumParts(modelid); ++i)
+        {
+            for (auto f : {NegX, NegY, NegZ, PosX, PosY, PosZ})
+            {
+                const auto cullFace = handler->queryPartFaceCull(modelid, i, f);
+                if (handler->queryPartFaceEnabled(modelid, i, f) &&
+                    !checkVoxelOcculusion(chunk, externalAccessor, v.first, f, cullFace, v.second, i) &&
+                    !checkSkipRendering(chunk, externalAccessor, v.first, cullFace, v.second))
+                {
+                    auto [ao1, ao2, ao3, ao4] =
+                        handler->queryPartAmbientOcclusion(modelid, i) && handler->queryPartShade(modelid, i)
+                            ? computeAO(chunk, externalAccessor, v.first.x, v.first.y, v.first.z, f, modelid, i)
+                            : std::make_tuple<uint8_t, uint8_t, uint8_t, uint8_t>(0, 0, 0, 0);
+                    auto aabb = handler->queryPartAABB(modelid, i);
+                    auto uv = handler->queryPartFaceUV(modelid, i, f);
+                    auto raxis = handler->queryPartRotationCenter(modelid, i);
+
+                    const int tintIndex = handler->queryPartFaceTint(modelid, i, f);
+                    const glm::u8vec3 tint =
+                        (tintIndex >= 0 && paletteProvider)
+                            ? paletteProvider->color(chunk, v.first.x, v.first.y, v.first.z, v.second, tintIndex)
+                            : glm::u8vec3{255, 255, 255};
+
+                    if (handler->queryPartComplex(modelid, i))
+                    {
+                        float rotationAngle = handler->queryPartRotationAngleF(modelid, i);
+                        bool texSec = handler->queryPartFaceSecondaryTexture(modelid, i, f);
+                        auto vox = packVoxelComplex(
+                            v.first.x, v.first.y, v.first.z, f, texSec, handler->queryPartFaceTex(modelid, i, f),
+                            chunkid, handler->queryPartFaceRotation(modelid, i, f), 15, 15, 15, 15, 0, 0, 0, 0, ao1,
+                            ao2, ao3, ao4, handler->queryPartShade(modelid, i), aabb.offset, {uv.x, uv.y}, {uv.z, uv.w},
+                            handler->queryPartRotationAxis(modelid, i), rotationAngle, raxis, aabb.size,
+                            handler->queryPartRotationAngleExt(modelid, i), tint.r, tint.g, tint.b);
+                        (trans ? committerTranslucentComplex : committerComplex)(
+                            OMVoxelComplex{std::get<0>(vox), std::get<1>(vox), std::get<2>(vox), std::get<3>(vox),
+                                           std::get<4>(vox), std::get<5>(vox), std::get<6>(vox), std::get<7>(vox),
+                                           std::get<8>(vox), std::get<9>(vox), std::get<10>(vox), std::get<11>(vox)});
+                        continue;
+                    }
+
+                    auto vox =
+                        packVoxel(v.first.x, v.first.y, v.first.z, f, std::abs(aabb.offset.x), std::abs(aabb.offset.y),
+                                  std::abs(aabb.offset.z), handler->queryPartFaceTex(modelid, i, f), chunkid,
+                                  handler->queryPartFaceRotation(modelid, i, f), 15, 15, 15, 15, 0, 0, 0, 0,
+                                  aabb.size.x, aabb.size.y, aabb.size.z, ao1, ao2, ao3, ao4, uv.x, uv.y, uv.z, uv.w,
+                                  handler->queryPartRotationAxis(modelid, i), std::abs(raxis.x), std::abs(raxis.y),
+                                  std::abs(raxis.z), raxis.x < 0, raxis.y < 0, raxis.z < 0,
+                                  handler->queryPartRotationAngle(modelid, i), handler->queryPartShade(modelid, i),
+                                  tint.r, tint.g, tint.b);
+                    (trans ? committerTranslucent : committer)(OMVoxel{vox[0], vox[1], vox[2], vox[3], vox[4], vox[5]});
+                }
+            }
+        }
+    }
+}
+} // namespace openminecraft::renderer::common::wrap::voxel

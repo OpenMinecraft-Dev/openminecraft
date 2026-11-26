@@ -648,22 +648,17 @@ static auto resolveFaceQuarterTurn(OMModelCullSide side, const FaceBasis &target
 OMModelPart rotateModelPart(const OMModelPart &part, int xrot, int yrot, int zrot, bool lockuv)
 {
     const glm::mat3 R = rotationMat(xrot, yrot, zrot);
-    const glm::vec3 center(8.0f, 8.0f, 8.0f); // 原版 blockstate 旋转中心
+    const glm::vec3 center(8.0f, 8.0f, 8.0f);
 
     OMModelPart out = part;
 
-    // ---------- 1. 几何 AABB ----------
     {
         glm::vec3 f = R * (part.from - center) + center;
         glm::vec3 t = R * (part.to - center) + center;
         out.from = glm::min(f, t);
         out.to = glm::max(f, t);
-        // 90° 倍数下旋转后的 AABB 顶点仍轴对齐，min/max 即正确
     }
 
-    // ---------- 2. 内层元素旋转（共轭变换） ----------
-    // 正确关系：R · Rot(axis, θ) = Rot(R·axis, θ) · R
-    // 因此：origin → R·origin，axis → R·axis，角度不变
     if (part.rotate)
     {
         out.rotateOrigin = R * (part.rotateOrigin - center) + center;
@@ -722,13 +717,10 @@ OMModelPart rotateModelPart(const OMModelPart &part, int xrot, int yrot, int zro
             }
 
             out.rotateAxis = newAxis;
-            out.rotateAngle = part.rotateAngle * sgn; // 负方向轴用角度取反表示
+            out.rotateAngle = part.rotateAngle * sgn;
         }
-        // Any 轴（三欧拉角复合旋转）：外层 R 无法分解回单轴+角度，
-        // 只旋转 origin，角度保持。升级方案见文末"可选：彻底矩阵化"
     }
 
-    // ---------- 3. 面表 ----------
     out.enableDown = out.enableUp = false;
     out.enableSouth = out.enableNorth = false;
     out.enableWest = out.enableEast = false;
@@ -756,7 +748,6 @@ OMModelPart rotateModelPart(const OMModelPart &part, int xrot, int yrot, int zro
         FaceBasis b = standardBasis(e.side);
         glm::vec3 n = b.n, u = b.u, v = b.v;
 
-        // 施加 face.rotation（顺时针：u→v, v→-u）
         int r = ((e.face->rotation / 90) % 4 + 4) % 4;
         for (int i = 0; i < r; ++i)
         {
@@ -766,7 +757,6 @@ OMModelPart rotateModelPart(const OMModelPart &part, int xrot, int yrot, int zro
             v = vn;
         }
 
-        // 施加外层 R
         glm::vec3 n1 = R * n;
         OMModelCullSide newSide = sideFromNormal(n1);
         if (newSide == OMModelCullSide::None)
@@ -776,8 +766,7 @@ OMModelPart rotateModelPart(const OMModelPart &part, int xrot, int yrot, int zro
         // different: their canonical UV axes don't encode the model's Y
         // rotation, so their basis must follow the model or a 2x9 fence UV is
         // stretched across the rotated long axis.
-        const bool keepUvWorld =
-            lockuv && newSide != OMModelCullSide::Up && newSide != OMModelCullSide::Down;
+        const bool keepUvWorld = lockuv && newSide != OMModelCullSide::Up && newSide != OMModelCullSide::Down;
         glm::vec3 u1 = keepUvWorld ? u : R * u;
         glm::vec3 v1 = keepUvWorld ? v : R * v;
 
@@ -805,7 +794,7 @@ OMModelPart rotateModelPart(const OMModelPart &part, int xrot, int yrot, int zro
         }
         if (e.face->cull != OMModelCullSide::None)
         {
-            nf.cull = newSide; // cullface 跟随面名
+            nf.cull = newSide;
         }
 
         switch (newSide)
@@ -864,7 +853,7 @@ int OMModelPrecompiler::loadModelPartWithArgs(OMIdentifier i, int xrot, int yrot
     {
         for (auto &p : pre->getArray())
         {
-            OMModelPart baked = wrapPart(p); // 你的 JSON→OMModelPart
+            OMModelPart baked = wrapPart(p);
             baked = rotateModelPart(baked, xrot, yrot, zrot, lockuv);
             modelParts[modelId].emplace_back(baked);
         }

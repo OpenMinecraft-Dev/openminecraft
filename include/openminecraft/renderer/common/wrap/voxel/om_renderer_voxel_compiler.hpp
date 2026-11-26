@@ -3,6 +3,7 @@
 
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/common/wrap/voxel/om_renderer_voxel_objects.hpp"
+#include "openminecraft/world/om_world_chunk.hpp"
 #include <array>
 #include <functional>
 #include <atomic>
@@ -29,6 +30,8 @@ class OMVoxelCompiler
     auto checkVoxelOcculusion(const world::OMChunk<16> &,
                               std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>, glm::ivec3,
                               OMVoxelFacing face, OMVoxelFacing cullFace, uint32_t id, int pid) -> bool;
+    auto checkFluidState(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>,
+                         glm::ivec3, uint32_t id) -> std::tuple<std::array<uint8_t, 4>, std::vector<OMVoxelFacing>>;
     auto compile(const world::OMChunk<16> &, std::function<uint32_t(glm::ivec3, int64_t, int64_t, int64_t)>,
                  int chunkid, std::function<void(OMVoxel)>, std::function<void(OMVoxelComplex)>,
                  std::function<void(OMVoxelFluid)>, std::function<void(OMVoxel)>, std::function<void(OMVoxelComplex)>,
