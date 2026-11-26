@@ -367,7 +367,23 @@ auto OMModelPrecompiler::queryWaterlogged(int modelId) -> bool
 
 auto OMModelPrecompiler::queryFluidSame(int modelId1, int modelId2) -> bool
 {
-    return fluidModels[modelId1] == fluidModels[modelId2];
+    auto fluidKind = [&](int modelId) -> block::OMBlockFluidType {
+        const auto it = fluidModels.find(modelId);
+        if (it != fluidModels.end())
+        {
+            return it->second;
+        }
+        if (blockModels[modelId].fluid)
+        {
+            return blockModels[modelId].fluidLava ? block::OMBlockFluidType::FluidLava
+                                                  : block::OMBlockFluidType::FluidWater;
+        }
+        return block::OMBlockFluidType::FluidNone;
+    };
+
+    const auto a = fluidKind(modelId1);
+    const auto b = fluidKind(modelId2);
+    return a != block::OMBlockFluidType::FluidNone && a == b;
 }
 
 auto OMModelPrecompiler::queryFluidTexSec(int modelId) -> int
@@ -1075,7 +1091,8 @@ auto OMModelPrecompiler::composeModel(std::vector<int> partids, bool soild, bool
         }
     }
 
-    fluidModels[blockModels.size() - 1] = OMIdentifier("minecraft:water");
+    fluidModels[blockModels.size() - 1] =
+        waterlogged ? block::OMBlockFluidType::FluidWater : block::OMBlockFluidType::FluidNone;
     return blockModels.size() - 1;
 }
 
@@ -1097,7 +1114,7 @@ auto OMModelPrecompiler::composeFluidModel(OMIdentifier ident, block::OMBlockFlu
     m.fluidTexFlow = textureAtlas.addWideTexture(OMIdentifier("minecraft:block/" + fluidName + "_flow"));
     m.waterlogged = false;
 
-    fluidModels[blockModels.size() - 1] = OMIdentifier("minecraft:" + fluidName);
+    fluidModels[blockModels.size() - 1] = fluidType;
 
     return blockModels.size() - 1;
 }

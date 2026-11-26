@@ -158,7 +158,7 @@ class OMModelPrecompiler : public openminecraft::renderer::common::wrap::voxel::
     std::vector<bool> modelAmbientOcculusion;
     std::vector<bool> modelComplex;
 
-    std::unordered_map<int, OMIdentifier> fluidModels;
+    std::unordered_map<int, block::OMBlockFluidType> fluidModels;
 };
 } // namespace openminecraft::shell::data
 
