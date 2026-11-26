@@ -106,38 +106,40 @@ auto OMVoxelCompiler::checkFluidState(const world::OMChunk<16> &chunk,
     std::array<uint8_t, 4> heights = {};
     for (size_t corner = 0; corner < cornerSamples.size(); ++corner)
     {
-        float sum = 0.0f;
-        bool fullCorner = false;
+        // Always include this block, then add only same-fluid neighbours.
+        float sum = currentHeight;
+        int fluidCount = 1;
+        bool fullNeighbour = currentHeight >= 0.999f;
+
         for (const auto &offset : cornerSamples[corner])
         {
+            if (offset == glm::ivec3{0, 0, 0})
+            {
+                continue;
+            }
+
             const auto samplePos = pos + offset;
             const auto sampleModel = modelAt(samplePos);
-            if (handler->queryFluid(sampleModel))
+            if (handler->queryFluid(sampleModel) && handler->queryFluidSame(id, sampleModel))
             {
-                if (handler->queryFluidSame(id, sampleModel))
+                const float sampleHeight = blockHeight(samplePos);
+                sum += sampleHeight;
+                ++fluidCount;
+
+                if (sampleHeight >= 0.999f)
                 {
-                    const float sampleHeight = blockHeight(samplePos);
-                    sum += sampleHeight;
-                    if (sampleHeight >= 0.999f)
-                    {
-                        fullCorner = true;
-                    }
+                    fullNeighbour = true;
                 }
-                // A different fluid contributes zero.
-            }
-            else
-            {
-                // Non-fluid neighbours keep the current fluid height instead
-                // of pulling the corner down to zero.
-                sum += currentHeight;
             }
         }
-        if (fullCorner)
+
+        if (fullNeighbour)
         {
             heights[corner] = 255;
             continue;
         }
-        const float average = sum / 4.0f;
+
+        const float average = sum / static_cast<float>(fluidCount);
         heights[corner] = static_cast<uint8_t>(std::clamp(std::lround(average * 255.0f), 0L, 255L));
     }
 
