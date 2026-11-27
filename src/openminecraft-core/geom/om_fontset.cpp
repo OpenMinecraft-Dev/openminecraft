@@ -170,6 +170,7 @@ auto OMFontSet::compile(OMFontSetShapeResult r) -> std::vector<float>
     for (auto &ot : outline.operations)
     {
         switch (ot.type)
+
         {
         case geom::Move:
             beginPoints.emplace_back(ot.target / ext);
