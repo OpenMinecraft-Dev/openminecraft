@@ -46,6 +46,8 @@ OMSurfaceRenderer::OMSurfaceRenderer(openminecraft::renderer::OMRenderer *render
 
     auto rawfile1 = vfs::fsfetch("/bootassets/openminecraft-renderer/font/MapleMono-NF-Regular.ttf");
     fontset->fontList.push_back(std::make_shared<geom::OMFont>(*rawfile1.get()));
+    auto rawfile2 = vfs::fsfetch("/bootassets/openminecraft-renderer/font/NotoColorEmoji.ttf");
+    fontset->fontList.push_back(std::make_shared<geom::OMFont>(*rawfile2.get()));
     node::controls::OMDemiurgeTooltip::instance().setFontSet(fontset.get());
     dialog = std::make_shared<node::controls::OMDemiurgeDialog>(fontset.get());
     dialog2 = std::make_shared<node::controls::OMDemiurgeDialog>(fontset.get());

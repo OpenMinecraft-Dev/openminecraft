@@ -64,6 +64,7 @@ class OMRenderer
 
         auto *buffer = allocateBuffer(usage, length);
         bufferRegistry[tag] = buffer;
+        nameBuffer(tag);
         return buffer;
     }
 
@@ -96,6 +97,9 @@ class OMRenderer
         lifeCycle->retireBuffer(it->second);
         bufferRegistry.erase(it);
     }
+    virtual void nameBuffer(const std::string &tag)
+    {
+    }
 
     auto registerTexture(const std::string &tag, uint64_t width, uint64_t height, uint64_t mipmap,
                          common::OMTextureType type, common::OMTextureArrangement arrangement)
@@ -115,7 +119,11 @@ class OMRenderer
 
         auto *texture = allocateTexture(width, height, layers, mipmap, type, arrangement);
         textureRegistry[tag] = texture;
+        nameTexture(tag);
         return texture;
+    }
+    virtual void nameTexture(const std::string &tag)
+    {
     }
 
     auto getTexture(const std::string &tag) -> common::OMRendererTexture *

@@ -272,6 +272,24 @@ auto OMRendererOpenGL::getExtent() const -> glm::vec2
     SDL_GetWindowSizeInPixels(reinterpret_cast<SDL_Window *>(window), &w, &h);
     return {w, h};
 }
+
+void OMRendererOpenGL::nameBuffer(const std::string &tag)
+{
+    if (gl.glObjectLabel)
+    {
+        gl.glObjectLabel(GL_BUFFER, reinterpret_cast<OMRendererBufferOpenGL *>(bufferRegistry[tag])->buffer, tag.size(),
+                         tag.data());
+    }
+}
+void OMRendererOpenGL::nameTexture(const std::string &tag)
+{
+    if (gl.glObjectLabel)
+    {
+        reinterpret_cast<OMRendererTextureOpenGL *>(textureRegistry[tag])->bind();
+        gl.glObjectLabel(GL_TEXTURE, reinterpret_cast<OMRendererTextureOpenGL *>(textureRegistry[tag])->texture,
+                         tag.size(), tag.data());
+    }
+}
 auto OMRendererOpenGL::getLogicalExtent() const -> glm::vec2
 {
     int w, h;

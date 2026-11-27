@@ -5,6 +5,7 @@
 #include "openminecraft-shell/data/block/om_blockstate_resolver.hpp"
 #include "openminecraft-shell/data/om_model_precompiler.hpp"
 #include "openminecraft-shell/data/om_textureatlas.hpp"
+#include "openminecraft-shell/data/om_textureatlas_plain.hpp"
 #include "openminecraft/log/om_log_common.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
 #include "openminecraft/renderer/common/basics/om_vertex_format.hpp"
@@ -59,6 +60,7 @@ class OMWorldRenderer : public OMRendererHandler
     wrap::OMRendererTempTarget *tempTarget;
     wrap::voxel::OMVoxelManager *voxelManager;
     data::OMTextureAtlas *textureAtlas;
+    data::OMTextureAtlasPlain *textureAtlasPlain;
     openminecraft::renderer::common::OMRendererTextureRef sunTex;
     openminecraft::renderer::common::OMRendererTextureRef moonTex;
     openminecraft::renderer::common::OMRendererTextureRef cloudTex;

@@ -81,6 +81,8 @@ class OMRendererVk : public OMRenderer
 
     void render(util::OMTicker &) override;
     void requestResize() override;
+    void nameBuffer(const std::string &tag) override;
+    void nameTexture(const std::string &tag) override;
 
     float frameTimeMs = 0.0f;
     std::chrono::steady_clock::time_point frameStamp = {};

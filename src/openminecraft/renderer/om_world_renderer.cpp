@@ -18,6 +18,7 @@
 #include "openminecraft-shell/data/om_identifier.hpp"
 #include "openminecraft-shell/data/om_model_precompiler.hpp"
 #include "openminecraft-shell/data/om_textureatlas.hpp"
+#include "openminecraft-shell/data/om_textureatlas_plain.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_easing.hpp"
 #include "openminecraft/renderer/common/animation/om_animation_multitimeline.hpp"
 #include "openminecraft/renderer/common/basics/om_camera.hpp"
@@ -455,6 +456,15 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
         std::make_shared<OMWorldPaletteProvider>(grassColor, foliageColor, dryFoliageColor), renderDistance, airId);
 
     voxelManager->bindCameraBuffer(cameraBuffer);
+
+    textureAtlasPlain = new data::OMTextureAtlasPlain("/external/assets", renderer, 2048, 2048);
+    textureAtlasPlain->addTexture(data::OMIdentifier("minecraft:entity/pig/pig_temperate"));
+    textureAtlasPlain->addTexture(data::OMIdentifier("minecraft:entity/pig/pig_temperate_baby"));
+    textureAtlasPlain->addTexture(data::OMIdentifier("minecraft:entity/pig/pig_cold"));
+    textureAtlasPlain->addTexture(data::OMIdentifier("minecraft:entity/pig/pig_cold_baby"));
+    textureAtlasPlain->addTexture(data::OMIdentifier("minecraft:entity/pig/pig_warm"));
+    textureAtlasPlain->addTexture(data::OMIdentifier("minecraft:entity/pig/pig_warm_baby"));
+    textureAtlasPlain->upload();
 }
 
 void OMWorldRenderer::beforeFrame()
@@ -495,8 +505,6 @@ void OMWorldRenderer::afterFrame()
         gameT %= 24000;
         colorManager->updateGameTime(gameT);
     }
-
-
 }
 
 void OMWorldRenderer::submitTasks()
@@ -513,6 +521,7 @@ OMWorldRenderer::~OMWorldRenderer()
     delete voxelManager;
     delete blockStateResolver;
     delete textureAtlas;
+    delete textureAtlasPlain;
 
     delete tempTarget;
     delete voxelHandler;

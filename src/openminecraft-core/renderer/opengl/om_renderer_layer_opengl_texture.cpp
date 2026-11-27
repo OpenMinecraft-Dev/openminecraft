@@ -336,4 +336,8 @@ auto OMRendererTextureOpenGL::fetchData(uint64_t layer) -> std::shared_ptr<void>
 
     return {all, [](void *p) { std::free(p); }};
 }
+void OMRendererTextureOpenGL::bind()
+{
+    gl->glBindTexture(fromCommon(type), texture);
+}
 } // namespace openminecraft::renderer::opengl

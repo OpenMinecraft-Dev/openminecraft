@@ -1226,4 +1226,76 @@ auto OMRendererVk::driver() -> std::string
         return "<unknown>";
     }
 }
+void OMRendererVk::nameBuffer(const std::string &tag)
+{
+    auto func =
+        reinterpret_cast<PFN_vkSetDebugUtilsObjectNameEXT>(instance.getProcAddr("vkSetDebugUtilsObjectNameEXT"));
+    if (func)
+    {
+        {
+            VkDebugUtilsObjectNameInfoEXT nameInfo{};
+            nameInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
+            nameInfo.objectType = VK_OBJECT_TYPE_BUFFER;
+            nameInfo.objectHandle =
+                (uint64_t)(VkBuffer) reinterpret_cast<OMRendererBufferVk *>(bufferRegistry[tag])->buffer;
+            nameInfo.pObjectName = tag.c_str();
+
+            func(logicalDevice, &nameInfo);
+        }
+
+        {
+            auto mname = "memory for " + tag;
+            VkDebugUtilsObjectNameInfoEXT nameInfo{};
+            nameInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
+            nameInfo.objectType = VK_OBJECT_TYPE_DEVICE_MEMORY;
+            nameInfo.objectHandle =
+                (uint64_t)(VkDeviceMemory) reinterpret_cast<OMRendererBufferVk *>(bufferRegistry[tag])->bufferMemory;
+            nameInfo.pObjectName = mname.c_str();
+
+            func(logicalDevice, &nameInfo);
+        }
+    }
+}
+void OMRendererVk::nameTexture(const std::string &tag)
+{
+    auto func =
+        reinterpret_cast<PFN_vkSetDebugUtilsObjectNameEXT>(instance.getProcAddr("vkSetDebugUtilsObjectNameEXT"));
+    if (func)
+    {
+        {
+            VkDebugUtilsObjectNameInfoEXT nameInfo{};
+            nameInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
+            nameInfo.objectType = VK_OBJECT_TYPE_IMAGE;
+            nameInfo.objectHandle =
+                (uint64_t)(VkImage) reinterpret_cast<OMRendererTextureVk *>(textureRegistry[tag])->image;
+            nameInfo.pObjectName = tag.c_str();
+
+            func(logicalDevice, &nameInfo);
+        }
+
+        {
+            auto mname = "memory for " + tag;
+            VkDebugUtilsObjectNameInfoEXT nameInfo{};
+            nameInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
+            nameInfo.objectType = VK_OBJECT_TYPE_DEVICE_MEMORY;
+            nameInfo.objectHandle =
+                (uint64_t)(VkDeviceMemory) reinterpret_cast<OMRendererTextureVk *>(textureRegistry[tag])->imageMemory;
+            nameInfo.pObjectName = mname.c_str();
+
+            func(logicalDevice, &nameInfo);
+        }
+
+        {
+            auto mname = "image view for " + tag;
+            VkDebugUtilsObjectNameInfoEXT nameInfo{};
+            nameInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
+            nameInfo.objectType = VK_OBJECT_TYPE_DEVICE_MEMORY;
+            nameInfo.objectHandle =
+                (uint64_t)(VkImageView) reinterpret_cast<OMRendererTextureVk *>(textureRegistry[tag])->imageView;
+            nameInfo.pObjectName = mname.c_str();
+
+            func(logicalDevice, &nameInfo);
+        }
+    }
+}
 } // namespace openminecraft::renderer::vk

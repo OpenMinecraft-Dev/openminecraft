@@ -10,6 +10,7 @@
 #include <array>
 #include <cstdint>
 #include <vector>
+#include <list>
 namespace openminecraft::renderer::opengl
 {
 static const std::array<std::string, 9> opnames = {"BindFramebuffer", "Clear",          "Disable",
@@ -127,7 +128,7 @@ class OMRendererTaskOpenGL : public common::OMRendererTask
     bool isCleared = false;
     bool needClearDepth = false;
     bool finished = false;
-    std::vector<std::string> tags;
+    std::list<std::string> tags;
     // glMultiDrawElementsIndirect requires GL 4.3+ (used by drawIndirect(begin,count))
     bool supportIndirect = false;
 };
