@@ -188,6 +188,11 @@ class OMTextureAtlasPlain
             texture->updateDataPart(texFile->fetchData(), rect.x, rect.y, rect.z, rect.w);
         }
     }
+
+    auto queryRect(OMIdentifier ident) -> glm::vec4
+    {
+        return glm::vec4(occupiedRects[ident]) / glm::vec4(width, height, width, height);
+    }
     openminecraft::renderer::common::OMRendererTextureRef texture;
 
   private:

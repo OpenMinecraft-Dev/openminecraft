@@ -464,7 +464,11 @@ OMWorldRenderer::OMWorldRenderer(OMRenderer *renderer, std::shared_ptr<basics::O
     textureAtlasPlain->addTexture(data::OMIdentifier("minecraft:entity/pig/pig_cold_baby"));
     textureAtlasPlain->addTexture(data::OMIdentifier("minecraft:entity/pig/pig_warm"));
     textureAtlasPlain->addTexture(data::OMIdentifier("minecraft:entity/pig/pig_warm_baby"));
+    textureAtlasPlain->addTexture(data::OMIdentifier("minecraft:entity/bell/bell_body"));
     textureAtlasPlain->upload();
+
+    auto l = textureAtlasPlain->queryRect(data::OMIdentifier("minecraft:entity/bell/bell_body"));
+    logger.debug("{} {} {} {}", l.x, l.y, l.z, l.w);
 }
 
 void OMWorldRenderer::beforeFrame()
