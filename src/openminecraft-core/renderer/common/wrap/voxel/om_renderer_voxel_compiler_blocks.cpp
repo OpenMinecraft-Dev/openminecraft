@@ -296,7 +296,7 @@ auto OMVoxelCompiler::checkVoxelOcculusion(
     }
 
     const auto currentModel = modelFetcher(id, chunk.chunkx, chunk.chunky, chunk.chunkz, v.x, v.y, v.z);
-    if (handler->queryNumParts(currentModel) <= pid || handler->queryTranslucent(currentModel))
+    if (handler->queryNumParts(currentModel) <= pid)
     {
         return false;
     }
